@@ -16,6 +16,8 @@ const sprite = { id: "" };
 $(() => {
   let main = require("electron").remote.require("./main");
   const ipcRenderer = require( 'electron' ).ipcRenderer;
+  
+  let codeMode = false;
 
   //----------------------
   // Initialize sprite
@@ -32,9 +34,44 @@ $(() => {
   ipcRenderer.on('sprite-saved-to-close', (event) => {
     window.close();
   });
+
+
+  $(window).resize(() => {
+    let barwidth = $(window).width() -48;
+    $('#titlebar').width(barwidth);
+
+    $('#contents').width($(window).width());
+    $('#contents').height($(window).height());
+
+    $('#editor').width($(window).width());
+    $('#editor').height($(window).height());
+  });
+
+  $('#contents').click(() => {
+      $('#editor').html($('#contents').html());
+      $('#contents').hide();
+      $('#editor').show();
+  });
+
+  $('#codeBtn').click(() => {
+      codeMode = !codeMode;
+      if(codeMode){
+        $('#codeBtn').css({ 'color':'#000000' });
+        $('#editor').html($('#contents').html());
+        $('#contents').hide();
+        $('#editor').show();
+      }
+      else{
+        $('#codeBtn').css({ 'color':'#a0a0a0' });
+        $('#contents').html($('#editor').val());
+        $('#contents').show();
+        $('#editor').hide();
+      }
+  });
+
   $('#closeBtn').click(() => {
-    var data = $('#contents').val();
-    var json = {
+    let data = $('#editor').val();
+    let json = {
       key: sprite.id,
       cdata: data
     };
@@ -47,15 +84,21 @@ $(() => {
 <!-- 
 -webkig-app-region:drag を設定した子要素は、マウスイベントを取得できないので注意 
 -->
-<div style="top:0px; left:0px; width:226px; height:16px; background-color:#d0d090; position:absolute; -webkit-app-region:drag; padding:0px; margin:0px;"></div>
+<div id="titlebar" style="top:0px; left:34px; width:192px; height:16px; background-color:#d0d090; position:absolute; -webkit-app-region:drag; padding:0px; margin:0px;"></div>
 
-<div id="newBtn" style="position:absolute; top:0px; left:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer"><i class="fas fa-plus"></i></div>
+<div id="newBtn" style="background-color:#d0d090; position:absolute; top:0px; left:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer"><i class="fas fa-plus"></i></div>
 
-<div id="codeBtn" style="position:absolute; top:0px; left:18px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer"><i class="fas fa-code"></i></div>
+<!-- ボタンの間を埋める -->
+<div style="top:0px; left:16px; width:2px; height:16px; background-color:#d0d090; position:absolute; -webkit-app-region:drag; padding:0px; margin:0px;"></div>
 
-<div id="closeBtn" style="background-color:#d0d090; position:absolute; top:0px; right:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer"><i class="fas fa-minus-circle"></i></div>
+<div id="codeBtn" style="background-color:#d0d090; position:absolute; top:0px; left:18px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer; color:#a0a0a0;"><i class="fas fa-code"></i></div>
 
-<textarea id="contents" style="top:16px; left:0px; width:240px; height:160px; background-color:#f0f0a0; position:absolute; padding:0px; margin:0px;border:0px;">
+<div id="closeBtn" style="background-color:#d0d090; position:absolute; top:0px; right:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer;"><i class="fas fa-minus-circle"></i></div>
+
+<div id="contents" style="top:16px; left:0px; width:240px; height:160px; background-color:#f0f0a0; position:absolute; padding:0px; margin:0px;border:0px; z-index:10;">
+</div>
+
+<textarea id="editor" style="top:16px; left:0px; width:240px; height:160px; background-color:#f0f0a0; position:absolute; padding:0px; margin:0px;border:0px; z-index:0;">
 </textarea>
 
 </body>

@@ -78,6 +78,8 @@ exports.saveToCloseSprite = (spriteId, json) => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   createSprite("0");
+  createSprite("1");
+  createSprite("2");
 });
 
 //-----------------------------------
