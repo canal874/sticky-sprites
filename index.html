@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
+<link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 <script>
 // See https://github.com/electron/electron/issues/254
@@ -47,7 +48,13 @@ $(() => {
 -webkig-app-region:drag を設定した子要素は、マウスイベントを取得できないので注意 
 -->
 <div style="top:0px; left:0px; width:226px; height:16px; background-color:#d0d090; position:absolute; -webkit-app-region:drag; padding:0px; margin:0px;"></div>
-<div id="closeBtn" style="background-color:#d0d090; position:absolute; top:0px; right:0px; border:1px solid black; width:14px; height:14px; text-align:center; font-size:16px; padding:0px;font-family:sans-serif;cursor:pointer">X</div>
+
+<div id="newBtn" style="position:absolute; top:0px; left:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer"><i class="fas fa-plus"></i></div>
+
+<div id="codeBtn" style="position:absolute; top:0px; left:18px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer"><i class="fas fa-code"></i></div>
+
+<div id="closeBtn" style="background-color:#d0d090; position:absolute; top:0px; right:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer"><i class="fas fa-minus-circle"></i></div>
+
 <textarea id="contents" style="top:16px; left:0px; width:240px; height:160px; background-color:#f0f0a0; position:absolute; padding:0px; margin:0px;border:0px;">
 </textarea>
 
