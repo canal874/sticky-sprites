@@ -1,0 +1,8 @@
+{
+  "name": "sticky-sprites",
+  "version": "1.0.0",
+  "description": "Small sticky browser windows",
+  "main": "main.js",
+  "author": "canalsphere",
+  "license": "MIT"
+}
