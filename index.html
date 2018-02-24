@@ -93,37 +93,45 @@ $(() => {
   
   let codeMode = false;
 
-  let prevData = "";
+  let prevSprite = {};
   let titlebarHeight = 16;
   let toolbarHeight = 64;
 
   let spriteColor = "#f0f0a0";
   let titleColor = "#d0d090";
 
+
+   let isEditorReady = false;
   //----------------------
   // ipc (inter-process communication)
   //----------------------
 
   // Initialize sprite
-  ipcRenderer.on("sprite-loaded", (event, id, data) => {
+  ipcRenderer.on("sprite-loaded", (event, id, data, x, y,  width, height) => {
     sprite.id = id;
     Object.freeze(sprite);
-    prevData = data;
+    prevSprite.data = data;
+    prevSprite.x = x;
+    prevSprite.y = y;
+    prevSprite.width = width;
+    prevSprite.height = height;
+
     $("#editor").val(data);
     $("#contents").html(data);
 
-    let padding = 2;
-    CKEDITOR.config.height =  $(window).height() - toolbarHeight; 
+    CKEDITOR.config.width =  width - 2;
+    CKEDITOR.config.height =  height - toolbarHeight; 
+
     CKEDITOR.config.uiColor = titleColor;
     CKEDITOR.replace("editor"); 
     CKEDITOR.on("instanceReady", () => {
-      // nop
+      isEditorReady = true;
       $("#cke_1_contents .cke_wysiwyg_frame").css('background-color', spriteColor);
+
     });
 
     $(".title-color").css('background-color', titleColor);
     $(".sprite-color").css('background-color', spriteColor);
-    
   });
 
   ipcRenderer.on("sprite-saved-to-close", (event) => {
@@ -177,8 +185,8 @@ $(() => {
   //--------------------------
   // UI
   //--------------------------  
-
-  $(window).resize(() => {
+  let resizeWindow = () => {
+    console.log("sprite resize: " + $(window).width() + "," + $(window).height());
     let barwidth = $(window).width() -48;
     $("#titlebar").width(barwidth);
 
@@ -186,7 +194,13 @@ $(() => {
     $("#contents").width($(window).width() - padding*2);
     $("#contents").height($(window).height() - titlebarHeight - padding*2);
 
-    CKEDITOR.instances["editor"].resize($(window).width(), $(window).height() - titlebarHeight);
+    if(isEditorReady){
+      CKEDITOR.instances["editor"].resize($(window).width(), $(window).height() - titlebarHeight);
+    }
+  };
+
+  $(window).resize(() => {
+    resizeWindow();
   });
 
   $("#contents").click(() => {
@@ -205,12 +219,13 @@ $(() => {
   $("#closeBtn").click(() => {
 //    let data = $("#editor").val();
     let data = CKEDITOR.instances["editor"].getData();
-
-    if(prevData == data){
+    let w = $(window).width();
+    let h =  $(window).height();
+    if(prevSprite.data == data && prevSprite.width == w && prevSprite.height == h){
       close();
     }
     else{
-      main.saveToCloseSprite(sprite.id, data);
+      main.saveToCloseSprite(sprite.id, data, w, h);
     }
   });
 });
@@ -235,7 +250,7 @@ $(() => {
 <div id="contents" class="sprite-color" style="padding: 2px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:256px; height:154px; position:absolute; margin:0px;border:0px; z-index:10">
 </div>
 
-<textarea id="editor" style="padding: 0px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:256px; height:154px; position:absolute; margin:0px;border:0px; visibility:hidden;">
+<textarea id="editor" style="padding: 0px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:10px; height:10px; position:absolute; margin:0px;border:0px; visibility:hidden;">
 </textarea>
 
 </body>

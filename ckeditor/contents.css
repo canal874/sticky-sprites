@@ -6,22 +6,22 @@ For licensing, see LICENSE.md or https://ckeditor.com/legal/terms-of-use/#open-s
 body
 {
 	/* Font */
-	font-family: sans-serif, Arial, Verdana, "Trebuchet MS";
-	font-size: 12px;
+	font-family: sans-serif;
 
 	/* Text color */
-	color: #333;
+	color: #000;
 
 	/* Remove the background color to make it transparent */
-	background-color: #fff;
+	background-color: transparent;
 
-	margin: 20px;
+	padding: 0px 0px 0px 0px;
+	margin: 0px 10px 0px 0px;
 }
 
 .cke_editable
 {
-	font-size: 13px;
-	line-height: 1.6;
+/*	font-size: 13px;
+	line-height: 1.6; */
 
 	/* Fix for missing scrollbars with RTL texts. (#10488) */
 	word-wrap: break-word;

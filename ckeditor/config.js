@@ -4,6 +4,10 @@
  */
 
 CKEDITOR.editorConfig = function( config ) {
+
+	CKEDITOR.config.enterMode = 2;
+	CKEDITOR.config.shiftEnterMode = 1;
+
 	config.toolbarGroups = [
 		{ name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
 		{ name: 'clipboard', groups: [ 'clipboard', 'undo' ] },

@@ -9,10 +9,17 @@ const path = require("path");
 const sprites = {};
 
 // A small sticky windows is called "sprite".
+const defaultSpriteWidth = 260;
+const defaultSpriteHeight = 176;
+const defaultSpriteX = 70;
+const defaultSpriteY = 70;
+
 let createSprite = function (spriteId) {
   let sprite = new BrowserWindow({
-    width: 260,
-    height: 176,
+    width: defaultSpriteWidth,
+    height: defaultSpriteHeight,
+    x: defaultSpriteX,
+    y:defaultSpriteY,
     transparent: true,
     frame: false,
     show: false,
@@ -35,17 +42,29 @@ let createSprite = function (spriteId) {
       .then( (doc) => {
         let data = doc != null ? doc.data : "";
         console.log("Load sprite: " + data);
-        sprite.webContents.send("sprite-loaded", spriteId, data);
+        let w = doc != null ? doc.width : defaultSpriteWidth;
+        let h = doc != null ? doc.height : defaultSpriteHeight;
+        let x = doc != null ? doc.x : defaultSpriteX;
+        let y = doc != null ? doc.y : defaultSpriteY;
+        sprite.webContents.send("sprite-loaded", spriteId, data, x, y, w, h);
+        sprite.setSize(w, h);
+        sprite.setPosition(x, y);
         sprite.show();
       })
       .catch( (err) => {
         console.log("Load sprite error: " + err);
-        sprite.webContents.send("sprite-loaded", spriteId, "");
+        let w = defaultSpriteWidth;
+        let h = defaultSpriteHeight;
+        let x = defaultSpriteX;
+        let y = defaultSpriteY;
+        sprite.webContents.send("sprite-loaded", spriteId, "", x, y, w, h);
+        sprite.setSize(w, h);
+        sprite.setPosition(x, y);
         sprite.show();
       })
 
   });
-  //sprite.openDevTools();
+  sprite.openDevTools();
   
   sprites[spriteId] = sprite;
   sprite.on("closed", () => {
@@ -99,10 +118,16 @@ confDB.get("sprite")
     });
 
 // Save sprite
-exports.saveToCloseSprite = (spriteId, data) => {
+exports.saveToCloseSprite = (spriteId, data, width, height) => {
+  let pos = sprites[spriteId].getPosition();
+  console.log("Sprite position: " + pos[0] + "," + pos[1]);
   spritesDB.get(spriteId)
     .then((doc) => {
       doc.data = data;
+      doc.x = pos[0];
+      doc.y = pos[1];
+      doc.width = width;
+      doc.height = height;
       spritesDB.put(doc)
         .then((res) => {
           console.log("Sprite saved: " + res.id);
@@ -114,7 +139,7 @@ exports.saveToCloseSprite = (spriteId, data) => {
     })
     .catch((err) => {
       // create new sprite
-      spritesDB.put({ _id: spriteId, data: data })
+      spritesDB.put({ _id: spriteId, data: data, width: width, height: height, x: pos[0], y: pos[1] })
           .then((res) => {
               console.log("New sprite saved: " + res.id);
               sprites[spriteId].webContents.send("sprite-saved-to-close");
