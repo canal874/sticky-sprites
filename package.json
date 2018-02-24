@@ -4,5 +4,11 @@
   "description": "Small sticky browser windows",
   "main": "main.js",
   "author": "canalsphere",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "pouchdb": "^6.4.3"
+  },
+  "devDependencies": {
+    "electron-rebuild": "^1.7.3"
+  }
 }

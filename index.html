@@ -3,6 +3,14 @@
 <head>
 <meta charset="utf-8">
 <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
+<style>
+.title-color{
+  background-color:#d0d090;
+}
+.default-color{
+  background-color:#f0f0a0;
+}
+</style>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 <script>
 // See https://github.com/electron/electron/issues/254
@@ -19,63 +27,86 @@ $(() => {
   
   let codeMode = false;
 
+  let prevData = "";
+
   //----------------------
   // Initialize sprite
   //----------------------
-  ipcRenderer.on('sprite-loaded', (event, id, cdata) => {
+  ipcRenderer.on('sprite-loaded', (event, id, data) => {
     sprite.id = id;
     Object.freeze(sprite);
-    $('#contents').html(cdata);
+    prevData = data;
+    $('#editor').val(data);
+    $('#contents').html(data);
   });
 
   //--------------------------
   // Save and close sprite
-  //--------------------------
-  ipcRenderer.on('sprite-saved-to-close', (event) => {
+  //--------------------------  
+  let close = () => {
     window.close();
+  };
+
+  ipcRenderer.on('sprite-saved-to-close', (event) => {
+    close();
   });
 
+  //--------------------------
+  // Edit
+  //--------------------------  
+  let startCodeMode = () => {
+    codeMode = true;
+    $('#codeBtn').css({ 'color':'#000000' });
+    $('#editor').html($('#contents').html());
+    $('#contents').hide();
+    $('#editor').show();
+  };
+
+  let endCodeMode = () => {
+    codeMode = false;
+    $('#codeBtn').css({ 'color':'#a0a0a0' });
+    $('#contents').html($('#editor').val());
+    $('#contents').show();
+    $('#editor').hide();
+  };
+
+  //--------------------------
+  // UI
+  //--------------------------  
 
   $(window).resize(() => {
     let barwidth = $(window).width() -48;
     $('#titlebar').width(barwidth);
 
-    $('#contents').width($(window).width());
-    $('#contents').height($(window).height());
+    let padding = 2;
+    $('#contents').width($(window).width() - padding*2);
+    $('#contents').height($(window).height() - padding*2);
 
-    $('#editor').width($(window).width());
-    $('#editor').height($(window).height());
+    $('#editor').width($(window).width() - padding*2);
+    $('#editor').height($(window).height() - padding*2);
   });
 
   $('#contents').click(() => {
-      $('#editor').html($('#contents').html());
-      $('#contents').hide();
-      $('#editor').show();
+      startCodeMode();
   });
 
   $('#codeBtn').click(() => {
-      codeMode = !codeMode;
-      if(codeMode){
-        $('#codeBtn').css({ 'color':'#000000' });
-        $('#editor').html($('#contents').html());
-        $('#contents').hide();
-        $('#editor').show();
+      if(!codeMode){
+        startCodeMode();
       }
       else{
-        $('#codeBtn').css({ 'color':'#a0a0a0' });
-        $('#contents').html($('#editor').val());
-        $('#contents').show();
-        $('#editor').hide();
+        endCodeMode();
       }
   });
 
   $('#closeBtn').click(() => {
     let data = $('#editor').val();
-    let json = {
-      key: sprite.id,
-      cdata: data
-    };
-    main.saveToCloseSprite(sprite.id, json);
+    if(prevData == data){
+      close();
+    }
+    else{
+      main.saveToCloseSprite(sprite.id, data);
+    }
   });
 });
 </script>
@@ -84,21 +115,21 @@ $(() => {
 <!-- 
 -webkig-app-region:drag を設定した子要素は、マウスイベントを取得できないので注意 
 -->
-<div id="titlebar" style="top:0px; left:34px; width:192px; height:16px; background-color:#d0d090; position:absolute; -webkit-app-region:drag; padding:0px; margin:0px;"></div>
+<div id="titlebar" class="title-color" style="top:0px; left:34px; width:192px; height:16px; position:absolute; -webkit-app-region:drag; padding:0px; margin:0px;"></div>
 
-<div id="newBtn" style="background-color:#d0d090; position:absolute; top:0px; left:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer"><i class="fas fa-plus"></i></div>
+<div id="newBtn" class="title-color" style="position:absolute; top:0px; left:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer"><i class="fas fa-plus"></i></div>
 
 <!-- ボタンの間を埋める -->
-<div style="top:0px; left:16px; width:2px; height:16px; background-color:#d0d090; position:absolute; -webkit-app-region:drag; padding:0px; margin:0px;"></div>
+<div class="title-color" style="top:0px; left:16px; width:2px; height:16px; position:absolute; -webkit-app-region:drag; padding:0px; margin:0px;"></div>
 
-<div id="codeBtn" style="background-color:#d0d090; position:absolute; top:0px; left:18px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer; color:#a0a0a0;"><i class="fas fa-code"></i></div>
+<div id="codeBtn" class="title-color" style="position:absolute; top:0px; left:18px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer;"><i class="fas fa-code"></i></div>
 
-<div id="closeBtn" style="background-color:#d0d090; position:absolute; top:0px; right:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer;"><i class="fas fa-minus-circle"></i></div>
+<div id="closeBtn" class="title-color" style="position:absolute; top:0px; right:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer;"><i class="fas fa-minus-circle"></i></div>
 
-<div id="contents" style="top:16px; left:0px; width:240px; height:160px; background-color:#f0f0a0; position:absolute; padding:0px; margin:0px;border:0px; z-index:10;">
+<div id="contents" class="default-color" style="padding: 2px; font-size: 14px; font-family:sans-serif; top:16px; left:0px; width:236px; height:154px; position:absolute; margin:0px;border:0px; z-index:10;">
 </div>
 
-<textarea id="editor" style="top:16px; left:0px; width:240px; height:160px; background-color:#f0f0a0; position:absolute; padding:0px; margin:0px;border:0px; z-index:0;">
+<textarea id="editor" style="padding: 2px; font-size: 14px; font-family:sans-serif; top:16px; left:0px; width:236px; height:154px; position:absolute; margin:0px;border:0px; z-index:0;">
 </textarea>
 
 </body>
