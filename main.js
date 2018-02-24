@@ -11,7 +11,7 @@ const sprites = {};
 // A small sticky windows is called "sprite".
 let createSprite = function (spriteId) {
   let sprite = new BrowserWindow({
-    width: 240,
+    width: 260,
     height: 176,
     transparent: true,
     frame: false,
@@ -45,7 +45,7 @@ let createSprite = function (spriteId) {
       })
 
   });
-//  sprite.openDevTools();
+   sprite.openDevTools();
   
   sprites[spriteId] = sprite;
   sprite.on("closed", () => {

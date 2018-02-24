@@ -10,7 +10,17 @@
 .default-color{
   background-color:#f0f0a0;
 }
+.cke_combo__fontsize a.cke_combo_button .cke_combo_text{
+
+  width:28px;
+  padding-left: 0px;
+}
+.cke_combo__fontsize a.cke_combo_button .cke_combo_open{
+  margin-left:0px;
+  margin-right:0px;
+}
 </style>
+<script type="text/javascript" src="ckeditor/ckeditor.js"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 <script>
 // See https://github.com/electron/electron/issues/254
@@ -38,6 +48,8 @@ $(() => {
     prevData = data;
     $('#editor').val(data);
     $('#contents').html(data);
+
+    CKEDITOR.replace("editor");
   });
 
   //--------------------------
@@ -57,7 +69,7 @@ $(() => {
   let startCodeMode = () => {
     codeMode = true;
     $('#codeBtn').css({ 'color':'#000000' });
-    $('#editor').html($('#contents').html());
+//    $('#editor').html($('#contents').html());
     $('#contents').hide();
     $('#editor').show();
   };
@@ -65,7 +77,8 @@ $(() => {
   let endCodeMode = () => {
     codeMode = false;
     $('#codeBtn').css({ 'color':'#a0a0a0' });
-    $('#contents').html($('#editor').val());
+    let data = CKEDITOR.instances["editor"].getData();
+    $('#contents').html(data);
     $('#contents').show();
     $('#editor').hide();
   };
@@ -100,7 +113,8 @@ $(() => {
   });
 
   $('#closeBtn').click(() => {
-    let data = $('#editor').val();
+//    let data = $('#editor').val();
+    let data = CKEDITOR.instances["editor"].getData();
     if(prevData == data){
       close();
     }
@@ -109,13 +123,14 @@ $(() => {
     }
   });
 });
+
 </script>
 </head>
-<body>
+<body style="margin:0px; padding:0px;">
 <!-- 
 -webkig-app-region:drag を設定した子要素は、マウスイベントを取得できないので注意 
 -->
-<div id="titlebar" class="title-color" style="top:0px; left:34px; width:192px; height:16px; position:absolute; -webkit-app-region:drag; padding:0px; margin:0px;"></div>
+<div id="titlebar" class="title-color" style="top:0px; left:34px; width:212px; height:16px; position:absolute; -webkit-app-region:drag; padding:0px; margin:0px;"></div>
 
 <div id="newBtn" class="title-color" style="position:absolute; top:0px; left:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer"><i class="fas fa-plus"></i></div>
 
@@ -126,10 +141,10 @@ $(() => {
 
 <div id="closeBtn" class="title-color" style="position:absolute; top:0px; right:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer;"><i class="fas fa-minus-circle"></i></div>
 
-<div id="contents" class="default-color" style="padding: 2px; font-size: 14px; font-family:sans-serif; top:16px; left:0px; width:236px; height:154px; position:absolute; margin:0px;border:0px; z-index:10;">
+<div id="contents" class="default-color" style="padding: 2px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:256px; height:154px; position:absolute; margin:0px;border:0px; z-index:10">
 </div>
 
-<textarea id="editor" style="padding: 2px; font-size: 14px; font-family:sans-serif; top:16px; left:0px; width:236px; height:154px; position:absolute; margin:0px;border:0px; z-index:0;">
+<textarea id="editor" style="padding: 0px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:256px; height:154px; position:absolute; margin:0px;border:0px; visibility:hidden;">
 </textarea>
 
 </body>
