@@ -45,7 +45,7 @@ let createSprite = function (spriteId) {
       })
 
   });
-   sprite.openDevTools();
+  //sprite.openDevTools();
   
   sprites[spriteId] = sprite;
   sprite.on("closed", () => {
@@ -54,6 +54,13 @@ let createSprite = function (spriteId) {
     // when you should delete the corresponding element.
     sprites[spriteId] = null;
     delete sprites[spriteId];
+  });
+
+  sprite.on("focus", () => {
+    sprite.webContents.send("sprite-focused");
+  });
+  sprite.on("blur", () => {
+    sprite.webContents.send("sprite-blured");
   });
 }
 

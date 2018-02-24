@@ -4,13 +4,28 @@
  */
 
 CKEDITOR.editorConfig = function( config ) {
-	config.language = 'en';
-//	config.toolbarLocation = 'bottom';
-	config.fontSize_sizes = '16/16px;24/24px;36/36px;';
-//	config.skin = 'kama';
-	// config.uiColor = '#AADC6E';
-	config.toolbar = [
-		{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'TextColor', 'BGColor', 'FontSize' ] }
+	config.toolbarGroups = [
+		{ name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
+		{ name: 'clipboard', groups: [ 'clipboard', 'undo' ] },
+		{ name: 'editing', groups: [ 'find', 'selection', 'spellchecker', 'editing' ] },
+		{ name: 'forms', groups: [ 'forms' ] },
+		{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup', 'colors', 'styles' ] },
+		{ name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi', 'paragraph' ] },
+		{ name: 'links', groups: [ 'links' ] },
+		{ name: 'insert', groups: [ 'insert' ] },
+		{ name: 'tools', groups: [ 'tools' ] },
+		{ name: 'others', groups: [ 'others' ] },
+		{ name: 'about', groups: [ 'about' ] }
 	];
+/* removeButtonsで消すと、機能まで消えてしまう。例えば、Iframeを消すと、ソースモードでiframeを記入しても、wysiwigモードで表示されず、なくなる。
+	config.removeButtons = 'Save,Templates,NewPage,Preview,Print,Cut,Copy,Paste,PasteText,PasteFromWord,Redo,Undo,Find,Replace,SelectAll,Scayt,Form,Checkbox,Radio,Textarea,TextField,Select,Button,HiddenField,CopyFormatting,RemoveFormat,Subscript,Superscript,NumberedList,Outdent,Indent,BulletedList,CreateDiv,Blockquote,JustifyLeft,JustifyRight,JustifyCenter,BidiLtr,BidiRtl,Language,JustifyBlock,Link,Unlink,Anchor,HorizontalRule,Smiley,SpecialChar,PageBreak,Styles,Format,Font,Maximize,About,Source,ShowBlocks';
+*/
+	config.removeButtons = 'Save,Templates,NewPage,Preview,Print,Cut,Copy,Paste,PasteText,PasteFromWord,Redo,Undo,Find,Replace,SelectAll,Scayt,CopyFormatting,RemoveFormat,Maximize,About,Source,ShowBlocks';
+
+/*
+Form,Checkbox,Radio,Textarea,TextField,Select,Button,HiddenField,
+Subscript,Superscript,
+NumberedList,Outdent,Indent,BulletedList,CreateDiv,Blockquote,JustifyLeft,JustifyRight,JustifyCenter,BidiLtr,BidiRtl,Language,JustifyBlock,Link,Unlink,Anchor,HorizontalRule,Smiley,SpecialChar,PageBreak,Styles,Format,Font,
+*/
 
 };

@@ -4,14 +4,7 @@
 <meta charset="utf-8">
 <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
 <style>
-.title-color{
-  background-color:#d0d090;
-}
-.default-color{
-  background-color:#f0f0a0;
-}
 .cke_combo__fontsize a.cke_combo_button .cke_combo_text{
-
   width:28px;
   padding-left: 0px;
 }
@@ -19,6 +12,69 @@
   margin-left:0px;
   margin-right:0px;
 }
+
+#cke_editor .cke_button__form,
+#cke_editor .cke_button__checkbox,
+#cke_editor .cke_button__radio,
+#cke_editor .cke_button__textarea,
+#cke_editor .cke_button__textfield,
+#cke_editor .cke_button__select,
+#cke_editor .cke_button__button,
+#cke_editor .cke_button__hiddenfield,
+#cke_editor .cke_button__subscript,
+#cke_editor .cke_button__superscript,
+#cke_editor .cke_button__numberedlist,
+#cke_editor .cke_button__outdent,
+#cke_editor .cke_button__indent,
+#cke_editor .cke_button__bulletedlist,
+#cke_editor .cke_button__imagebutton,
+#cke_editor .cke_button__creatediv,
+#cke_editor .cke_button__blockquote,
+#cke_editor .cke_button__justifyleft,
+#cke_editor .cke_button__justifyright,
+#cke_editor .cke_button__justifycenter,
+#cke_editor .cke_button__bidiltr,
+#cke_editor .cke_button__bidirtl,
+#cke_editor .cke_button__language,
+#cke_editor .cke_button__justifyblock,
+#cke_editor .cke_button__link,
+#cke_editor .cke_button__unlink,
+#cke_editor .cke_button__anchor,
+#cke_editor .cke_button__horizontalrule,
+#cke_editor .cke_button__smiley,
+#cke_editor .cke_button__specialchar,
+#cke_editor .cke_button__image,
+#cke_editor .cke_button__flash,
+#cke_editor .cke_button__table,
+#cke_editor .cke_button__iframe,
+#cke_editor .cke_button__pagebreak,
+#cke_editor .cke_combo__styles,
+#cke_editor .cke_combo__format,
+#cke_editor .cke_combo__font
+{
+  display: none;
+}
+
+#cke_editor .cke_toolbar_separator{
+  display: none;
+}
+#cke_editor .cke_combo::after,
+#cke_editor .cke_toolgroup a.cke_button:last-child:after,
+#cke_editor .cke_toolgroup a.cke_button.cke_button_disabled:last-child:after
+{
+  border: none;
+}
+
+#cke_editor{
+  margin-top: 16px;
+}
+#cke_1_bottom{
+  display:none;
+}
+body .cke_screen_reader_only{
+  display:none;
+}
+
 </style>
 <script type="text/javascript" src="ckeditor/ckeditor.js"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
@@ -33,24 +89,55 @@ const sprite = { id: "" };
 
 $(() => {
   let main = require("electron").remote.require("./main");
-  const ipcRenderer = require( 'electron' ).ipcRenderer;
+  const ipcRenderer = require( "electron" ).ipcRenderer;
   
   let codeMode = false;
 
   let prevData = "";
+  let titlebarHeight = 16;
+  let toolbarHeight = 64;
+
+  let spriteColor = "#f0f0a0";
+  let titleColor = "#d0d090";
 
   //----------------------
-  // Initialize sprite
+  // ipc (inter-process communication)
   //----------------------
-  ipcRenderer.on('sprite-loaded', (event, id, data) => {
+
+  // Initialize sprite
+  ipcRenderer.on("sprite-loaded", (event, id, data) => {
     sprite.id = id;
     Object.freeze(sprite);
     prevData = data;
-    $('#editor').val(data);
-    $('#contents').html(data);
+    $("#editor").val(data);
+    $("#contents").html(data);
 
-    CKEDITOR.replace("editor");
+    let padding = 2;
+    CKEDITOR.config.height =  $(window).height() - toolbarHeight; 
+    CKEDITOR.config.uiColor = titleColor;
+    CKEDITOR.replace("editor"); 
+    CKEDITOR.on("instanceReady", () => {
+      // nop
+      $("#cke_1_contents .cke_wysiwyg_frame").css('background-color', spriteColor);
+    });
+
+    $(".title-color").css('background-color', titleColor);
+    $(".sprite-color").css('background-color', spriteColor);
+    
   });
+
+  ipcRenderer.on("sprite-saved-to-close", (event) => {
+    close();
+  });
+
+  ipcRenderer.on("sprite-focused", (event) => {
+  });
+  
+  ipcRenderer.on("sprite-blured", (event) => {
+    endEditMode();
+  });
+
+
 
   //--------------------------
   // Save and close sprite
@@ -59,28 +146,32 @@ $(() => {
     window.close();
   };
 
-  ipcRenderer.on('sprite-saved-to-close', (event) => {
-    close();
-  });
 
   //--------------------------
   // Edit
   //--------------------------  
+  let startEditMode = () => {
+    $("#contents").hide();
+  };
+
+  let endEditMode = () => {
+    let data = CKEDITOR.instances["editor"].getData();
+    $("#contents").html(data);
+    $("#contents").show();
+  };
+
   let startCodeMode = () => {
     codeMode = true;
-    $('#codeBtn').css({ 'color':'#000000' });
-//    $('#editor').html($('#contents').html());
-    $('#contents').hide();
-    $('#editor').show();
+    startEditMode();
+    $("#codeBtn").css({ "color":"#a0a0a0" });
+    CKEDITOR.instances["editor"].setMode("source");
+
   };
 
   let endCodeMode = () => {
     codeMode = false;
-    $('#codeBtn').css({ 'color':'#a0a0a0' });
-    let data = CKEDITOR.instances["editor"].getData();
-    $('#contents').html(data);
-    $('#contents').show();
-    $('#editor').hide();
+    $("#codeBtn").css({ "color":"#000000" });
+    CKEDITOR.instances["editor"].setMode("wysiwyg");
   };
 
   //--------------------------
@@ -89,21 +180,20 @@ $(() => {
 
   $(window).resize(() => {
     let barwidth = $(window).width() -48;
-    $('#titlebar').width(barwidth);
+    $("#titlebar").width(barwidth);
 
     let padding = 2;
-    $('#contents').width($(window).width() - padding*2);
-    $('#contents').height($(window).height() - padding*2);
+    $("#contents").width($(window).width() - padding*2);
+    $("#contents").height($(window).height() - titlebarHeight - padding*2);
 
-    $('#editor').width($(window).width() - padding*2);
-    $('#editor').height($(window).height() - padding*2);
+    CKEDITOR.instances["editor"].resize($(window).width(), $(window).height() - titlebarHeight);
   });
 
-  $('#contents').click(() => {
-      startCodeMode();
+  $("#contents").click(() => {
+      startEditMode();
   });
 
-  $('#codeBtn').click(() => {
+  $("#codeBtn").click(() => {
       if(!codeMode){
         startCodeMode();
       }
@@ -112,9 +202,10 @@ $(() => {
       }
   });
 
-  $('#closeBtn').click(() => {
-//    let data = $('#editor').val();
+  $("#closeBtn").click(() => {
+//    let data = $("#editor").val();
     let data = CKEDITOR.instances["editor"].getData();
+
     if(prevData == data){
       close();
     }
@@ -141,7 +232,7 @@ $(() => {
 
 <div id="closeBtn" class="title-color" style="position:absolute; top:0px; right:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer;"><i class="fas fa-minus-circle"></i></div>
 
-<div id="contents" class="default-color" style="padding: 2px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:256px; height:154px; position:absolute; margin:0px;border:0px; z-index:10">
+<div id="contents" class="sprite-color" style="padding: 2px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:256px; height:154px; position:absolute; margin:0px;border:0px; z-index:10">
 </div>
 
 <textarea id="editor" style="padding: 0px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:256px; height:154px; position:absolute; margin:0px;border:0px; visibility:hidden;">

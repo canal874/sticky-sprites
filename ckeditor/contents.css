@@ -6,8 +6,8 @@ For licensing, see LICENSE.md or https://ckeditor.com/legal/terms-of-use/#open-s
 body
 {
 	/* Font */
-/*	font-family: sans-serif, Arial, Verdana, "Trebuchet MS";
-	font-size: 12px; */
+	font-family: sans-serif, Arial, Verdana, "Trebuchet MS";
+	font-size: 12px;
 
 	/* Text color */
 	color: #333;
@@ -15,8 +15,7 @@ body
 	/* Remove the background color to make it transparent */
 	background-color: #fff;
 
-	padding: 0px;
-	margin: 0px;
+	margin: 20px;
 }
 
 .cke_editable
