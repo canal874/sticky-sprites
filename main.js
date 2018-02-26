@@ -38,30 +38,37 @@ let createSprite = function (spriteId) {
   //----------------------
   sprite.once("ready-to-show", () => {
     // ready-to-show is emitted after $(document).ready
+    let data,x,y,w,h;
     spritesDB.get(spriteId)
-      .then( (doc) => {
-        let data = doc != null ? doc.data : "";
-        console.log("Load sprite: " + data);
-        let w = doc != null ? doc.width : defaultSpriteWidth;
-        let h = doc != null ? doc.height : defaultSpriteHeight;
-        let x = doc != null ? doc.x : defaultSpriteX;
-        let y = doc != null ? doc.y : defaultSpriteY;
+      .then((doc) => {
+        data = doc != null ? doc.data : "";
+        w = doc != null ? doc.width : defaultSpriteWidth;
+        h = doc != null ? doc.height : defaultSpriteHeight;
+        x = doc != null ? doc.x : defaultSpriteX;
+        y = doc != null ? doc.y : defaultSpriteY;
+
+      })
+      .catch((err) => {
+        console.log("Load sprite error: " + spriteId + ", " + err);
+        data = "";
+        w = defaultSpriteWidth;
+        h = defaultSpriteHeight;
+        x = defaultSpriteX;
+        y = defaultSpriteY;
+      })
+      .then(() => {
+        // save prev values
+        sprite.prevData = data;
+        sprite.prevX = x;
+        sprite.prevY = y;
+        sprite.prevW = w;
+        sprite.prevH = h;
+
         sprite.webContents.send("sprite-loaded", spriteId, data, x, y, w, h);
         sprite.setSize(w, h);
         sprite.setPosition(x, y);
         sprite.show();
-      })
-      .catch( (err) => {
-        console.log("Load sprite error: " + err);
-        let w = defaultSpriteWidth;
-        let h = defaultSpriteHeight;
-        let x = defaultSpriteX;
-        let y = defaultSpriteY;
-        sprite.webContents.send("sprite-loaded", spriteId, "", x, y, w, h);
-        sprite.setSize(w, h);
-        sprite.setPosition(x, y);
-        sprite.show();
-      })
+      });
 
   });
   sprite.openDevTools();
@@ -118,35 +125,47 @@ confDB.get("sprite")
     });
 
 // Save sprite
-exports.saveToCloseSprite = (spriteId, data, width, height) => {
-  let pos = sprites[spriteId].getPosition();
-  console.log("Sprite position: " + pos[0] + "," + pos[1]);
+exports.saveToCloseSprite = (spriteId, data) => {  
+  let spr = sprites[spriteId];
+  let pos = spr.getPosition();
+  let size = spr.getSize();
+  let x = pos[0];
+  let y = pos[1];
+  let w = size[0];
+  let h = size[1];
+  
+  if(x == spr.prevX
+    && y == spr.prevY
+    && w == spr.prevW
+    && h == spr.prevH
+    && data == spr.prevData
+  ){
+    spr.webContents.send("sprite-close");
+    return;
+  }
+  let newDoc;
   spritesDB.get(spriteId)
     .then((doc) => {
-      doc.data = data;
-      doc.x = pos[0];
-      doc.y = pos[1];
-      doc.width = width;
-      doc.height = height;
-      spritesDB.put(doc)
+      newDoc = doc;
+    })
+    .catch((err) => {
+      // create new sprite
+      newDoc = { _id: spriteId, data: data, width: w, height: h, x: x, y: y };
+    })
+    .then(() => {
+      newDoc.data = spr.prevData = data;
+      newDoc.x = spr.prevX = x;
+      newDoc.y = spr.prevY = y;
+      newDoc.width = spr.prevW = w;
+      newDoc.height = spr.prevH = h;
+      spritesDB.put(newDoc)
         .then((res) => {
-          console.log("Sprite saved: " + res.id);
-          sprites[spriteId].webContents.send("sprite-saved-to-close");
+          console.log("Sprite saved: " + res.id + ",x:" + x + ",y:" + y + ",w:" + w + ",h:" + h + ",data:" + data);
+          spr.webContents.send("sprite-close");
         })
         .catch((err) => {
           console.log("Sprite save error: " + err);
         });
-    })
-    .catch((err) => {
-      // create new sprite
-      spritesDB.put({ _id: spriteId, data: data, width: width, height: height, x: pos[0], y: pos[1] })
-          .then((res) => {
-              console.log("New sprite saved: " + res.id);
-              sprites[spriteId].webContents.send("sprite-saved-to-close");
-           })
-           .catch((err) => {
-              console.log("New sprite save error: " + err);
-           });
     });
 }
 

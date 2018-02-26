@@ -93,7 +93,6 @@ $(() => {
   
   let codeMode = false;
 
-  let prevSprite = {};
   let titlebarHeight = 16;
   let toolbarHeight = 64;
 
@@ -110,12 +109,7 @@ $(() => {
   ipcRenderer.on("sprite-loaded", (event, id, data, x, y,  width, height) => {
     sprite.id = id;
     Object.freeze(sprite);
-    prevSprite.data = data;
-    prevSprite.x = x;
-    prevSprite.y = y;
-    prevSprite.width = width;
-    prevSprite.height = height;
-
+    
     $("#editor").val(data);
     $("#contents").html(data);
 
@@ -134,7 +128,7 @@ $(() => {
     $(".sprite-color").css('background-color', spriteColor);
   });
 
-  ipcRenderer.on("sprite-saved-to-close", (event) => {
+  ipcRenderer.on("sprite-close", (event) => {
     close();
   });
 
@@ -217,16 +211,8 @@ $(() => {
   });
 
   $("#closeBtn").click(() => {
-//    let data = $("#editor").val();
     let data = CKEDITOR.instances["editor"].getData();
-    let w = $(window).width();
-    let h =  $(window).height();
-    if(prevSprite.data == data && prevSprite.width == w && prevSprite.height == h){
-      close();
-    }
-    else{
-      main.saveToCloseSprite(sprite.id, data, w, h);
-    }
+    main.saveToCloseSprite(sprite.id, data);
   });
 });
 
