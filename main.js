@@ -125,7 +125,14 @@ confDB.get("sprite")
     });
 
 // Save sprite
+exports.saveSprite = (spriteId, data) => {
+  saveSprite(spriteId, data, false);
+};
 exports.saveToCloseSprite = (spriteId, data) => {  
+  saveSprite(spriteId, data, true);
+};
+
+let saveSprite = (spriteId, data, closeAfterSave) => {
   let spr = sprites[spriteId];
   let pos = spr.getPosition();
   let size = spr.getSize();
@@ -140,7 +147,9 @@ exports.saveToCloseSprite = (spriteId, data) => {
     && h == spr.prevH
     && data == spr.prevData
   ){
-    spr.webContents.send("sprite-close");
+    if(closeAfterSave){
+      spr.webContents.send("sprite-close");
+    }
     return;
   }
   let newDoc;
@@ -158,10 +167,12 @@ exports.saveToCloseSprite = (spriteId, data) => {
       newDoc.y = spr.prevY = y;
       newDoc.width = spr.prevW = w;
       newDoc.height = spr.prevH = h;
+      console.log("Saving sprite...: " + newDoc._id + ",x:" + x + ",y:" + y + ",w:" + w + ",h:" + h + ",data:" + data);
       spritesDB.put(newDoc)
         .then((res) => {
-          console.log("Sprite saved: " + res.id + ",x:" + x + ",y:" + y + ",w:" + w + ",h:" + h + ",data:" + data);
-          spr.webContents.send("sprite-close");
+          if(closeAfterSave){
+            spr.webContents.send("sprite-close");
+          }
         })
         .catch((err) => {
           console.log("Sprite save error: " + err);

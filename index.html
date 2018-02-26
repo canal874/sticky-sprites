@@ -160,6 +160,9 @@ $(() => {
     let data = CKEDITOR.instances["editor"].getData();
     $("#contents").html(data);
     $("#contents").show();
+    setTimeout(() => {
+      main.saveSprite(sprite.id, data);
+    },1);
   };
 
   let startCodeMode = () => {
