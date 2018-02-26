@@ -14,7 +14,7 @@ const defaultSpriteHeight = 176;
 const defaultSpriteX = 70;
 const defaultSpriteY = 70;
 
-let createSprite = function (spriteId) {
+let buildSprite = function (spriteId) {
   let sprite = new BrowserWindow({
     width: defaultSpriteWidth,
     height: defaultSpriteHeight,
@@ -71,7 +71,6 @@ let createSprite = function (spriteId) {
       });
 
   });
-  sprite.openDevTools();
   
   sprites[spriteId] = sprite;
   sprite.on("closed", () => {
@@ -88,6 +87,8 @@ let createSprite = function (spriteId) {
   sprite.on("blur", () => {
     sprite.webContents.send("sprite-blured");
   });
+
+  //  sprite.openDevTools();
 }
 
 app.on("window-all-closed", () => {
@@ -180,12 +181,32 @@ let saveSprite = (spriteId, data, closeAfterSave) => {
     });
 }
 
+// Create new sprite
+exports.createSprite = () => {
+  spriteIndex++;
+  let spriteId = "spr" + spriteIndex;
+  buildSprite(spriteId);
+};
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
-  var spriteId = "spr0"
-  createSprite(spriteId);
+  // load sprites
+  let docs = null;
+  spritesDB.allDocs()
+    .then((res) => {
+      for (let doc of res.rows){
+        let spriteId = doc.id;
+        buildSprite(spriteId);
+      }
+    })
+    .catch((err) => {
+      console.log("load sprites: " + err);
+      // Create a new sprite
+      let spriteId = "spr" + spriteIndex;
+      buildSprite(spriteId);
+    });
 });
 
 //-----------------------------------

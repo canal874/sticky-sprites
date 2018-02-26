@@ -136,7 +136,9 @@ $(() => {
   });
   
   ipcRenderer.on("sprite-blured", (event) => {
-    endEditMode();
+    if($("#contents").css("display") == "none"){
+      endEditMode();
+    }
   });
 
 
@@ -198,6 +200,10 @@ $(() => {
 
   $(window).resize(() => {
     resizeWindow();
+  });
+
+  $("#newBtn").click(() => {
+    main.createSprite();
   });
 
   $("#contents").click(() => {
