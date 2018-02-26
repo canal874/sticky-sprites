@@ -49,7 +49,7 @@ let buildSprite = function (spriteId) {
 
       })
       .catch((err) => {
-        console.log("Load sprite error: " + spriteId + ", " + err);
+//        console.log("Load sprite error: " + spriteId + ", " + err);
         data = "";
         w = defaultSpriteWidth;
         h = defaultSpriteHeight;
@@ -102,35 +102,26 @@ app.on("window-all-closed", () => {
 //-----------------------------------
 // Serialization
 //-----------------------------------
-var PouchDB = require("pouchdb");
-var spritesDB = new PouchDB("sprites");
-var confDB = new PouchDB("conf");
-
-var spriteIndex = 0;
-
-// Load config
-confDB.get("sprite")
-    .then((doc) => {
-      spriteIndex = doc.index;
-      console.log("spriteIndex: " + spriteIndex);
-    })
-    .catch((err) => {
-       // create default config
-       confDB.put({ _id: "sprite", index: 0 })
-           .then((res) => {
-              console.log("Initial conf created: " + res);
-           })
-           .catch((err) => {
-              console.log("Initial conf creation error: " + err);
-           });
-    });
 
 // Save sprite
 exports.saveSprite = (spriteId, data) => {
   saveSprite(spriteId, data, false);
 };
-exports.saveToCloseSprite = (spriteId, data) => {  
-  saveSprite(spriteId, data, true);
+exports.saveToCloseSprite = (spriteId, data) => {
+  if(data == ""){
+    let spr = sprites[spriteId];
+    spritesDB.get(spriteId)
+      .then((doc) => {
+        spritesDB.remove(doc);
+        spr.webContents.send("sprite-close");
+      })
+      .catch((err) => {
+        spr.webContents.send("sprite-close");
+      });
+  }
+  else{
+    saveSprite(spriteId, data, true);
+  }
 };
 
 let saveSprite = (spriteId, data, closeAfterSave) => {
@@ -186,26 +177,68 @@ exports.createSprite = () => {
   spriteIndex++;
   let spriteId = "spr" + spriteIndex;
   buildSprite(spriteId);
+
+  confDB.get("sprite")
+    .then((doc) => {
+      doc.index = spriteIndex;
+      confDB.put(doc)
+           .catch((err) => {
+              console.log("conf update error: " + err);
+           });
+    })
+    .catch((err) => {
+      console.log("conf read error: " + err);
+    });
+
 };
 
+
+var PouchDB = require("pouchdb");
+var spritesDB = null;
+var confDB = null;
+var spriteIndex = 0;
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
+  confDB = new PouchDB("conf");
+  spritesDB = new PouchDB("sprites");
+
+  // Load config
+  confDB.get("sprite")
+    .then((doc) => {
+      spriteIndex = doc.index;
+      console.log("spriteIndex: " + spriteIndex);
+    })
+    .catch((err) => {
+       // create default config
+       confDB.put({ _id: "sprite", index: 0 })
+           .then((res) => {
+              console.log("Initial conf created: " + res);
+           })
+           .catch((err) => {
+              console.log("Initial conf creation error: " + err);
+           });
+    });
+
   // load sprites
   let docs = null;
   spritesDB.allDocs()
     .then((res) => {
-      for (let doc of res.rows){
-        let spriteId = doc.id;
+      if(res.rows.length == 0){
+        // Create a new sprite
+        let spriteId = "spr" + spriteIndex;
         buildSprite(spriteId);
+      }
+      else{
+        for (let doc of res.rows){
+          let spriteId = doc.id;
+          buildSprite(spriteId);
+        }
       }
     })
     .catch((err) => {
-      console.log("load sprites: " + err);
-      // Create a new sprite
-      let spriteId = "spr" + spriteIndex;
-      buildSprite(spriteId);
+      console.log("sprites load error: " + err);
     });
 });
 
