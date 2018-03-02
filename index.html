@@ -212,6 +212,7 @@ $(() => {
 
   ipcRenderer.on("sprite-focused", (event) => {
     $("#sprite").css({ border: "3px solid red" });
+    $("#titlearea").show();
   });
   
   ipcRenderer.on("sprite-blured", (event) => {
@@ -219,6 +220,9 @@ $(() => {
       endEditMode();
     }
     $("#sprite").css({ border: "3px solid transparent" });
+    if(currentBgOpacity == 0){
+      $("#titlearea").hide();
+    }
   });
 
   //--------------------------
