@@ -75,6 +75,26 @@ body .cke_screen_reader_only{
   display:none;
 }
 
+.title-bar{
+  top: 0px;
+  height: 16px;
+  position: absolute;
+  -webkit-app-region: drag;
+  padding: 0px;
+  margin: 0px;
+}
+
+.title-btn{
+  position: absolute;
+  top: 0px;
+  width: 14px;
+  height: 14px; 
+  text-align: center; 
+  font-size: 14px;
+  padding: 1px; 
+  cursor: pointer;
+}
+
 </style>
 <script type="text/javascript" src="ckeditor/ckeditor.js"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
@@ -223,12 +243,9 @@ $(() => {
 
   //--------------------------
   // UI
-  //--------------------------  
+  //--------------------------
   let resizeWindow = () => {
-    console.log("sprite resize: " + $(window).width() + "," + $(window).height());
-    let barwidth = $(window).width() -48;
-    $("#titlebar").width(barwidth);
-
+//    console.log("sprite resize: " + $(window).width() + "," + $(window).height());
     let padding = 2;
     $("#contents").width($(window).width() - padding*2);
     $("#contents").height($(window).height() - titlebarHeight - padding*2);
@@ -236,10 +253,16 @@ $(() => {
     if(isEditorReady){
       CKEDITOR.instances["editor"].resize($(window).width(), $(window).height() - titlebarHeight);
     }
+
+    let titleBarLeft =  $("#codeBtn").position().left + $("#codeBtn").outerWidth();
+    let titleBarRight = $("#closeBtn").position().left;
+    let barwidth = titleBarRight - titleBarLeft;
+    $("#titlebar").width(barwidth);
   };
 
   $(window).resize(() => {
-    resizeWindow();
+    // delay 100msec to avoid to fail to calculate size due to scrollbar 
+    setTimeout(resizeWindow, 100);
   });
 
   $("#newBtn").click(() => {
@@ -271,16 +294,16 @@ $(() => {
 <!-- 
 -webkig-app-region:drag を設定した子要素は、マウスイベントを取得できないので注意 
 -->
-<div id="titlebar" class="title-color" style="top:0px; left:39px; width:207px; height:16px; position:absolute; -webkit-app-region:drag; padding:0px; margin:0px;"></div>
+<div id="titlebar" class="title-color title-bar" style="left:39px; width:207px;"></div>
 
-<div id="newBtn" class="title-color" style="position:absolute; top:0px; left:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer"><i class="fas fa-plus"></i></div>
+<div id="newBtn" class="title-color title-btn" style="left:0px;"><i class="fas fa-plus"></i></div>
 
 <!-- ボタンの間を埋める -->
-<div class="title-color" style="top:0px; left:16px; width:7px; height:16px; position:absolute; -webkit-app-region:drag; padding:0px; margin:0px;"></div>
+<div class="title-color title-bar" style="left:16px; width:7px;"></div>
 
-<div id="codeBtn" class="title-color" style="position:absolute; top:0px; left:23px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer;"><i class="fas fa-code"></i></div>
+<div id="codeBtn" class="title-color title-btn" style="left:23px;"><i class="fas fa-code"></i></div>
 
-<div id="closeBtn" class="title-color" style="position:absolute; top:0px; right:0px; width:14px; height:14px; text-align:center; font-size:14px; padding:1px; cursor:pointer;"><i class="fas fa-minus-circle"></i></div>
+<div id="closeBtn" class="title-color title-btn" style="right:0px; "><i class="fas fa-minus-circle"></i></div>
 
 <div id="contents" class="sprite-color" style="padding: 2px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:256px; height:154px; position:absolute; margin:0px;border:0px; z-index:10">
 </div>
