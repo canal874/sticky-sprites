@@ -102,7 +102,6 @@ body .cke_screen_reader_only{
   -webkit-app-region: drag;
   padding: 0px;
   margin: 0px;
-  cursor: crosshair;
 }
 
 .title-btn{
@@ -133,40 +132,67 @@ $(() => {
   let main = require("electron").remote.require("./main");
   const ipcRenderer = require( "electron" ).ipcRenderer;
   
+  const {remote} = require('electron');
+  const {Menu, MenuItem} = remote;
+
+  //-----------------------------------
+  // ContextMenu
+  //-----------------------------------
+  var menu = new Menu();
+  menu.append(new MenuItem({ label: "yellow", click: () => { setSpriteColor("#ffffa0"); }}));
+  menu.append(new MenuItem({ label: "red", click: () => { setSpriteColor("#ffd0d0"); }}));
+  menu.append(new MenuItem({ label: "green", click: () => { setSpriteColor("#d0ffd0"); }}));
+  menu.append(new MenuItem({ label: "blue", click: () => { setSpriteColor("#d0d0ff"); }}));
+  menu.append(new MenuItem({ label: "purple", click: () => { setSpriteColor("#ffd0ff"); }}));
+  menu.append(new MenuItem({ label: "gray", click: () => { setSpriteColor("#d0d0d0"); }}));
+  
+  
+  window.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    menu.popup(remote.getCurrentWindow());
+  }, false);
+
+  
+  //-----------------------------------
+  // Global
+  //-----------------------------------
   let codeMode = false;
 
   let toolbarHeight = 64;
 
-  let spriteColor = "#f0f0a0";
-  let titleColor = "#d0d090";
-
-
-   let isEditorReady = false;
+  let currentSpriteColor = "#f0f0a0";
+  let currentTitleColor = "#d0d090";
+  
+  let isEditorReady = false;
+  
   //----------------------
   // ipc (inter-process communication)
   //----------------------
 
   // Initialize sprite
-  ipcRenderer.on("sprite-loaded", (event, id, data, x, y,  width, height) => {
+  ipcRenderer.on("sprite-loaded", (event, id, data, x, y,  width, height, color) => {
     sprite.id = id;
     Object.freeze(sprite);
     
     $("#editor").val(data);
     $("#contents").html(data);
 
-    CKEDITOR.config.width =  width - 2;
-    CKEDITOR.config.height =  height - toolbarHeight; 
+    setSpriteColor(color);
 
-    CKEDITOR.config.uiColor = titleColor;
+    var sprBorder = parseInt($("#sprite").css("border-left"));
+    var sprWidth = width - sprBorder*2;
+    var sprHeight = height - sprBorder*2;
+    CKEDITOR.config.width =  sprWidth;
+    CKEDITOR.config.height =  sprHeight - $("#titlebar").outerHeight() - toolbarHeight; 
+    resizeWindow();
+
+    CKEDITOR.config.uiColor = currentTitleColor;
     CKEDITOR.replace("editor"); 
     CKEDITOR.on("instanceReady", () => {
       isEditorReady = true;
-      $("#cke_1_contents .cke_wysiwyg_frame").css('background-color', spriteColor);
-      setTimeout(resizeWindow, 200);
+      $("#cke_1_contents .cke_wysiwyg_frame").css('background-color', currentSpriteColor);
     });
 
-    $(".title-color").css('background-color', titleColor);
-    $(".sprite-color").css('background-color', spriteColor);
   });
 
   ipcRenderer.on("sprite-close", (event) => {
@@ -184,7 +210,25 @@ $(() => {
     $("#sprite").css({ border: "3px solid transparent" });
   });
 
+  //--------------------------
+  // Set sprite properties
+  //--------------------------  
 
+  let setSpriteColor = (spriteColor) => {
+    currentSpriteColor = spriteColor;
+    let scale = 0.8;
+    spriteColor.match(/#(\w\w)(\w\w)(\w\w)/)
+    let r = Math.floor(parseInt(RegExp.$1, 16) * scale).toString(16);
+    if (r.length == 1){r= '0' + r;}
+    let g = Math.floor(parseInt(RegExp.$2, 16) * scale).toString(16);
+    if (g.length == 1){g= '0' + g;}
+    let b = Math.floor(parseInt(RegExp.$3, 16) * scale).toString(16);
+    if (b.length == 1){b= '0' + b;}
+    currentTitleColor = "#" + r + g + b;
+
+    $(".title-color").css('background-color', currentTitleColor);
+    $(".sprite-color").css('background-color', currentSpriteColor);
+  };
 
   //--------------------------
   // Save and close sprite
@@ -218,6 +262,7 @@ $(() => {
     s.selectRanges(selected_ranges);  // putting the current selection there
 
   };
+
   let startEditMode = () => {
     $("#contents").hide();
     CKEDITOR.instances["editor"].focus();
@@ -229,7 +274,7 @@ $(() => {
     $("#contents").html(data);
     $("#contents").show();
     setTimeout(() => {
-      main.saveSprite(sprite.id, data);
+      main.saveSprite(sprite.id, data, currentSpriteColor);
     },1);
   };
 
@@ -313,8 +358,9 @@ $(() => {
 
   $("#closeBtn").click(() => {
     let data = CKEDITOR.instances["editor"].getData();
-    main.saveToCloseSprite(sprite.id, data);
+    main.saveToCloseSprite(sprite.id, data, currentSpriteColor);
   });
+
 });
 
 </script>
@@ -332,7 +378,7 @@ $(() => {
     <div id="codeBtn" class="title-color title-btn" style="left:23px;"><i class="fas fa-code"></i></div>
     <div id="closeBtn" class="title-color title-btn" style="left:246px; "><i class="fas fa-minus-circle"></i></div>
   </div>
-  <div id="contents" class="sprite-color" style="padding: 2px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:256px; height:154px; position:absolute; margin:0px;border:0px; z-index:10"></div>
+  <div id="contents" class="sprite-color" style="padding: 2px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:10px; height:10px; position:absolute; margin:0px;border:0px; z-index:10"></div>
 
   <textarea id="editor" style="padding: 0px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:10px; height:10px; position:absolute; margin:0px;border:0px; visibility:hidden;"></textarea>
 </div>
