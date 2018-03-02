@@ -14,6 +14,7 @@ const defaultSpriteHeight = 176;
 const defaultSpriteX = 70;
 const defaultSpriteY = 70;
 let defaultSpriteColor = "#ffffa0";
+let defaultBgOpacity = 1.0;
 
 let buildSprite = function (spriteId) {
   let sprite = new BrowserWindow({
@@ -39,15 +40,16 @@ let buildSprite = function (spriteId) {
   //----------------------
   sprite.once("ready-to-show", () => {
     // ready-to-show is emitted after $(document).ready
-    let data,x,y,w,h,color;
+    let data,x,y,w,h,color,bgOpacity;
     spritesDB.get(spriteId)
       .then((doc) => {
-        data = doc != null ? (doc.data ? doc.data : "") : "";
-        w = doc != null ? (doc.width ? doc.width : defaultSpriteWidth) : defaultSpriteWidth;
-        h = doc != null ? (doc.height ? doc.height : defaultSpriteHeight) : defaultSpriteHeight;
-        x = doc != null ? (doc.x ? doc.x : defaultSpriteX) : defaultSpriteX;
-        y = doc != null ? (doc.y ? doc.y : defaultSpriteY) : defaultSpriteY;
-        color = doc != null ? (doc.color ? doc.color : defaultSpriteColor) : defaultSpriteColor;
+        data = doc != null ? (doc.data !== undefined ? doc.data : "") : "";
+        w = doc != null ? (doc.width !== undefined ? doc.width : defaultSpriteWidth) : defaultSpriteWidth;
+        h = doc != null ? (doc.height !== undefined ? doc.height : defaultSpriteHeight) : defaultSpriteHeight;
+        x = doc != null ? (doc.x !== undefined ? doc.x : defaultSpriteX) : defaultSpriteX;
+        y = doc != null ? (doc.y !== undefined ? doc.y : defaultSpriteY) : defaultSpriteY;
+        color = doc != null ? (doc.color !== undefined ? doc.color : defaultSpriteColor) : defaultSpriteColor;
+        bgOpacity = doc != null ? (doc.bgOpacity !== undefined ? doc.bgOpacity : defaultBgOpacity) : defaultBgOpacity;
       })
       .catch((err) => {
 //        console.log("Load sprite error: " + spriteId + ", " + err);
@@ -57,6 +59,7 @@ let buildSprite = function (spriteId) {
         x = defaultSpriteX;
         y = defaultSpriteY;
         color = defaultSpriteColor;
+        bgOpacity = defaultBgOpacity;
       })
       .then(() => {
         // save prev values
@@ -66,8 +69,8 @@ let buildSprite = function (spriteId) {
         sprite.prevW = w;
         sprite.prevH = h;
         sprite.prevColor = color;
-
-        sprite.webContents.send("sprite-loaded", spriteId, data, x, y, w, h, color);
+        sprite.prevBgOpacity = bgOpacity;
+        sprite.webContents.send("sprite-loaded", spriteId, data, x, y, w, h, color, bgOpacity);
         sprite.setSize(w, h);
         sprite.setPosition(x, y);
         sprite.show();
@@ -92,7 +95,7 @@ let buildSprite = function (spriteId) {
     sprite.webContents.send("sprite-blured");
   });
 
-//    sprite.openDevTools();
+    sprite.openDevTools();
 }
 
 app.on("window-all-closed", () => {
@@ -108,10 +111,10 @@ app.on("window-all-closed", () => {
 //-----------------------------------
 
 // Save sprite
-exports.saveSprite = (spriteId, data, color) => {
-  saveSprite(spriteId, data, color, false);
+exports.saveSprite = (spriteId, data, color, bgOpacity) => {
+  saveSprite(spriteId, data, color, bgOpacity, false);
 };
-exports.saveToCloseSprite = (spriteId, data, color) => {
+exports.saveToCloseSprite = (spriteId, data, color, bgOpacity) => {
   if(data == ""){
     let spr = sprites[spriteId];
     spritesDB.get(spriteId)
@@ -124,11 +127,11 @@ exports.saveToCloseSprite = (spriteId, data, color) => {
       });
   }
   else{
-    saveSprite(spriteId, data, color, true);
+    saveSprite(spriteId, data, color, bgOpacity, true);
   }
 };
 
-let saveSprite = (spriteId, data, color, closeAfterSave) => {
+let saveSprite = (spriteId, data, color, bgOpacity, closeAfterSave) => {
   let spr = sprites[spriteId];
   let pos = spr.getPosition();
   let size = spr.getSize();
@@ -143,6 +146,7 @@ let saveSprite = (spriteId, data, color, closeAfterSave) => {
     && h == spr.prevH
     && data == spr.prevData
     && color == spr.prevColor
+    && color == spr.prevBgOpacity
   ){
     if(closeAfterSave){
       spr.webContents.send("sprite-close");
@@ -156,7 +160,7 @@ let saveSprite = (spriteId, data, color, closeAfterSave) => {
     })
     .catch((err) => {
       // create new sprite
-      newDoc = { _id: spriteId, data: data, width: w, height: h, x: x, y: y, color: color };
+      newDoc = { _id: spriteId, data: data, width: w, height: h, x: x, y: y, color: color, bgOpacity: bgOpacity };
     })
     .then(() => {
       newDoc.data = spr.prevData = data;
@@ -165,7 +169,8 @@ let saveSprite = (spriteId, data, color, closeAfterSave) => {
       newDoc.width = spr.prevW = w;
       newDoc.height = spr.prevH = h;
       newDoc.color = spr.prevColor = color;
-      console.log("Saving sprite...: " + newDoc._id + ",x:" + x + ",y:" + y + ",w:" + w + ",h:" + h + "color:" + color + ",data:" + data);
+      newDoc.bgOpacity = spr.prevBgOpacity = bgOpacity;
+      console.log("Saving sprite...: " + newDoc._id + ",x:" + x + ",y:" + y + ",w:" + w + ",h:" + h + "color:" + color + ",bgOpacity:" + bgOpacity + ",data:" + data);
       spritesDB.put(newDoc)
         .then((res) => {
           if(closeAfterSave){

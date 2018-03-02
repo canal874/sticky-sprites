@@ -67,6 +67,7 @@
 
 #cke_editor{
   margin-top: 16px;
+  display: none;
 }
 #cke_1_bottom{
   display:none;
@@ -85,6 +86,7 @@ body .cke_screen_reader_only{
   margin: 0px;
   border: 3px solid transparent;
   box-sizing: border-box;
+  visibility: hidden;
 }
 
 #titlearea{
@@ -145,6 +147,7 @@ $(() => {
   menu.append(new MenuItem({ label: "blue", click: () => { setSpriteColor("#d0d0ff"); }}));
   menu.append(new MenuItem({ label: "purple", click: () => { setSpriteColor("#ffd0ff"); }}));
   menu.append(new MenuItem({ label: "gray", click: () => { setSpriteColor("#d0d0d0"); }}));
+  menu.append(new MenuItem({ label: "transparent", click: () => { setSpriteColor("#f0f0f0", 0.0); }}));
   
   
   window.addEventListener('contextmenu', (e) => {
@@ -162,6 +165,7 @@ $(() => {
 
   let currentSpriteColor = "#f0f0a0";
   let currentTitleColor = "#d0d090";
+  let currentBgOpacity = 1.0;
   
   let isEditorReady = false;
   
@@ -170,14 +174,14 @@ $(() => {
   //----------------------
 
   // Initialize sprite
-  ipcRenderer.on("sprite-loaded", (event, id, data, x, y,  width, height, color) => {
+  ipcRenderer.on("sprite-loaded", (event, id, data, x, y,  width, height, color, bgOpacity) => {
     sprite.id = id;
     Object.freeze(sprite);
     
     $("#editor").val(data);
     $("#contents").html(data);
 
-    setSpriteColor(color);
+    setSpriteColor(color, bgOpacity);
 
     var sprBorder = parseInt($("#sprite").css("border-left"));
     var sprWidth = width - sprBorder*2;
@@ -186,13 +190,20 @@ $(() => {
     CKEDITOR.config.height =  sprHeight - $("#titlebar").outerHeight() - toolbarHeight; 
     resizeWindow();
 
-    CKEDITOR.config.uiColor = currentTitleColor;
+//    CKEDITOR.config.uiColor = currentTitleColor;
     CKEDITOR.replace("editor"); 
     CKEDITOR.on("instanceReady", () => {
       isEditorReady = true;
+      $("#cke_editor").css('border-top-color', currentTitleColor);      
+      $("#cke_1_top").css('background-color', currentTitleColor);
+      $("#cke_1_top").css('border-bottom-color', currentTitleColor);
+      $("#cke_1_top").css('border-top-color', currentTitleColor);
       $("#cke_1_contents .cke_wysiwyg_frame").css('background-color', currentSpriteColor);
     });
 
+    setTimeout(()=>{
+      $("#sprite").css("visibility", "visible");
+    },300);
   });
 
   ipcRenderer.on("sprite-close", (event) => {
@@ -213,21 +224,35 @@ $(() => {
   //--------------------------
   // Set sprite properties
   //--------------------------  
-
-  let setSpriteColor = (spriteColor) => {
+  // spriteColor : #HEX (e.g. #ff00ff)
+  // spriteColor : 0.0-1.0
+  let setSpriteColor = (spriteColor, bgOpacity) => {
     currentSpriteColor = spriteColor;
+    currentBgOpacity = bgOpacity === undefined ? 1.0 : bgOpacity;
     let scale = 0.8;
     spriteColor.match(/#(\w\w)(\w\w)(\w\w)/)
-    let r = Math.floor(parseInt(RegExp.$1, 16) * scale).toString(16);
-    if (r.length == 1){r= '0' + r;}
-    let g = Math.floor(parseInt(RegExp.$2, 16) * scale).toString(16);
-    if (g.length == 1){g= '0' + g;}
-    let b = Math.floor(parseInt(RegExp.$3, 16) * scale).toString(16);
-    if (b.length == 1){b= '0' + b;}
+    let red = parseInt(RegExp.$1, 16);
+    let green = parseInt(RegExp.$2, 16);
+    let blue = parseInt(RegExp.$3, 16);
+    $(".sprite-color").css("background-color", "rgba("+ red + "," + green + "," + blue + "," + currentBgOpacity + ")");
+
+    let r = Math.floor(red * scale).toString(16);
+    if (r.length == 1){r= "0" + r;}
+    let g = Math.floor(green * scale).toString(16);
+    if (g.length == 1){g= "0" + g;}
+    let b = Math.floor(blue * scale).toString(16);
+    if (b.length == 1){b= "0" + b;}
     currentTitleColor = "#" + r + g + b;
 
-    $(".title-color").css('background-color', currentTitleColor);
-    $(".sprite-color").css('background-color', currentSpriteColor);
+    $(".title-color").css("background-color", currentTitleColor);
+
+　　if(isEditorReady){
+      $("#cke_editor").css('border-top-color', currentTitleColor);      
+      $("#cke_1_top").css('background-color', currentTitleColor);
+      $("#cke_1_top").css('border-bottom-color', currentTitleColor);
+      $("#cke_1_top").css('border-top-color', currentTitleColor);
+      $("#cke_1_contents .cke_wysiwyg_frame").css('background-color', currentSpriteColor);
+    }
   };
 
   //--------------------------
@@ -265,8 +290,15 @@ $(() => {
 
   let startEditMode = () => {
     $("#contents").hide();
-    CKEDITOR.instances["editor"].focus();
-    moveCursorToBottom();
+    $("#cke_editor").show();
+
+    execAfterWysiwygChanged(
+      function(){
+        resizeWindow();
+        CKEDITOR.instances["editor"].focus();
+        moveCursorToBottom();
+      }
+    );
   };
 
   let endEditMode = () => {
@@ -274,8 +306,13 @@ $(() => {
     $("#contents").html(data);
     $("#contents").show();
     setTimeout(() => {
-      main.saveSprite(sprite.id, data, currentSpriteColor);
+      main.saveSprite(sprite.id, data, currentSpriteColor, currentBgOpacity);
     },1);
+    $("#cke_editor").hide();
+
+    codeMode = false;
+    $("#codeBtn").css({ "color":"#000000" });
+    CKEDITOR.instances["editor"].setMode("wysiwyg");
   };
 
   let startCodeMode = () => {
@@ -304,7 +341,7 @@ $(() => {
     execAfterWysiwygChanged(
       function(){
         CKEDITOR.instances["editor"].focus();
-       moveCursorToBottom();
+        moveCursorToBottom();
       }
     );
   };
@@ -335,8 +372,7 @@ $(() => {
   };
 
   $(window).resize(() => {
-    // delay 100msec to avoid to fail to calculate size due to scrollbar 
-    setTimeout(resizeWindow, 200);
+    resizeWindow();
   });
 
   $("#newBtn").click(() => {
@@ -358,14 +394,14 @@ $(() => {
 
   $("#closeBtn").click(() => {
     let data = CKEDITOR.instances["editor"].getData();
-    main.saveToCloseSprite(sprite.id, data, currentSpriteColor);
+    main.saveToCloseSprite(sprite.id, data, currentSpriteColor, currentBgOpacity);
   });
 
 });
 
 </script>
 </head>
-<body style="margin:0px; padding:0px;">
+<body style="margin:0px; padding:0px; overflow-x:hidden; overflow-y:hidden;">
 <!-- 
 -webkig-app-region:drag を設定した子要素は、マウスイベントを取得できないので注意 
 -->
