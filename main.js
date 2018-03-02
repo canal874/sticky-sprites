@@ -88,7 +88,7 @@ let buildSprite = function (spriteId) {
     sprite.webContents.send("sprite-blured");
   });
 
-  //  sprite.openDevTools();
+//    sprite.openDevTools();
 }
 
 app.on("window-all-closed", () => {

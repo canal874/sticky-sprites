@@ -7,7 +7,8 @@ CKEDITOR.editorConfig = function( config ) {
 
 	CKEDITOR.config.enterMode = 2;
 	CKEDITOR.config.shiftEnterMode = 1;
-
+	CKEDITOR.config.allowedContent = true;
+	
 	config.toolbarGroups = [
 		{ name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
 		{ name: 'clipboard', groups: [ 'clipboard', 'undo' ] },
@@ -21,7 +22,9 @@ CKEDITOR.editorConfig = function( config ) {
 		{ name: 'others', groups: [ 'others' ] },
 		{ name: 'about', groups: [ 'about' ] }
 	];
-/* removeButtons‚ÅÁ‚·‚ÆA‹@”\‚Ü‚ÅÁ‚¦‚Ä‚µ‚Ü‚¤B—á‚¦‚ÎAIframe‚ğÁ‚·‚ÆAƒ\[ƒXƒ‚[ƒh‚Åiframe‚ğ‹L“ü‚µ‚Ä‚àAwysiwigƒ‚[ƒh‚Å•\¦‚³‚ê‚¸A‚È‚­‚È‚éB
+/* removeButtonsã§æ¶ˆã™ã¨ã€æ©Ÿèƒ½ã¾ã§æ¶ˆãˆã¦ã—ã¾ã†ã€‚ä¾‹ãˆã°ã€Iframeã‚’æ¶ˆã™ã¨ã€ã‚½ãƒ¼ã‚¹ãƒ¢ãƒ¼ãƒ‰ã§iframeã‚’è¨˜å…¥ã—ã¦ã‚‚ã€wysiwigãƒ¢ãƒ¼ãƒ‰ã§è¡¨ç¤ºã•ã‚Œãšã€ãªããªã‚‹ã€‚
+ã€€ã€€ã“ã®å•é¡Œã¯ã€config.allowedContent = true; è¨­å®šã§è§£æ¶ˆã•ã‚Œã¦ã‚‹ã‹ã‚‚ã—ã‚Œãªã„ã®ã§è©¦ã™ã“ã¨ã€‚
+
 	config.removeButtons = 'Save,Templates,NewPage,Preview,Print,Cut,Copy,Paste,PasteText,PasteFromWord,Redo,Undo,Find,Replace,SelectAll,Scayt,Form,Checkbox,Radio,Textarea,TextField,Select,Button,HiddenField,CopyFormatting,RemoveFormat,Subscript,Superscript,NumberedList,Outdent,Indent,BulletedList,CreateDiv,Blockquote,JustifyLeft,JustifyRight,JustifyCenter,BidiLtr,BidiRtl,Language,JustifyBlock,Link,Unlink,Anchor,HorizontalRule,Smiley,SpecialChar,PageBreak,Styles,Format,Font,Maximize,About,Source,ShowBlocks';
 */
 	config.removeButtons = 'Save,Templates,NewPage,Preview,Print,Cut,Copy,Paste,PasteText,PasteFromWord,Redo,Undo,Find,Replace,SelectAll,Scayt,CopyFormatting,RemoveFormat,Maximize,About,Source,ShowBlocks';

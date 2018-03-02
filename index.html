@@ -154,8 +154,31 @@ $(() => {
   //--------------------------
   // Edit
   //--------------------------  
+  let moveCursorToBottom = () => {
+    let editor = CKEDITOR.instances["editor"];
+    let s = editor.getSelection(); // getting selection
+    let selected_ranges = s.getRanges(); // getting ranges
+    let node = selected_ranges[0].startContainer; // selecting the starting node
+    let parents = node.getParents(true);
+    node = parents[parents.length - 2].getFirst();
+    while (true) {
+      let x = node.getNext();
+      if (x == null) {
+        break;
+      }
+      node = x;
+    }
+
+    s.selectElement(node);
+    selected_ranges = s.getRanges();
+    selected_ranges[0].collapse(false);  //  false collapses the range to the end of the selected node, true before the node.
+    s.selectRanges(selected_ranges);  // putting the current selection there
+
+  };
   let startEditMode = () => {
     $("#contents").hide();
+    CKEDITOR.instances["editor"].focus();
+    moveCursorToBottom();
   };
 
   let endEditMode = () => {
@@ -172,13 +195,30 @@ $(() => {
     startEditMode();
     $("#codeBtn").css({ "color":"#a0a0a0" });
     CKEDITOR.instances["editor"].setMode("source");
-
+    CKEDITOR.instances["editor"].focus();
   };
 
+  let execAfterWysiwygChanged = (func) => {
+    let editor = CKEDITOR.instances["editor"];
+    let s = editor.getSelection(); // getting selection
+    if(s){
+      func();
+    }
+    else{
+      setTimeout(() => {execAfterWysiwygChanged(func)}, 100);
+    }
+  };
+  
   let endCodeMode = () => {
     codeMode = false;
     $("#codeBtn").css({ "color":"#000000" });
     CKEDITOR.instances["editor"].setMode("wysiwyg");
+    execAfterWysiwygChanged(
+      function(){
+        CKEDITOR.instances["editor"].focus();
+       moveCursorToBottom();
+      }
+    );
   };
 
   //--------------------------
