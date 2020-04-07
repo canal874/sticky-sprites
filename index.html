@@ -149,7 +149,35 @@ $(() => {
   menu.append(new MenuItem({ label: "gray", click: () => { setSpriteColor("#d0d0d0"); }}));
   menu.append(new MenuItem({ label: "transparent", click: () => { setSpriteColor("#f0f0f0", 0.0); }}));
   
-  
+  document.ondragover = (e) => {
+    e.preventDefault();
+    return false;
+  };
+
+  document.ondrop = (e) => {
+    e.preventDefault();
+
+    var file = e.dataTransfer.files[0];
+
+    var dropImg = new Image();
+    dropImg.onload = () => {
+      var width = dropImg.naturalWidth;
+      var height = dropImg.naturalHeight;
+
+      // Adjust img to sprite size
+      // ...
+      // ...
+
+      var data = "<img src='" + file.path + "' width='" + width + "' height='" + height + "'>";
+      CKEDITOR.instances["editor"].setData(data);
+      $("#contents").html(data);
+    };
+    dropImg.src = file.path;
+
+    return false;
+  };
+
+
   window.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     menu.popup(remote.getCurrentWindow());

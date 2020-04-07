@@ -6,9 +6,11 @@
   "author": "canalsphere",
   "license": "MIT",
   "dependencies": {
-    "pouchdb": "^6.4.3"
+    "electron-log": "^4.1.1",
+    "pouchdb": "^7.1.1"
   },
   "devDependencies": {
-    "electron-rebuild": "^1.7.3"
+    "electron": "^8.2.0",
+    "electron-rebuild": "^1.10.1"
   }
 }

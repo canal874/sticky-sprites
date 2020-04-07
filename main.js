@@ -4,6 +4,16 @@ const {app, BrowserWindow} = require("electron");
 const url = require("url");
 const path = require("path");
 
+
+var mylog = require('electron-log');
+
+process.on('uncaughtException', function(err) {
+  mylog.error('electron:event:uncaughtException');
+  mylog.error(err);
+  mylog.error(err.stack);
+  app.quit();
+});
+
 // Keep a global reference of the window object, if you don"t, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 const sprites = {};
@@ -18,6 +28,9 @@ let defaultBgOpacity = 1.0;
 
 let buildSprite = function (spriteId) {
   let sprite = new BrowserWindow({
+	webPreferences: {
+      nodeIntegration: true
+    },
     width: defaultSpriteWidth,
     height: defaultSpriteHeight,
     x: defaultSpriteX + Math.round( Math.random()*50),
@@ -52,7 +65,7 @@ let buildSprite = function (spriteId) {
         bgOpacity = doc != null ? (doc.bgOpacity !== undefined ? doc.bgOpacity : defaultBgOpacity) : defaultBgOpacity;
       })
       .catch((err) => {
-//        console.log("Load sprite error: " + spriteId + ", " + err);
+        console.log("Load sprite error: " + spriteId + ", " + err);
         data = "";
         w = defaultSpriteWidth;
         h = defaultSpriteHeight;
@@ -95,7 +108,7 @@ let buildSprite = function (spriteId) {
     sprite.webContents.send("sprite-blured");
   });
 
-    sprite.openDevTools();
+//    sprite.openDevTools();
 }
 
 app.on("window-all-closed", () => {
