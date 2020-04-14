@@ -141,13 +141,13 @@ $(() => {
   // ContextMenu
   //-----------------------------------
   var menu = new Menu();
-  menu.append(new MenuItem({ label: "yellow", click: () => { setSpriteColor("#ffffa0"); }}));
-  menu.append(new MenuItem({ label: "red", click: () => { setSpriteColor("#ffd0d0"); }}));
-  menu.append(new MenuItem({ label: "green", click: () => { setSpriteColor("#d0ffd0"); }}));
-  menu.append(new MenuItem({ label: "blue", click: () => { setSpriteColor("#d0d0ff"); }}));
-  menu.append(new MenuItem({ label: "purple", click: () => { setSpriteColor("#ffd0ff"); }}));
-  menu.append(new MenuItem({ label: "gray", click: () => { setSpriteColor("#d0d0d0"); }}));
-  menu.append(new MenuItem({ label: "transparent", click: () => { setSpriteColor("#f0f0f0", 0.0); }}));
+  menu.append(new MenuItem({ label: main.i18n("yellow"), click: () => { setSpriteColor("#ffffa0"); }}));
+  menu.append(new MenuItem({ label: main.i18n("red"), click: () => { setSpriteColor("#ffd0d0"); }}));
+  menu.append(new MenuItem({ label: main.i18n("green"), click: () => { setSpriteColor("#d0ffd0"); }}));
+  menu.append(new MenuItem({ label: main.i18n("blue"), click: () => { setSpriteColor("#d0d0ff"); }}));
+  menu.append(new MenuItem({ label: main.i18n("purple"), click: () => { setSpriteColor("#ffd0ff"); }}));
+  menu.append(new MenuItem({ label: main.i18n("gray"), click: () => { setSpriteColor("#d0d0d0"); }}));
+  menu.append(new MenuItem({ label: main.i18n("transparent"), click: () => { setSpriteColor("#f0f0f0", 0.0); }}));
   
   document.ondragover = (e) => {
     e.preventDefault();
@@ -412,21 +412,26 @@ $(() => {
   });
 
   $("#contents").click(() => {
-      startEditMode();
+    startEditMode();
   });
 
   $("#codeBtn").click(() => {
-      if(!codeMode){
-        startCodeMode();
-      }
-      else{
-        endCodeMode();
-      }
+    if(!codeMode){
+      startCodeMode();
+    }
+    else{
+      endCodeMode();
+    }
   });
 
   $("#closeBtn").click(() => {
     let data = CKEDITOR.instances["editor"].getData();
-    main.saveToCloseSprite(sprite.id, data, currentSpriteColor, currentBgOpacity);
+    if(data == ""){
+      main.saveToCloseSprite(sprite.id, data, currentSpriteColor, currentBgOpacity);
+    }
+    else if(window.confirm(main.i18n("confirm-closing"))){
+      main.saveToCloseSprite(sprite.id, data, currentSpriteColor, currentBgOpacity);
+    }
   });
 
 });

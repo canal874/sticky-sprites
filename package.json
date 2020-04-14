@@ -1,12 +1,13 @@
 {
-  "name": "sticky-sprites",
-  "version": "1.0.0",
+  "name": "media-sticky",
+  "version": "1.0.1",
   "description": "Small sticky browser windows",
   "main": "main.js",
-  "author": "canalsphere",
+  "author": "canal874",
   "license": "MIT",
   "dependencies": {
     "electron-log": "^4.1.1",
+    "i18n": "^0.8.6",
     "pouchdb": "^7.1.1"
   },
   "devDependencies": {

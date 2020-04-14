@@ -1,11 +1,22 @@
 ﻿"use strict";
 
 const {app, BrowserWindow} = require("electron");
+const i18n = require("i18n");
 const url = require("url");
 const path = require("path");
 
 
 var mylog = require('electron-log');
+
+i18n.configure({
+  // Locales under the directory are automatically detected.
+  // Other locales default to en silently.
+  directory: __dirname + '/locales'
+});
+exports.i18n = (msg) => {
+  return i18n.__(msg);
+}
+
 
 process.on('uncaughtException', function(err) {
   mylog.error('electron:event:uncaughtException');
@@ -225,6 +236,10 @@ var spriteIndex = 0;
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
+  // locale can be got after "ready"
+  console.log("locale: " + app.getLocale());
+  i18n.setLocale(app.getLocale());
+
   confDB = new PouchDB("conf");
   spritesDB = new PouchDB("sprites");
 
