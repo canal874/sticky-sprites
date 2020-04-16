@@ -1,38 +1,86 @@
-/**
- * @license Copyright (c) 2003-2017, CKSource - Frederico Knabben. All rights reserved.
- * For licensing, see LICENSE.md or http://ckeditor.com/license
+﻿/**
+ * Copyright (c) 2003-2020, CKSource - Frederico Knabben. All rights reserved.
+ * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 CKEDITOR.editorConfig = function( config ) {
+	config.enterMode = 2;
+	config.shiftEnterMode = 1;
+	config.allowedContent = true;
 
-	CKEDITOR.config.enterMode = 2;
-	CKEDITOR.config.shiftEnterMode = 1;
-	CKEDITOR.config.allowedContent = true;
-	
-	config.toolbarGroups = [
-		{ name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
-		{ name: 'clipboard', groups: [ 'clipboard', 'undo' ] },
-		{ name: 'editing', groups: [ 'find', 'selection', 'spellchecker', 'editing' ] },
-		{ name: 'forms', groups: [ 'forms' ] },
-		{ name: 'basicstyles', groups: [ 'basicstyles', 'cleanup', 'colors', 'styles' ] },
-		{ name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi', 'paragraph' ] },
-		{ name: 'links', groups: [ 'links' ] },
-		{ name: 'insert', groups: [ 'insert' ] },
-		{ name: 'tools', groups: [ 'tools' ] },
-		{ name: 'others', groups: [ 'others' ] },
-		{ name: 'about', groups: [ 'about' ] }
+	config.contentsCss = './css/ckeditor-media-stickies-contents.css';
+
+	config.toolbar = [
+		{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'FontSize', 'TextColor', 'BGColor', 'Image', 'Link', 'EmojiPanel' ] }
 	];
-/* removeButtonsで消すと、機能まで消えてしまう。例えば、Iframeを消すと、ソースモードでiframeを記入しても、wysiwigモードで表示されず、なくなる。
-　　この問題は、config.allowedContent = true; 設定で解消されてるかもしれないので試すこと。
 
-	config.removeButtons = 'Save,Templates,NewPage,Preview,Print,Cut,Copy,Paste,PasteText,PasteFromWord,Redo,Undo,Find,Replace,SelectAll,Scayt,Form,Checkbox,Radio,Textarea,TextField,Select,Button,HiddenField,CopyFormatting,RemoveFormat,Subscript,Superscript,NumberedList,Outdent,Indent,BulletedList,CreateDiv,Blockquote,JustifyLeft,JustifyRight,JustifyCenter,BidiLtr,BidiRtl,Language,JustifyBlock,Link,Unlink,Anchor,HorizontalRule,Smiley,SpecialChar,PageBreak,Styles,Format,Font,Maximize,About,Source,ShowBlocks';
-*/
-	config.removeButtons = 'Save,Templates,NewPage,Preview,Print,Cut,Copy,Paste,PasteText,PasteFromWord,Redo,Undo,Find,Replace,SelectAll,Scayt,CopyFormatting,RemoveFormat,Maximize,About,Source,ShowBlocks';
+	config.plugins =
+//		'about,' +
+//		'a11yhelp,' +
+		'autolink,' +
+		'basicstyles,' +
+		'bidi,' +
+		'blockquote,' +
+		'clipboard,' +
+		'colorbutton,' +
+		'colordialog,' +
+		'copyformatting,' +
+//		'contextmenu,' +
+		'dialogadvtab,' +
+		'div,' +
+//		'elementspath,' +
+		'enterkey,' +
+		'entities,' +
+		'emoji,' +
+//		'filebrowser,' +
+		'find,' +
+//		'flash,' +
+		'floatingspace,' +
+		'font,' +
+//		'format,' +
+		'forms,' +
+		'horizontalrule,' +
+		'htmlwriter,' +
+		'image,' +
+		'iframe,' +
+		'indentlist,' +
+		'indentblock,' +
+		'justify,' +
+		'language,' +
+		'link,' +
+		'list,' +
+		'liststyle,' +
+		'magicline,' +
+//		'maximize,' +
+//		'newpage,' +
+//		'pagebreak,' +
+		'pastefromgdocs,' +
+		'pastefromlibreoffice,' +
+		'pastefromword,' +
+		'pastetext,' +
+//		'preview,' +
+//		'print,' +
+//		'removeformat,' +
+//		'resize,' +
+//		'save,' +
+//		'selectall,' +
+//		'showblocks,' +
+		'showborders,' +
+//		'smiley,' +
+		'sourcearea,' +
+		'specialchar,' +
+//		'stylescombo,' +
+		'tab,' +
+		'table,' +
+		'tableselection,' +
+		'tabletools,' +
+//		'templates,' +
+		'toolbar,' +
+		'undo,' +
+//		'uploadimage,' +
+		'wysiwygarea';
 
-/*
-Form,Checkbox,Radio,Textarea,TextField,Select,Button,HiddenField,
-Subscript,Superscript,
-NumberedList,Outdent,Indent,BulletedList,CreateDiv,Blockquote,JustifyLeft,JustifyRight,JustifyCenter,BidiLtr,BidiRtl,Language,JustifyBlock,Link,Unlink,Anchor,HorizontalRule,Smiley,SpecialChar,PageBreak,Styles,Format,Font,
-*/
-
+	config.toolbarLocation = 'bottom';
+	config.fontSize_defaultLabel = '16';
 };
+
