@@ -27,25 +27,25 @@ process.on('uncaughtException', function(err) {
 
 // Keep a global reference of the window object, if you don"t, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-const sprites = {};
+const cards = {};
 
-// A small sticky windows is called "sprite".
-const defaultSpriteWidth = 260;
-const defaultSpriteHeight = 176;
-const defaultSpriteX = 70;
-const defaultSpriteY = 70;
-let defaultSpriteColor = "#ffffa0";
+// A small sticky windows is called "card".
+const defaultCardWidth = 260;
+const defaultCardHeight = 176;
+const defaultCardX = 70;
+const defaultCardY = 70;
+let defaultCardColor = "#ffffa0";
 let defaultBgOpacity = 1.0;
 
-let buildSprite = function (spriteId) {
-  let sprite = new BrowserWindow({
-	webPreferences: {
+let buildCard = function (cardId) {
+  let card = new BrowserWindow({
+	  webPreferences: {
       nodeIntegration: true
     },
-    width: defaultSpriteWidth,
-    height: defaultSpriteHeight,
-    x: defaultSpriteX + Math.round( Math.random()*50),
-    y: defaultSpriteY + Math.round( Math.random()*50),
+    width: defaultCardWidth,
+    height: defaultCardHeight,
+    x: defaultCardX + Math.round( Math.random()*50),
+    y: defaultCardY + Math.round( Math.random()*50),
     transparent: true,
     frame: false,
     show: false,
@@ -53,73 +53,73 @@ let buildSprite = function (spriteId) {
     "title-bar-style": "hidden-inset"
   });
 
-  sprite.loadURL(url.format({
+  card.loadURL(url.format({
     pathname: path.join(__dirname, "index.html"),
     protocol: "file:",
     slashes: true
   }))
 
   //----------------------
-  // Initialize a sprite
+  // Initialize a card
   //----------------------
-  sprite.once("ready-to-show", () => {
+  card.once("ready-to-show", () => {
     // ready-to-show is emitted after $(document).ready
     let data,x,y,w,h,color,bgOpacity;
-    spritesDB.get(spriteId)
+    cardsDB.get(cardId)
       .then((doc) => {
         data = doc != null ? (doc.data !== undefined ? doc.data : "") : "";
-        w = doc != null ? (doc.width !== undefined ? doc.width : defaultSpriteWidth) : defaultSpriteWidth;
-        h = doc != null ? (doc.height !== undefined ? doc.height : defaultSpriteHeight) : defaultSpriteHeight;
-        x = doc != null ? (doc.x !== undefined ? doc.x : defaultSpriteX) : defaultSpriteX;
-        y = doc != null ? (doc.y !== undefined ? doc.y : defaultSpriteY) : defaultSpriteY;
-        color = doc != null ? (doc.color !== undefined ? doc.color : defaultSpriteColor) : defaultSpriteColor;
+        w = doc != null ? (doc.width !== undefined ? doc.width : defaultCardWidth) : defaultCardWidth;
+        h = doc != null ? (doc.height !== undefined ? doc.height : defaultCardHeight) : defaultCardHeight;
+        x = doc != null ? (doc.x !== undefined ? doc.x : defaultCardX) : defaultCardX;
+        y = doc != null ? (doc.y !== undefined ? doc.y : defaultCardY) : defaultCardY;
+        color = doc != null ? (doc.color !== undefined ? doc.color : defaultCardColor) : defaultCardColor;
         bgOpacity = doc != null ? (doc.bgOpacity !== undefined ? doc.bgOpacity : defaultBgOpacity) : defaultBgOpacity;
       })
       .catch((err) => {
-        console.log("Load sprite error: " + spriteId + ", " + err);
+        console.log("Load card error: " + cardId + ", " + err);
         data = "";
-        w = defaultSpriteWidth;
-        h = defaultSpriteHeight;
-        x = defaultSpriteX;
-        y = defaultSpriteY;
-        color = defaultSpriteColor;
+        w = defaultCardWidth;
+        h = defaultCardHeight;
+        x = defaultCardX;
+        y = defaultCardY;
+        color = defaultCardColor;
         bgOpacity = defaultBgOpacity;
       })
       .then(() => {
         // save prev values
-        sprite.prevData = data;
-        sprite.prevX = x;
-        sprite.prevY = y;
-        sprite.prevW = w;
-        sprite.prevH = h;
-        sprite.prevColor = color;
-        sprite.prevBgOpacity = bgOpacity;
-        sprite.webContents.send("sprite-loaded", spriteId, data, x, y, w, h, color, bgOpacity);
-        sprite.setSize(w, h);
-        sprite.setPosition(x, y);
-        sprite.show();
-        sprite.blur();        
+        card.prevData = data;
+        card.prevX = x;
+        card.prevY = y;
+        card.prevW = w;
+        card.prevH = h;
+        card.prevColor = color;
+        card.prevBgOpacity = bgOpacity;
+        card.webContents.send("card-loaded", cardId, data, x, y, w, h, color, bgOpacity);
+        card.setSize(w, h);
+        card.setPosition(x, y);
+        card.show();
+        card.blur();        
       });
 
   });
   
-  sprites[spriteId] = sprite;
-  sprite.on("closed", () => {
+  cards[cardId] = card;
+  card.on("closed", () => {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
-    sprites[spriteId] = null;
-    delete sprites[spriteId];
+    cards[cardId] = null;
+    delete cards[cardId];
   });
 
-  sprite.on("focus", () => {
-    sprite.webContents.send("sprite-focused");
+  card.on("focus", () => {
+    card.webContents.send("card-focused");
   });
-  sprite.on("blur", () => {
-    sprite.webContents.send("sprite-blured");
+  card.on("blur", () => {
+    card.webContents.send("card-blured");
   });
 
-//    sprite.openDevTools();
+//    card.openDevTools();
 }
 
 app.on("window-all-closed", () => {
@@ -134,29 +134,29 @@ app.on("window-all-closed", () => {
 // Serialization
 //-----------------------------------
 
-// Save sprite
-exports.saveSprite = (spriteId, data, color, bgOpacity) => {
-  saveSprite(spriteId, data, color, bgOpacity, false);
+// Save card
+exports.saveCard = (cardId, data, color, bgOpacity) => {
+  saveCard(cardId, data, color, bgOpacity, false);
 };
-exports.saveToCloseSprite = (spriteId, data, color, bgOpacity) => {
+exports.saveToCloseCard = (cardId, data, color, bgOpacity) => {
   if(data == ""){
-    let spr = sprites[spriteId];
-    spritesDB.get(spriteId)
+    let spr = cards[cardId];
+    cardsDB.get(cardId)
       .then((doc) => {
-        spritesDB.remove(doc);
-        spr.webContents.send("sprite-close");
+        cardsDB.remove(doc);
+        spr.webContents.send("card-close");
       })
       .catch((err) => {
-        spr.webContents.send("sprite-close");
+        spr.webContents.send("card-close");
       });
   }
   else{
-    saveSprite(spriteId, data, color, bgOpacity, true);
+    saveCard(cardId, data, color, bgOpacity, true);
   }
 };
 
-let saveSprite = (spriteId, data, color, bgOpacity, closeAfterSave) => {
-  let spr = sprites[spriteId];
+let saveCard = (cardId, data, color, bgOpacity, closeAfterSave) => {
+  let spr = cards[cardId];
   let pos = spr.getPosition();
   let size = spr.getSize();
   let x = pos[0];
@@ -173,18 +173,18 @@ let saveSprite = (spriteId, data, color, bgOpacity, closeAfterSave) => {
     && color == spr.prevBgOpacity
   ){
     if(closeAfterSave){
-      spr.webContents.send("sprite-close");
+      spr.webContents.send("card-close");
     }
     return;
   }
   let newDoc;
-  spritesDB.get(spriteId)
+  cardsDB.get(cardId)
     .then((doc) => {
       newDoc = doc;
     })
     .catch((err) => {
-      // create new sprite
-      newDoc = { _id: spriteId, data: data, width: w, height: h, x: x, y: y, color: color, bgOpacity: bgOpacity };
+      // create new card
+      newDoc = { _id: cardId, data: data, width: w, height: h, x: x, y: y, color: color, bgOpacity: bgOpacity };
     })
     .then(() => {
       newDoc.data = spr.prevData = data;
@@ -194,28 +194,28 @@ let saveSprite = (spriteId, data, color, bgOpacity, closeAfterSave) => {
       newDoc.height = spr.prevH = h;
       newDoc.color = spr.prevColor = color;
       newDoc.bgOpacity = spr.prevBgOpacity = bgOpacity;
-      console.log("Saving sprite...: " + newDoc._id + ",x:" + x + ",y:" + y + ",w:" + w + ",h:" + h + "color:" + color + ",bgOpacity:" + bgOpacity + ",data:" + data);
-      spritesDB.put(newDoc)
+      console.log("Saving card...: " + newDoc._id + ",x:" + x + ",y:" + y + ",w:" + w + ",h:" + h + "color:" + color + ",bgOpacity:" + bgOpacity + ",data:" + data);
+      cardsDB.put(newDoc)
         .then((res) => {
           if(closeAfterSave){
-            spr.webContents.send("sprite-close");
+            spr.webContents.send("card-close");
           }
         })
         .catch((err) => {
-          console.log("Sprite save error: " + err);
+          console.log("Card save error: " + err);
         });
     });
 }
 
-// Create new sprite
-exports.createSprite = () => {
-  spriteIndex++;
-  let spriteId = "spr" + spriteIndex;
-  buildSprite(spriteId);
+// Create new card
+exports.createCard = () => {
+  cardIndex++;
+  let cardId = "spr" + cardIndex;
+  buildCard(cardId);
 
-  confDB.get("sprite")
+  confDB.get("card")
     .then((doc) => {
-      doc.index = spriteIndex;
+      doc.index = cardIndex;
       confDB.put(doc)
            .catch((err) => {
               console.log("conf update error: " + err);
@@ -229,9 +229,9 @@ exports.createSprite = () => {
 
 
 var PouchDB = require("pouchdb");
-var spritesDB = null;
+var cardsDB = null;
 var confDB = null;
-var spriteIndex = 0;
+var cardIndex = 0;
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -241,17 +241,17 @@ app.on("ready", () => {
   i18n.setLocale(app.getLocale());
 
   confDB = new PouchDB("conf");
-  spritesDB = new PouchDB("sprites");
+  cardsDB = new PouchDB("cards");
 
   // Load config
-  confDB.get("sprite")
+  confDB.get("card")
     .then((doc) => {
-      spriteIndex = doc.index;
-      console.log("spriteIndex: " + spriteIndex);
+      cardIndex = doc.index;
+      console.log("cardIndex: " + cardIndex);
     })
     .catch((err) => {
        // create default config
-       confDB.put({ _id: "sprite", index: 0 })
+       confDB.put({ _id: "card", index: 0 })
            .then((res) => {
               console.log("Initial conf created: " + res);
            })
@@ -260,24 +260,24 @@ app.on("ready", () => {
            });
     });
 
-  // load sprites
+  // load cards
   let docs = null;
-  spritesDB.allDocs()
+  cardsDB.allDocs()
     .then((res) => {
       if(res.rows.length == 0){
-        // Create a new sprite
-        let spriteId = "spr" + spriteIndex;
-        buildSprite(spriteId);
+        // Create a new card
+        let cardId = "spr" + cardIndex;
+        buildCard(cardId);
       }
       else{
         for (let doc of res.rows){
-          let spriteId = doc.id;
-          buildSprite(spriteId);
+          let cardId = doc.id;
+          buildCard(cardId);
         }
       }
     })
     .catch((err) => {
-      console.log("sprites load error: " + err);
+      console.log("cards load error: " + err);
     });
 });
 
