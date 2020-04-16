@@ -14,7 +14,7 @@ body
 	color: #000;
 
 	/* Remove the background color to make it transparent. */
-	background-color: #transparent;
+	background-color: transparent;
 	margin: 0px;
 	padding: 2px;
 }
