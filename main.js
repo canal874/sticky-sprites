@@ -8,7 +8,7 @@
 
 "use strict";
 
-const {app, BrowserWindow} = require("electron");
+const {app, shell, BrowserWindow} = require("electron");
 const i18n = require("i18n");
 const url = require("url");
 const path = require("path");
@@ -59,6 +59,14 @@ let buildCard = function (cardId) {
     show: false,
     "always-on-top": true,
     "title-bar-style": "hidden-inset"
+  });
+
+  // Open hyperlink on external browser window
+  // by preventing to open it on new electron window
+  // when target="_blank" is set.
+  card.webContents.on('new-window', (event, url) => {
+    event.preventDefault();
+    shell.openExternal(url);
   });
 
   card.loadURL(url.format({
