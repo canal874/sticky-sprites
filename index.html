@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
 <style>
+
 .cke_combo__fontsize a.cke_combo_button .cke_combo_text{
   width:28px;
   padding-left: 0px;
@@ -13,51 +14,6 @@
   margin-right:0px;
 }
 
-#cke_editor .cke_button__form,
-#cke_editor .cke_button__checkbox,
-#cke_editor .cke_button__radio,
-#cke_editor .cke_button__textarea,
-#cke_editor .cke_button__textfield,
-#cke_editor .cke_button__select,
-#cke_editor .cke_button__button,
-#cke_editor .cke_button__hiddenfield,
-#cke_editor .cke_button__subscript,
-#cke_editor .cke_button__superscript,
-#cke_editor .cke_button__numberedlist,
-#cke_editor .cke_button__outdent,
-#cke_editor .cke_button__indent,
-#cke_editor .cke_button__bulletedlist,
-#cke_editor .cke_button__imagebutton,
-#cke_editor .cke_button__creatediv,
-#cke_editor .cke_button__blockquote,
-#cke_editor .cke_button__justifyleft,
-#cke_editor .cke_button__justifyright,
-#cke_editor .cke_button__justifycenter,
-#cke_editor .cke_button__bidiltr,
-#cke_editor .cke_button__bidirtl,
-#cke_editor .cke_button__language,
-#cke_editor .cke_button__justifyblock,
-#cke_editor .cke_button__link,
-#cke_editor .cke_button__unlink,
-#cke_editor .cke_button__anchor,
-#cke_editor .cke_button__horizontalrule,
-#cke_editor .cke_button__smiley,
-#cke_editor .cke_button__specialchar,
-#cke_editor .cke_button__image,
-#cke_editor .cke_button__flash,
-#cke_editor .cke_button__table,
-#cke_editor .cke_button__iframe,
-#cke_editor .cke_button__pagebreak,
-#cke_editor .cke_combo__styles,
-#cke_editor .cke_combo__format,
-#cke_editor .cke_combo__font
-{
-  display: none;
-}
-
-#cke_editor .cke_toolbar_separator{
-  display: none;
-}
 #cke_editor .cke_combo::after,
 #cke_editor .cke_toolgroup a.cke_button:last-child:after,
 #cke_editor .cke_toolgroup a.cke_button.cke_button_disabled:last-child:after
@@ -66,17 +22,27 @@
 }
 
 #cke_editor{
-  margin-top: 16px;
-  display: none;
+  margin-top: 18px;
+  border: 0px;
+  display: none;    
 }
+/*
 #cke_1_bottom{
   display:none;
+}*/
+
+body{
+  margin: 0px;
+  padding: 0px;
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
+
 body .cke_screen_reader_only{
   display:none;
 }
 
-#sprite{
+#card{
   position: absolute;
   top: 0px;
   left: 0px;
@@ -89,7 +55,7 @@ body .cke_screen_reader_only{
   visibility: hidden;
 }
 
-#titlearea{
+#card #titlearea{
   position: absolute;
   top: 0px;
   left: 0px;
@@ -97,25 +63,62 @@ body .cke_screen_reader_only{
   margin: 0px;
 }
 
-.title-bar{
+#card .title-bar{
   position: absolute;
   top: 0px;
-  height: 16px;
+  height: 18px;
   -webkit-app-region: drag;
   padding: 0px;
   margin: 0px;
 }
 
-.title-btn{
+#card .title-btn{
   position: absolute;
   top: 0px;
   width: 14px;
-  height: 14px; 
+  height: 16px; 
   text-align: center; 
   font-size: 14px;
   padding: 1px; 
   cursor: pointer;
 }
+
+#card #titlebar{
+  left: 39px;
+   width:207px;
+}
+
+#card #newBtn{
+  left:0px;
+} 
+
+#card #separator01{
+  left: 16px;
+  width: 7px;
+}
+
+#card #codeBtn{
+  left: 23px;
+}
+    
+#card #closeBtn{
+  left: 246px;
+}
+  
+#card #contents{
+  padding: 2px;
+  font-size: 16px;
+  font-family: sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  top: 18px;
+  left: 0px;
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  margin: 0px;
+  border: 0px;
+  z-index: 10;
+}
+
 
 
 </style>
@@ -128,7 +131,7 @@ if (typeof module === "object" && module.exports) {
   module.exports = {};
 }
 
-const sprite = { id: "" };
+const card = { id: "" };
 
 $(() => {
   let main = require("electron").remote.require("./main");
@@ -141,13 +144,13 @@ $(() => {
   // ContextMenu
   //-----------------------------------
   var menu = new Menu();
-  menu.append(new MenuItem({ label: main.i18n("yellow"), click: () => { setSpriteColor("#ffffa0"); }}));
-  menu.append(new MenuItem({ label: main.i18n("red"), click: () => { setSpriteColor("#ffd0d0"); }}));
-  menu.append(new MenuItem({ label: main.i18n("green"), click: () => { setSpriteColor("#d0ffd0"); }}));
-  menu.append(new MenuItem({ label: main.i18n("blue"), click: () => { setSpriteColor("#d0d0ff"); }}));
-  menu.append(new MenuItem({ label: main.i18n("purple"), click: () => { setSpriteColor("#ffd0ff"); }}));
-  menu.append(new MenuItem({ label: main.i18n("gray"), click: () => { setSpriteColor("#d0d0d0"); }}));
-  menu.append(new MenuItem({ label: main.i18n("transparent"), click: () => { setSpriteColor("#f0f0f0", 0.0); }}));
+  menu.append(new MenuItem({ label: main.i18n("yellow"), click: () => { setCardColor("#ffffa0"); }}));
+  menu.append(new MenuItem({ label: main.i18n("red"), click: () => { setCardColor("#ffd0d0"); }}));
+  menu.append(new MenuItem({ label: main.i18n("green"), click: () => { setCardColor("#d0ffd0"); }}));
+  menu.append(new MenuItem({ label: main.i18n("blue"), click: () => { setCardColor("#d0d0ff"); }}));
+  menu.append(new MenuItem({ label: main.i18n("purple"), click: () => { setCardColor("#ffd0ff"); }}));
+  menu.append(new MenuItem({ label: main.i18n("gray"), click: () => { setCardColor("#d0d0d0"); }}));
+  menu.append(new MenuItem({ label: main.i18n("transparent"), click: () => { setCardColor("#f0f0f0", 0.0); }}));
   
   document.ondragover = (e) => {
     e.preventDefault();
@@ -164,7 +167,7 @@ $(() => {
       var width = dropImg.naturalWidth;
       var height = dropImg.naturalHeight;
 
-      // Adjust img to sprite size
+      // Adjust img to card size
       // ...
       // ...
 
@@ -191,7 +194,7 @@ $(() => {
 
   let toolbarHeight = 64;
 
-  let currentSpriteColor = "#f0f0a0";
+  let currentCardColor = "#f0f0a0";
   let currentTitleColor = "#d0d090";
   let currentBgOpacity = 1.0;
   
@@ -201,17 +204,17 @@ $(() => {
   // ipc (inter-process communication)
   //----------------------
 
-  // Initialize sprite
-  ipcRenderer.on("sprite-loaded", (event, id, data, x, y,  width, height, color, bgOpacity) => {
-    sprite.id = id;
-    Object.freeze(sprite);
+  // Initialize card
+  ipcRenderer.on("card-loaded", (event, id, data, x, y,  width, height, color, bgOpacity) => {
+    card.id = id;
+    Object.freeze(card);
     
     $("#editor").val(data);
     $("#contents").html(data);
 
-    setSpriteColor(color, bgOpacity);
+    setCardColor(color, bgOpacity);
 
-    var sprBorder = parseInt($("#sprite").css("border-left"));
+    var sprBorder = parseInt($("#card").css("border-left"));
     var sprWidth = width - sprBorder*2;
     var sprHeight = height - sprBorder*2;
     CKEDITOR.config.width =  sprWidth;
@@ -226,47 +229,47 @@ $(() => {
       $("#cke_1_top").css('background-color', currentTitleColor);
       $("#cke_1_top").css('border-bottom-color', currentTitleColor);
       $("#cke_1_top").css('border-top-color', currentTitleColor);
-      $("#cke_1_contents .cke_wysiwyg_frame").css('background-color', currentSpriteColor);
+      $("#cke_1_contents .cke_wysiwyg_frame").css('background-color', currentCardColor);
     });
 
     setTimeout(()=>{
-      $("#sprite").css("visibility", "visible");
+      $("#card").css("visibility", "visible");
     },300);
   });
 
-  ipcRenderer.on("sprite-close", (event) => {
+  ipcRenderer.on("card-close", (event) => {
     close();
   });
 
-  ipcRenderer.on("sprite-focused", (event) => {
-    $("#sprite").css({ border: "3px solid red" });
+  ipcRenderer.on("card-focused", (event) => {
+    $("#card").css({ border: "3px solid red" });
     $("#titlearea").show();
   });
   
-  ipcRenderer.on("sprite-blured", (event) => {
+  ipcRenderer.on("card-blured", (event) => {
     if($("#contents").css("display") == "none"){
       endEditMode();
     }
-    $("#sprite").css({ border: "3px solid transparent" });
+    $("#card").css({ border: "3px solid transparent" });
     if(currentBgOpacity == 0){
       $("#titlearea").hide();
     }
   });
 
   //--------------------------
-  // Set sprite properties
+  // Set card properties
   //--------------------------  
-  // spriteColor : #HEX (e.g. #ff00ff)
-  // spriteColor : 0.0-1.0
-  let setSpriteColor = (spriteColor, bgOpacity) => {
-    currentSpriteColor = spriteColor;
+  // cardColor : #HEX (e.g. #ff00ff)
+  // cardColor : 0.0-1.0
+  let setCardColor = (cardColor, bgOpacity) => {
+    currentCardColor = cardColor;
     currentBgOpacity = bgOpacity === undefined ? 1.0 : bgOpacity;
     let scale = 0.8;
-    spriteColor.match(/#(\w\w)(\w\w)(\w\w)/)
+    cardColor.match(/#(\w\w)(\w\w)(\w\w)/)
     let red = parseInt(RegExp.$1, 16);
     let green = parseInt(RegExp.$2, 16);
     let blue = parseInt(RegExp.$3, 16);
-    $(".sprite-color").css("background-color", "rgba("+ red + "," + green + "," + blue + "," + currentBgOpacity + ")");
+    $(".card-color").css("background-color", "rgba("+ red + "," + green + "," + blue + "," + currentBgOpacity + ")");
 
     let r = Math.floor(red * scale).toString(16);
     if (r.length == 1){r= "0" + r;}
@@ -283,12 +286,12 @@ $(() => {
       $("#cke_1_top").css('background-color', currentTitleColor);
       $("#cke_1_top").css('border-bottom-color', currentTitleColor);
       $("#cke_1_top").css('border-top-color', currentTitleColor);
-      $("#cke_1_contents .cke_wysiwyg_frame").css('background-color', currentSpriteColor);
+      $("#cke_1_contents .cke_wysiwyg_frame").css('background-color', currentcardColor);
     }
   };
 
   //--------------------------
-  // Save and close sprite
+  // Save and close card
   //--------------------------  
   let close = () => {
     window.close();
@@ -338,7 +341,7 @@ $(() => {
     $("#contents").html(data);
     $("#contents").show();
     setTimeout(() => {
-      main.saveSprite(sprite.id, data, currentSpriteColor, currentBgOpacity);
+      main.saveCard(card.id, data, currentCardColor, currentBgOpacity);
     },1);
     $("#cke_editor").hide();
 
@@ -382,8 +385,8 @@ $(() => {
   // UI
   //--------------------------
   let resizeWindow = () => {
-//    console.log("sprite resize: " + $(window).width() + "," + $(window).height());
-    var sprBorder = parseInt($("#sprite").css("border-left"));
+//    console.log("card resize: " + $(window).width() + "," + $(window).height());
+    var sprBorder = parseInt($("#card").css("border-left"));
     var sprWidth = $(window).width() - sprBorder*2;
     var sprHeight = $(window).height() - sprBorder*2;
 
@@ -392,6 +395,7 @@ $(() => {
     $("#contents").height(sprHeight - $("#titlebar").outerHeight() - contPadding*2);
 
     if(isEditorReady){
+//      CKEDITOR.instances["editor"].resize(sprWidth, sprHeight - $("#titlebar").outerHeight());
       CKEDITOR.instances["editor"].resize(sprWidth, sprHeight - $("#titlebar").outerHeight());
     }
 
@@ -408,7 +412,7 @@ $(() => {
   });
 
   $("#newBtn").click(() => {
-    main.createSprite();
+    main.createCard();
   });
 
   $("#contents").click(() => {
@@ -427,10 +431,10 @@ $(() => {
   $("#closeBtn").click(() => {
     let data = CKEDITOR.instances["editor"].getData();
     if(data == ""){
-      main.saveToCloseSprite(sprite.id, data, currentSpriteColor, currentBgOpacity);
+      main.saveToCloseCard(card.id, data, currentCardColor, currentBgOpacity);
     }
     else if(window.confirm(main.i18n("confirm-closing"))){
-      main.saveToCloseSprite(sprite.id, data, currentSpriteColor, currentBgOpacity);
+      main.saveToCloseCard(card.id, data, currentCardColor, currentBgOpacity);
     }
   });
 
@@ -438,22 +442,22 @@ $(() => {
 
 </script>
 </head>
-<body style="margin:0px; padding:0px; overflow-x:hidden; overflow-y:hidden;">
+<body>
 <!-- 
 -webkig-app-region:drag を設定した子要素は、マウスイベントを取得できないので注意 
 -->
-<div id="sprite">
+<div id="card">
   <div id="titlearea">
-    <div id="titlebar" class="title-color title-bar" style="left:39px; width:207px;"></div>
-    <div id="newBtn" class="title-color title-btn" style="left:0px;"><i class="fas fa-plus"></i></div>
+    <div id="titlebar" class="title-color title-bar"></div>
+    <div id="newBtn" class="title-color title-btn"><i class="fas fa-plus"></i></div>
     <!-- ボタンの間を埋める -->
-    <div class="title-color title-bar" style="left:16px; width:7px;"></div>
-    <div id="codeBtn" class="title-color title-btn" style="left:23px;"><i class="fas fa-code"></i></div>
-    <div id="closeBtn" class="title-color title-btn" style="left:246px; "><i class="fas fa-minus-circle"></i></div>
+    <div id="separator01" class="title-color title-bar" style="left: width"></div>
+    <div id="codeBtn" class="title-color title-btn"><i class="fas fa-code"></i></div>
+    <div id="closeBtn" class="title-color title-btn"><i class="fas fa-minus-circle"></i></div>
   </div>
-  <div id="contents" class="sprite-color" style="padding: 2px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:10px; height:10px; position:absolute; margin:0px;border:0px; z-index:10"></div>
+  <div id="contents" class="card-color"></div>
 
-  <textarea id="editor" style="padding: 0px; font-size: 16px; font-family:sans-serif; top:16px; left:0px; width:10px; height:10px; position:absolute; margin:0px;border:0px; visibility:hidden;"></textarea>
+  <textarea id="editor"></textarea>
 </div>
 
 </body>
