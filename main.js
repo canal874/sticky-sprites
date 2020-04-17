@@ -6,15 +6,23 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-"use strict";
+'use strict';
 
-const {app, shell, BrowserWindow} = require("electron");
-const i18n = require("i18n");
-const url = require("url");
-const path = require("path");
+const {app, shell, BrowserWindow} = require('electron');
+const i18n = require('i18n');
+const url = require('url');
+const path = require('path');
 
 
 var mylog = require('electron-log');
+process.on('uncaughtException', function(err) {
+  mylog.error('electron:event:uncaughtException');
+  mylog.error(err);
+  mylog.error(err.stack);
+  app.quit();
+});
+
+
 
 i18n.configure({
   // Locales under the directory are automatically detected.
@@ -26,23 +34,15 @@ exports.i18n = (msg) => {
 }
 
 
-process.on('uncaughtException', function(err) {
-  mylog.error('electron:event:uncaughtException');
-  mylog.error(err);
-  mylog.error(err.stack);
-  app.quit();
-});
 
-// Keep a global reference of the window object, if you don"t, the window will
-// be closed automatically when the JavaScript object is garbage collected.
+// A small sticky windows is called 'card'.
 const cards = {};
 
-// A small sticky windows is called "card".
 const defaultCardWidth = 260;
 const defaultCardHeight = 176;
 const defaultCardX = 70;
 const defaultCardY = 70;
-let defaultCardColor = "#ffffa0";
+let defaultCardColor = '#ffffa0';
 let defaultBgOpacity = 1.0;
 
 let buildCard = function (cardId) {
@@ -57,33 +57,33 @@ let buildCard = function (cardId) {
     transparent: true,
     frame: false,
     show: false,
-    "always-on-top": true,
-    "title-bar-style": "hidden-inset"
+    'always-on-top': true,
+    'title-bar-style': 'hidden-inset'
   });
 
   // Open hyperlink on external browser window
   // by preventing to open it on new electron window
-  // when target="_blank" is set.
+  // when target='_blank' is set.
   card.webContents.on('new-window', (event, url) => {
     event.preventDefault();
     shell.openExternal(url);
   });
 
   card.loadURL(url.format({
-    pathname: path.join(__dirname, "index.html"),
-    protocol: "file:",
+    pathname: path.join(__dirname, 'index.html'),
+    protocol: 'file:',
     slashes: true
   }))
 
   //----------------------
   // Initialize a card
   //----------------------
-  card.once("ready-to-show", () => {
+  card.once('ready-to-show', () => {
     // ready-to-show is emitted after $(document).ready
     let data,x,y,w,h,color,bgOpacity;
     cardsDB.get(cardId)
       .then((doc) => {
-        data = doc != null ? (doc.data !== undefined ? doc.data : "") : "";
+        data = doc != null ? (doc.data !== undefined ? doc.data : '') : '';
         w = doc != null ? (doc.width !== undefined ? doc.width : defaultCardWidth) : defaultCardWidth;
         h = doc != null ? (doc.height !== undefined ? doc.height : defaultCardHeight) : defaultCardHeight;
         x = doc != null ? (doc.x !== undefined ? doc.x : defaultCardX) : defaultCardX;
@@ -92,8 +92,8 @@ let buildCard = function (cardId) {
         bgOpacity = doc != null ? (doc.bgOpacity !== undefined ? doc.bgOpacity : defaultBgOpacity) : defaultBgOpacity;
       })
       .catch((err) => {
-        console.log("Load card error: " + cardId + ", " + err);
-        data = "";
+        console.log('Load card error: ' + cardId + ', ' + err);
+        data = '';
         w = defaultCardWidth;
         h = defaultCardHeight;
         x = defaultCardX;
@@ -110,7 +110,7 @@ let buildCard = function (cardId) {
         card.prevH = h;
         card.prevColor = color;
         card.prevBgOpacity = bgOpacity;
-        card.webContents.send("card-loaded", cardId, data, x, y, w, h, color, bgOpacity);
+        card.webContents.send('card-loaded', cardId, data, x, y, w, h, color, bgOpacity);
         card.setSize(w, h);
         card.setPosition(x, y);
         card.show();
@@ -120,7 +120,7 @@ let buildCard = function (cardId) {
   });
   
   cards[cardId] = card;
-  card.on("closed", () => {
+  card.on('closed', () => {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
@@ -128,18 +128,18 @@ let buildCard = function (cardId) {
     delete cards[cardId];
   });
 
-  card.on("focus", () => {
-    card.webContents.send("card-focused");
+  card.on('focus', () => {
+    card.webContents.send('card-focused');
   });
-  card.on("blur", () => {
-    card.webContents.send("card-blured");
+  card.on('blur', () => {
+    card.webContents.send('card-blured');
   });
 
 //    card.openDevTools();
 }
 
-app.on("window-all-closed", () => {
-  if (process.platform != "darwin"){
+app.on('window-all-closed', () => {
+  if (process.platform != 'darwin'){
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
     app.quit();
@@ -155,15 +155,15 @@ exports.saveCard = (cardId, data, color, bgOpacity) => {
   saveCard(cardId, data, color, bgOpacity, false);
 };
 exports.saveToCloseCard = (cardId, data, color, bgOpacity) => {
-  if(data == ""){
+  if(data == ''){
     let spr = cards[cardId];
     cardsDB.get(cardId)
       .then((doc) => {
         cardsDB.remove(doc);
-        spr.webContents.send("card-close");
+        spr.webContents.send('card-close');
       })
       .catch((err) => {
-        spr.webContents.send("card-close");
+        spr.webContents.send('card-close');
       });
   }
   else{
@@ -189,7 +189,7 @@ let saveCard = (cardId, data, color, bgOpacity, closeAfterSave) => {
     && color == spr.prevBgOpacity
   ){
     if(closeAfterSave){
-      spr.webContents.send("card-close");
+      spr.webContents.send('card-close');
     }
     return;
   }
@@ -210,15 +210,15 @@ let saveCard = (cardId, data, color, bgOpacity, closeAfterSave) => {
       newDoc.height = spr.prevH = h;
       newDoc.color = spr.prevColor = color;
       newDoc.bgOpacity = spr.prevBgOpacity = bgOpacity;
-      console.log("Saving card...: " + newDoc._id + ",x:" + x + ",y:" + y + ",w:" + w + ",h:" + h + "color:" + color + ",bgOpacity:" + bgOpacity + ",data:" + data);
+      console.log('Saving card...: ' + newDoc._id + ',x:' + x + ',y:' + y + ',w:' + w + ',h:' + h + 'color:' + color + ',bgOpacity:' + bgOpacity + ',data:' + data);
       cardsDB.put(newDoc)
         .then((res) => {
           if(closeAfterSave){
-            spr.webContents.send("card-close");
+            spr.webContents.send('card-close');
           }
         })
         .catch((err) => {
-          console.log("Card save error: " + err);
+          console.log('Card save error: ' + err);
         });
     });
 }
@@ -226,53 +226,53 @@ let saveCard = (cardId, data, color, bgOpacity, closeAfterSave) => {
 // Create new card
 exports.createCard = () => {
   cardIndex++;
-  let cardId = "spr" + cardIndex;
+  let cardId = 'spr' + cardIndex;
   buildCard(cardId);
 
-  confDB.get("card")
+  confDB.get('card')
     .then((doc) => {
       doc.index = cardIndex;
       confDB.put(doc)
            .catch((err) => {
-              console.log("conf update error: " + err);
+              console.log('conf update error: ' + err);
            });
     })
     .catch((err) => {
-      console.log("conf read error: " + err);
+      console.log('conf read error: ' + err);
     });
 
 };
 
 
-var PouchDB = require("pouchdb");
+var PouchDB = require('pouchdb');
 var cardsDB = null;
 var confDB = null;
 var cardIndex = 0;
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", () => {
-  // locale can be got after "ready"
-  console.log("locale: " + app.getLocale());
+app.on('ready', () => {
+  // locale can be got after 'ready'
+  console.log('locale: ' + app.getLocale());
   i18n.setLocale(app.getLocale());
 
-  confDB = new PouchDB("conf");
-  cardsDB = new PouchDB("cards");
+  confDB = new PouchDB('conf');
+  cardsDB = new PouchDB('cards');
 
   // Load config
-  confDB.get("card")
+  confDB.get('card')
     .then((doc) => {
       cardIndex = doc.index;
-      console.log("cardIndex: " + cardIndex);
+      console.log('cardIndex: ' + cardIndex);
     })
     .catch((err) => {
        // create default config
-       confDB.put({ _id: "card", index: 0 })
+       confDB.put({ _id: 'card', index: 0 })
            .then((res) => {
-              console.log("Initial conf created: " + res);
+              console.log('Initial conf created: ' + res);
            })
            .catch((err) => {
-              console.log("Initial conf creation error: " + err);
+              console.log('Initial conf creation error: ' + err);
            });
     });
 
@@ -282,7 +282,7 @@ app.on("ready", () => {
     .then((res) => {
       if(res.rows.length == 0){
         // Create a new card
-        let cardId = "spr" + cardIndex;
+        let cardId = 'spr' + cardIndex;
         buildCard(cardId);
       }
       else{
@@ -293,7 +293,7 @@ app.on("ready", () => {
       }
     })
     .catch((err) => {
-      console.log("cards load error: " + err);
+      console.log('cards load error: ' + err);
     });
 });
 
