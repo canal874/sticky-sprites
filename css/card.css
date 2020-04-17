@@ -128,3 +128,17 @@ body > #card > #cke_editor .cke_combo__fontsize a.cke_combo_button .cke_combo_op
   margin-left:0px;
   margin-right:0px;
 }
+
+body > #card > #cke_editor .cke_bottom{
+  padding:0px;
+}
+
+body > #card > #cke_editor .cke_toolgroup{
+  margin: 0px;
+}
+
+body > #card > #cke_editor .cke_combo{
+  margin-bottom: 0px;
+}
+
+
