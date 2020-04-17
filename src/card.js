@@ -95,7 +95,7 @@ $(() => {
     var sprWidth = width - sprBorder*2;
     var sprHeight = height - sprBorder*2;
     CKEDITOR.config.width =  sprWidth;
-    CKEDITOR.config.height =  sprHeight - $("#titlebar").outerHeight() - toolbarHeight; 
+    CKEDITOR.config.height =  sprHeight - $("#titleBar").outerHeight() - toolbarHeight; 
     resizeWindow();
 
 //    CKEDITOR.config.uiColor = currentTitleColor;
@@ -120,7 +120,7 @@ $(() => {
 
   ipcRenderer.on("card-focused", (event) => {
     $("#card").css({ border: "3px solid red" });
-    $("#titlearea").show();
+    $("#title").show();
   });
   
   ipcRenderer.on("card-blured", (event) => {
@@ -129,7 +129,7 @@ $(() => {
     }
     $("#card").css({ border: "3px solid transparent" });
     if(currentBgOpacity == 0){
-      $("#titlearea").hide();
+      $("#title").hide();
     }
   });
 
@@ -269,19 +269,19 @@ $(() => {
 
     var contPadding = parseInt($("#contents").css("padding-left"))
     $("#contents").width(sprWidth - contPadding*2);
-    $("#contents").height(sprHeight - $("#titlebar").outerHeight() - contPadding*2);
+    $("#contents").height(sprHeight - $("#titleBar").outerHeight() - contPadding*2);
 
     if(isEditorReady){
-//      CKEDITOR.instances["editor"].resize(sprWidth, sprHeight - $("#titlebar").outerHeight());
-      CKEDITOR.instances["editor"].resize(sprWidth, sprHeight - $("#titlebar").outerHeight());
+//      CKEDITOR.instances["editor"].resize(sprWidth, sprHeight - $("#titleBar").outerHeight());
+      CKEDITOR.instances["editor"].resize(sprWidth, sprHeight - $("#titleBar").outerHeight());
     }
 
     let closeBtnLeft = sprBorder + sprWidth - $("#closeBtn").outerWidth();
     $("#closeBtn").offset({ left: closeBtnLeft });
     let titleBarLeft = $("#codeBtn").position().left + $("#codeBtn").outerWidth();
     let barwidth = closeBtnLeft - titleBarLeft;
-    $("#titlebar").offset({ left: titleBarLeft });
-    $("#titlebar").width(barwidth);
+    $("#titleBar").offset({ left: titleBarLeft });
+    $("#titleBar").width(barwidth);
   };
 
   $(window).resize(() => {
