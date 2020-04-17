@@ -1,5 +1,5 @@
 ﻿/** 
- * @license
+ * @license MediaSticky
  * Copyright (c) Hidekazu Kubota
  *
  * This source code is licensed under the Mozilla Public License Version 2.0
@@ -42,6 +42,7 @@ const defaultCardWidth = 260;
 const defaultCardHeight = 176;
 const defaultCardX = 70;
 const defaultCardY = 70;
+const minimumWindowWidth = 30;
 let defaultCardColor = '#ffffa0';
 let defaultBgOpacity = 1.0;
 
@@ -52,6 +53,7 @@ let buildCard = function (cardId) {
     },
     width: defaultCardWidth,
     height: defaultCardHeight,
+    minWidth : minimumWindowWidth,
     x: defaultCardX + Math.round( Math.random()*50),
     y: defaultCardY + Math.round( Math.random()*50),
     transparent: true,
@@ -302,4 +304,8 @@ app.on('ready', () => {
 //-----------------------------------
 exports.log = (txt) => {
   console.log(txt);
+}
+
+exports.getMinimumWindowWidth = () => {
+  return minimumWindowWidth;
 }
