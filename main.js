@@ -158,14 +158,14 @@ exports.saveCard = (cardId, data, color, bgOpacity) => {
 };
 exports.saveToCloseCard = (cardId, data, color, bgOpacity) => {
   if(data == ''){
-    let spr = cards[cardId];
+    let card = cards[cardId];
     cardsDB.get(cardId)
       .then((doc) => {
         cardsDB.remove(doc);
-        spr.webContents.send('card-close');
+        card.webContents.send('card-close');
       })
       .catch((err) => {
-        spr.webContents.send('card-close');
+        card.webContents.send('card-close');
       });
   }
   else{
@@ -174,24 +174,24 @@ exports.saveToCloseCard = (cardId, data, color, bgOpacity) => {
 };
 
 let saveCard = (cardId, data, color, bgOpacity, closeAfterSave) => {
-  let spr = cards[cardId];
-  let pos = spr.getPosition();
-  let size = spr.getSize();
+  let card = cards[cardId];
+  let pos = card.getPosition();
+  let size = card.getSize();
   let x = pos[0];
   let y = pos[1];
   let w = size[0];
   let h = size[1];
   
-  if(x == spr.prevX
-    && y == spr.prevY
-    && w == spr.prevW
-    && h == spr.prevH
-    && data == spr.prevData
-    && color == spr.prevColor
-    && color == spr.prevBgOpacity
+  if(x == card.prevX
+    && y == card.prevY
+    && w == card.prevW
+    && h == card.prevH
+    && data == card.prevData
+    && color == card.prevColor
+    && color == card.prevBgOpacity
   ){
     if(closeAfterSave){
-      spr.webContents.send('card-close');
+      card.webContents.send('card-close');
     }
     return;
   }
@@ -205,18 +205,18 @@ let saveCard = (cardId, data, color, bgOpacity, closeAfterSave) => {
       newDoc = { _id: cardId, data: data, width: w, height: h, x: x, y: y, color: color, bgOpacity: bgOpacity };
     })
     .then(() => {
-      newDoc.data = spr.prevData = data;
-      newDoc.x = spr.prevX = x;
-      newDoc.y = spr.prevY = y;
-      newDoc.width = spr.prevW = w;
-      newDoc.height = spr.prevH = h;
-      newDoc.color = spr.prevColor = color;
-      newDoc.bgOpacity = spr.prevBgOpacity = bgOpacity;
+      newDoc.data = card.prevData = data;
+      newDoc.x = card.prevX = x;
+      newDoc.y = card.prevY = y;
+      newDoc.width = card.prevW = w;
+      newDoc.height = card.prevH = h;
+      newDoc.color = card.prevColor = color;
+      newDoc.bgOpacity = card.prevBgOpacity = bgOpacity;
       console.log('Saving card...: ' + newDoc._id + ',x:' + x + ',y:' + y + ',w:' + w + ',h:' + h + 'color:' + color + ',bgOpacity:' + bgOpacity + ',data:' + data);
       cardsDB.put(newDoc)
         .then((res) => {
           if(closeAfterSave){
-            spr.webContents.send('card-close');
+            card.webContents.send('card-close');
           }
         })
         .catch((err) => {
@@ -228,7 +228,7 @@ let saveCard = (cardId, data, color, bgOpacity, closeAfterSave) => {
 // Create new card
 exports.createCard = () => {
   cardIndex++;
-  let cardId = 'spr' + cardIndex;
+  let cardId = 'card' + cardIndex;
   buildCard(cardId);
 
   confDB.get('card')
@@ -284,7 +284,7 @@ app.on('ready', () => {
     .then((res) => {
       if(res.rows.length == 0){
         // Create a new card
-        let cardId = 'spr' + cardIndex;
+        let cardId = 'card' + cardIndex;
         buildCard(cardId);
       }
       else{
@@ -308,4 +308,17 @@ exports.log = (txt) => {
 
 exports.getMinimumWindowWidth = () => {
   return minimumWindowWidth;
+}
+
+exports.setCardHeight = (cardId, height) => {
+  const card = cards[cardId];  
+  const size = card.getSize();
+  const w = size[0];
+  card.setSize(w, height);
+}
+
+exports.getCardHeight = (cardId) => {
+  const card = cards[cardId];  
+  const size = card.getSize();
+  return size[1];
 }

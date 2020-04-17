@@ -13,9 +13,9 @@ const {Menu, MenuItem} = remote;
 
 const card = { id: '' };
 
-let codeMode = false;
+const toolbarHeight = 30;
 
-let toolbarHeight = 64;
+let codeMode = false;
 
 let currentCardColor = '#f0f0a0';
 let currentTitleColor = '#d0d090';
@@ -61,7 +61,8 @@ const startEditMode = () => {
 
   execAfterWysiwygChanged(
     function () {
-      resizeWindow();
+      main.setCardHeight(card.id, main.getCardHeight(card.id) + toolbarHeight);
+//      resizeWindow();
       CKEDITOR.instances['editor'].focus();
       moveCursorToBottom();
     }
@@ -69,6 +70,8 @@ const startEditMode = () => {
 };
 
 const endEditMode = () => {
+  main.setCardHeight(card.id, main.getCardHeight(card.id) - toolbarHeight);
+
   let data = CKEDITOR.instances['editor'].getData();
   document.getElementById('contents').innerHTML = data;
   document.getElementById('contents').style.visibility = 'visible';
@@ -121,11 +124,12 @@ const resizeWindow = () => {
     setTimeout(resizeWindow, 500);
     return;
   }
-  var cardBorder = parseInt(window.getComputedStyle(document.getElementById('card')).borderLeft);
-  var cardWidth = window.innerWidth - cardBorder * 2;
-  var cardHeight = window.innerHeight - cardBorder * 2;
 
-  var contPadding = parseInt(window.getComputedStyle(document.getElementById('contents')).paddingLeft);
+  const cardBorder = parseInt(window.getComputedStyle(document.getElementById('card')).borderLeft);
+  const cardWidth = window.innerWidth - cardBorder * 2;
+  const cardHeight = window.innerHeight - cardBorder * 2;
+
+  const contPadding = parseInt(window.getComputedStyle(document.getElementById('contents')).paddingLeft);
   document.getElementById('contents').style.width = (cardWidth - contPadding * 2) + 'px';
   document.getElementById('contents').style.height = (cardHeight - document.getElementById('titleBar').offsetHeight - contPadding * 2) + 'px';
 
@@ -133,10 +137,10 @@ const resizeWindow = () => {
     CKEDITOR.instances['editor'].resize(cardWidth, cardHeight - document.getElementById('titleBar').offsetHeight);
   }
 
-  let closeBtnLeft = cardWidth - document.getElementById('closeBtn').offsetWidth;
+  const closeBtnLeft = cardWidth - document.getElementById('closeBtn').offsetWidth;
   document.getElementById('closeBtn').style.left = closeBtnLeft + 'px';
-  let titleBarLeft = document.getElementById('codeBtn').offsetLeft + document.getElementById('codeBtn').offsetWidth;
-  let barwidth = closeBtnLeft - titleBarLeft;
+  const titleBarLeft = document.getElementById('codeBtn').offsetLeft + document.getElementById('codeBtn').offsetWidth;
+  const barwidth = closeBtnLeft - titleBarLeft;
   document.getElementById('titleBar').style.left = titleBarLeft + 'px';
   document.getElementById('titleBar').style.width = barwidth + 'px';
 };
