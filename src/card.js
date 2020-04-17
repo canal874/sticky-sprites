@@ -8,7 +8,9 @@
 
 const main = require('electron').remote.require('./main');
 const ipcRenderer = require( 'electron' ).ipcRenderer;
-const {remote} = require('electron');
+const {remote, shell} = require('electron');
+const contextMenu = require('electron-context-menu');
+
 const {Menu, MenuItem} = remote;
 
 const card = { id: '' };
@@ -22,6 +24,9 @@ let currentTitleColor = '#d0d090';
 let currentBgOpacity = 1.0;
 
 let isEditorReady = false;
+
+let isEditorOpened = false;
+
 
 const close = () => {
   window.close();
@@ -55,21 +60,37 @@ const moveCursorToBottom = () => {
   }
 };
 
+const execAfterWysiwygChanged = (func) => {
+  let editor = CKEDITOR.instances['editor'];
+  let s = editor.getSelection(); // getting selection
+  if (s) {
+    func();
+  }
+  else {
+    setTimeout(() => { execAfterWysiwygChanged(func) }, 100);
+  }
+};
+
 const startEditMode = () => {
   document.getElementById('contents').style.visibility = 'hidden';
   document.getElementById('cke_editor').style.visibility = 'visible';
 
   execAfterWysiwygChanged(
     function () {
-      main.setCardHeight(card.id, main.getCardHeight(card.id) + toolbarHeight);
+      if(!isEditorOpened){
+        main.setCardHeight(card.id, main.getCardHeight(card.id) + toolbarHeight);
+        isEditorOpened = true;
+      }
 //      resizeWindow();
       CKEDITOR.instances['editor'].focus();
       moveCursorToBottom();
     }
   );
+
 };
 
 const endEditMode = () => {
+  isEditorOpened = false;  
   main.setCardHeight(card.id, main.getCardHeight(card.id) - toolbarHeight);
 
   let data = CKEDITOR.instances['editor'].getData();
@@ -93,23 +114,13 @@ const startCodeMode = () => {
   CKEDITOR.instances['editor'].focus();
 };
 
-const execAfterWysiwygChanged = (func) => {
-  let editor = CKEDITOR.instances['editor'];
-  let s = editor.getSelection(); // getting selection
-  if (s) {
-    func();
-  }
-  else {
-    setTimeout(() => { execAfterWysiwygChanged(func) }, 100);
-  }
-};
-
 const endCodeMode = () => {
   codeMode = false;
   document.getElementById('codeBtn').style.color = '#000000';
   CKEDITOR.instances['editor'].setMode('wysiwyg');
   execAfterWysiwygChanged(
     function () {
+      document.querySelector('#cke_1_contents .cke_wysiwyg_frame').style.backgroundColor = currentCardColor;
       CKEDITOR.instances['editor'].focus();
       moveCursorToBottom();
     }
@@ -180,20 +191,20 @@ const setCardColor = (cardColor, bgOpacity) => {
   }
 };
 
-const createContextMenu = () => {
-  const menu = new Menu();
-  menu.append(new MenuItem({ label: main.i18n('yellow'), click: () => { setCardColor('#ffffa0'); } }));
-  menu.append(new MenuItem({ label: main.i18n('red'), click: () => { setCardColor('#ffd0d0'); } }));
-  menu.append(new MenuItem({ label: main.i18n('green'), click: () => { setCardColor('#d0ffd0'); } }));
-  menu.append(new MenuItem({ label: main.i18n('blue'), click: () => { setCardColor('#d0d0ff'); } }));
-  menu.append(new MenuItem({ label: main.i18n('purple'), click: () => { setCardColor('#ffd0ff'); } }));
-  menu.append(new MenuItem({ label: main.i18n('gray'), click: () => { setCardColor('#d0d0d0'); } }));
-  menu.append(new MenuItem({ label: main.i18n('transparent'), click: () => { setCardColor('#f0f0f0', 0.0); } }));
-  window.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    menu.popup(remote.getCurrentWindow());
-  }, false);
-};
+contextMenu({
+  window: remote.getCurrentWindow(),
+  showSaveImageAs: true,
+  showInspectElement: false,
+  append: (defaultActions, params, browserWindow) => [
+    { label: main.i18n('yellow'), click: () => { setCardColor('#ffffa0'); } },
+    { label: main.i18n('red'), click: () => { setCardColor('#ffd0d0'); } },
+    { label: main.i18n('green'), click: () => { setCardColor('#d0ffd0'); } },
+    { label: main.i18n('blue'), click: () => { setCardColor('#d0d0ff'); } },
+    { label: main.i18n('purple'), click: () => { setCardColor('#ffd0ff'); } },
+    { label: main.i18n('gray'), click: () => { setCardColor('#d0d0d0'); } },
+    { label: main.i18n('transparent'), click: () => { setCardColor('#f0f0f0', 0.0); } }
+  ]
+});
 
 const initializeUIEvents = () => {
   document.ondragover = (e) => {
@@ -230,7 +241,12 @@ const initializeUIEvents = () => {
   });
 
   document.getElementById('contents').addEventListener('click', () => {
-    startEditMode();
+    if(window.getSelection().toString() != ''){
+      return;
+    }
+    else{
+      startEditMode();
+    }
   });
 
   document.getElementById('codeBtn').addEventListener('click', () => {
@@ -242,7 +258,7 @@ const initializeUIEvents = () => {
     }
   });
 
-  document.getElementById('closeBtn').click(() => {
+  document.getElementById('closeBtn').addEventListener('click', () => {
     let data = CKEDITOR.instances['editor'].getData();
     if (data == '') {
       main.saveToCloseCard(card.id, data, currentCardColor, currentBgOpacity);
@@ -316,7 +332,6 @@ const initializeIPCEvents = () => {
  * Initialize
  */
 const init = () => {
-  createContextMenu();
   initializeUIEvents();
 };
 
