@@ -72,15 +72,17 @@ const execAfterWysiwygChanged = (func) => {
 };
 
 const startEditMode = () => {
+  if(!isEditorOpened){
+    resizedByCode = true;
+    main.setCardHeight(card.id, main.getCardHeight(card.id) + toolbarHeight);
+    isEditorOpened = true;
+  }
+
   document.getElementById('contents').style.visibility = 'hidden';
   document.getElementById('cke_editor').style.visibility = 'visible';
 
   execAfterWysiwygChanged(
     function () {
-      if(!isEditorOpened){
-        main.setCardHeight(card.id, main.getCardHeight(card.id) + toolbarHeight);
-        isEditorOpened = true;
-      }
       CKEDITOR.instances['editor'].focus();
       moveCursorToBottom();
     }
@@ -156,7 +158,7 @@ const resizeCard = () => {
 
 };
 
-const setAndSaveCardColor =  (cardColor, bgOpacity) => {
+const setAndSaveCardColor = (cardColor, bgOpacity) => {
   setCardColor(cardColor, bgOpacity);
   let data = CKEDITOR.instances['editor'].getData();
   main.saveCard(card.id, data, currentCardColor, currentBgOpacity);
@@ -366,6 +368,12 @@ const init = () => {
 
 const onloaded = () => {
   window.removeEventListener('load', onloaded, false);
+  window.addEventListener('resize', () => {
+    if(resizedByCode){
+      resizedByCode = false;
+      resizeCard();
+    }
+  }, false);
   // Card must be loaded after CSS is rendered. 
   initializeIPCEvents();
 }

@@ -8,19 +8,22 @@
 
 'use strict';
 
-const {app, shell, BrowserWindow} = require('electron');
+const { app, shell, BrowserWindow } = require('electron');
 const i18n = require('i18n');
 const url = require('url');
 const path = require('path');
-const fs = require('fs');
 const util = require('util');
-const pouchDB = require('pouchdb');
 
 /**
- * Promisify
+ * Filepath
  */
-const readFileAsync = util.promisify(fs.readFile);
-const writeFileAsync = util.promisify(fs.writeFile);
+let libPath = './modules';
+if(process.env.NODE_LIBPATH){
+  libPath = process.env.NODE_LIBPATH;
+}
+
+const { generateNewCardId, getCardsList, readCardDataAsync, writeOrCreateCardDataAsync, deleteCardDataAsync} = require(libPath + '/lib.js');
+
 
  /**
   * Logging
@@ -48,11 +51,6 @@ i18n.configure({
 exports.i18n = (msg) => {
   return i18n.__(msg);
 }
-
-/**
- * Filepath
- */
- let cardDir = './';
 
 
 /**
@@ -230,29 +228,11 @@ const saveCard = (cardId, data, color, bgOpacity, closeAfterSave) => {
 
 // Create new card
 exports.createCard = () => {
-  cardIndex++;
-  let cardId = 'card' + cardIndex;
-  buildCard(cardId);
-
-  confDB.get('card')
-    .then((doc) => {
-      doc.index = cardIndex;
-      confDB.put(doc)
-           .catch((err) => {
-              console.log('conf update error: ' + err);
-           });
-    })
-    .catch((err) => {
-      console.log('conf read error: ' + err);
-    });
-
+  buildCard(generateNewCardId());
 };
 
 
 
-var cardsDB = null;
-var confDB = null;
-var cardIndex = 0;
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -261,34 +241,12 @@ app.on('ready', () => {
   console.log('locale: ' + app.getLocale());
   i18n.setLocale(app.getLocale());
 
-  confDB = new pouchDB('conf');
-  cardsDB = new pouchDB('cards');
-
-  // Load config
-  confDB.get('card')
-    .then((doc) => {
-      cardIndex = doc.index;
-      console.log('cardIndex: ' + cardIndex);
-    })
-    .catch((err) => {
-       // create default config
-       confDB.put({ _id: 'card', index: 0 })
-           .then((res) => {
-              console.log('Initial conf created: ' + res);
-           })
-           .catch((err) => {
-              console.log('Initial conf creation error: ' + err);
-           });
-    });
-
   // load cards
-  let docs = null;
   getCardsList()
     .then((arr) => {
       if (arr.length == 0) {
         // Create a new card
-        let cardId = 'card' + cardIndex;
-        buildCard(cardId);
+        buildCard(generateNewCardId());
       }
       else {
         for (let doc of arr) {
@@ -328,69 +286,3 @@ exports.getCardHeight = (cardId) => {
 
 
 
-
-
-const getCardsList = () => {
-  return new Promise((resolve, reject) => {
-    cardsDB.allDocs()
-      .then((res) => {
-        resolve(res.rows);
-      })
-      .catch((err) => {
-        reject(err);
-      });
-    });
-};
-
-const deleteCardDataAsync = (cardId) => {
-  return new Promise((resolve, reject) => {
-    cardsDB.get(cardId)
-    .then((res) => {
-      cardsDB.remove(res);
-      resolve(cardId);
-    })
-    .catch((err) => {
-      reject(err);
-    });
-  });
-};
-
-const readCardDataAsync = (cardId) => {
-  return new Promise((resolve, reject) => {
-    cardsDB.get(cardId)
-    .then((card) => {
-      resolve(card);
-    })
-    .catch((err) => {
-      reject(err);
-    })
-  });
-}
-
-const writeOrCreateCardDataAsync = (newCard) => {
-  return new Promise((resolve, reject) => {
-    console.log('Saving card...: ' + newCard.id + ',x:' + newCard.x + ',y:' + newCard.y + ',w:' + newCard.width + ',h:' + newCard.height + 'color:' + newCard.color + ',bgOpacity:' + newCard.bgOpacity + ',data:' + newCard.data);
-
-    // In PouchDB, _id must be used insted of id
-    newCard._id = newCard.id;
-    delete newCard.id;
-
-    cardsDB.get(newCard._id)
-      .then((oldCard) => {
-        // Update existing card
-        newCard._rev = oldCard._rev;
-      })
-      .catch((err) => {
-        // Create new card
-      })
-      .then(() => {
-        cardsDB.put(newCard)
-          .then((res) => {
-            resolve(res.id);
-          })
-          .catch((err) => {
-            reject('Card save error: ' + err);
-          });
-      });
-  });
-};

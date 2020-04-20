@@ -8,3 +8,27 @@ This looks like sticky notes but accepts any HTML and can have a transparent bac
 Currently no installer. 
 
 Just type './node_modules/.bin/electron .' on the project root directory.
+
+# Options
+
+Set environment variables to change runtime options.
+
+(Linux shell) VARIABLE_NAME=VALUE ./node_modules/.bin/electron .
+
+(Windows command prompt) set VARIABLE_NAME=VALUE & ./node_modules/.bin/electron .
+
+(Windows PowerShell）$env:VARIABLE_NAME="VALUE"; ./node_modules/.bin/electron .
+
+## Variables
+
+### NODE_LIBPATH
+
+PATH to library.
+
+Default value is ./modules
+
+### NODE_CARDDIR
+
+PATH to the place where cards are saved.
+
+Default value is ./cards
