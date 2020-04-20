@@ -81,7 +81,6 @@ const startEditMode = () => {
         main.setCardHeight(card.id, main.getCardHeight(card.id) + toolbarHeight);
         isEditorOpened = true;
       }
-//      resizeWindow();
       CKEDITOR.instances['editor'].focus();
       moveCursorToBottom();
     }
@@ -128,11 +127,11 @@ const endCodeMode = () => {
 };
 
 
-const resizeWindow = () => {
+const resizeCard = () => {
   if(window.innerWidth < main.getMinimumWindowWidth()){
     // CSS has not been rendered yet.
     console.log('retry resize..');
-    setTimeout(resizeWindow, 500);
+    setTimeout(resizeCard, 500);
     return;
   }
 
@@ -154,6 +153,13 @@ const resizeWindow = () => {
   const barwidth = closeBtnLeft - titleBarLeft;
   document.getElementById('titleBar').style.left = titleBarLeft + 'px';
   document.getElementById('titleBar').style.width = barwidth + 'px';
+
+};
+
+const setAndSaveCardColor =  (cardColor, bgOpacity) => {
+  setCardColor(cardColor, bgOpacity);
+  let data = CKEDITOR.instances['editor'].getData();
+  main.saveCard(card.id, data, currentCardColor, currentBgOpacity);
 };
 
 const setCardColor = (cardColor, bgOpacity) => {
@@ -196,13 +202,13 @@ contextMenu({
   showSaveImageAs: true,
   showInspectElement: false,
   append: (defaultActions, params, browserWindow) => [
-    { label: main.i18n('yellow'), click: () => { setCardColor('#ffffa0'); } },
-    { label: main.i18n('red'), click: () => { setCardColor('#ffd0d0'); } },
-    { label: main.i18n('green'), click: () => { setCardColor('#d0ffd0'); } },
-    { label: main.i18n('blue'), click: () => { setCardColor('#d0d0ff'); } },
-    { label: main.i18n('purple'), click: () => { setCardColor('#ffd0ff'); } },
-    { label: main.i18n('gray'), click: () => { setCardColor('#d0d0d0'); } },
-    { label: main.i18n('transparent'), click: () => { setCardColor('#f0f0f0', 0.0); } }
+    { label: main.i18n('yellow'), click: () => { setAndSaveCardColor('#ffffa0'); } },
+    { label: main.i18n('red'), click: () => { setAndSaveCardColor('#ffd0d0'); } },
+    { label: main.i18n('green'), click: () => { setAndSaveCardColor('#d0ffd0'); } },
+    { label: main.i18n('blue'), click: () => { setAndSaveCardColor('#d0d0ff'); } },
+    { label: main.i18n('purple'), click: () => { setAndSaveCardColor('#ffd0ff'); } },
+    { label: main.i18n('gray'), click: () => { setAndSaveCardColor('#d0d0d0'); } },
+    { label: main.i18n('transparent'), click: () => { setAndSaveCardColor('#f0f0f0', 0.0); } }
   ]
 });
 
@@ -288,7 +294,6 @@ const initializeIPCEvents = () => {
     var sprHeight = height - sprBorder*2;
     CKEDITOR.config.width =  sprWidth;
     CKEDITOR.config.height =  sprHeight - document.getElementById('titleBar').offsetHeight - toolbarHeight; 
-    resizeWindow();
 
 //    CKEDITOR.config.uiColor = currentTitleColor;
     CKEDITOR.replace('editor'); 
@@ -303,6 +308,7 @@ const initializeIPCEvents = () => {
 
     setTimeout(()=>{
       document.getElementById('card').style.visibility = 'visible';
+      resizeCard();
     },300);
   });
 
@@ -325,8 +331,31 @@ const initializeIPCEvents = () => {
     }
   });
 
+  ipcRenderer.on('resize-byhand', (newBounds) => {
+    resizeCard();
+    queueSaveCommand();
+  });
+
+  ipcRenderer.on('move-byhand', (newBounds) => {
+    queueSaveCommand();
+  });
+  
 };
 
+/**
+ * queueSaveCommand 
+ * Queuing and execute only last save command to avoid frequent save.
+ */
+let execSaveCommandTimeout = null;
+const execSaveCommand = () => {
+  let data = CKEDITOR.instances['editor'].getData();
+  main.saveCard(card.id, data, currentCardColor, currentBgOpacity);
+};
+
+const queueSaveCommand = () => {
+  clearTimeout(execSaveCommandTimeout);
+  execSaveCommandTimeout = setTimeout(execSaveCommand, 1000);
+}
 
 /**
  * Initialize
@@ -337,10 +366,6 @@ const init = () => {
 
 const onloaded = () => {
   window.removeEventListener('load', onloaded, false);
-  // Resize event must be called after CSS is rendered.
-  window.addEventListener('resize', () => {
-    resizeWindow();
-  });
   // Card must be loaded after CSS is rendered. 
   initializeIPCEvents();
 }

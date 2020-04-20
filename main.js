@@ -12,9 +12,24 @@ const {app, shell, BrowserWindow} = require('electron');
 const i18n = require('i18n');
 const url = require('url');
 const path = require('path');
+const fs = require('fs');
+const util = require('util');
+const pouchDB = require('pouchdb');
 
+/**
+ * Promisify
+ */
+const readFileAsync = util.promisify(fs.readFile);
+const writeFileAsync = util.promisify(fs.writeFile);
 
+ /**
+  * Logging
+  */
 var mylog = require('electron-log');
+
+/**
+ * Error handling
+ */
 process.on('uncaughtException', function(err) {
   mylog.error('electron:event:uncaughtException');
   mylog.error(err);
@@ -22,8 +37,9 @@ process.on('uncaughtException', function(err) {
   app.quit();
 });
 
-
-
+/**
+ * i18n
+ */
 i18n.configure({
   // Locales under the directory are automatically detected.
   // Other locales default to en silently.
@@ -33,9 +49,16 @@ exports.i18n = (msg) => {
   return i18n.__(msg);
 }
 
+/**
+ * Filepath
+ */
+ let cardDir = './';
 
 
-// A small sticky windows is called 'card'.
+/**
+ * Card
+ * A small sticky windows is called 'card'.
+ */
 const cards = {};
 
 const defaultCardWidth = 260;
@@ -71,6 +94,14 @@ let buildCard = function (cardId) {
     shell.openExternal(url);
   });
 
+  card.on('will-resize', (event, newBounds) => {
+    card.webContents.send('resize-byhand', newBounds);
+  });
+
+  card.on('will-move', (event, newBounds) => {
+    card.webContents.send('move-byhand', newBounds);    
+  });
+
   card.loadURL(url.format({
     pathname: path.join(__dirname, 'index.html'),
     protocol: 'file:',
@@ -82,16 +113,19 @@ let buildCard = function (cardId) {
   //----------------------
   card.once('ready-to-show', () => {
     // ready-to-show is emitted after $(document).ready
+
     let data,x,y,w,h,color,bgOpacity;
-    cardsDB.get(cardId)
-      .then((doc) => {
-        data = doc != null ? (doc.data !== undefined ? doc.data : '') : '';
-        w = doc != null ? (doc.width !== undefined ? doc.width : defaultCardWidth) : defaultCardWidth;
-        h = doc != null ? (doc.height !== undefined ? doc.height : defaultCardHeight) : defaultCardHeight;
-        x = doc != null ? (doc.x !== undefined ? doc.x : defaultCardX) : defaultCardX;
-        y = doc != null ? (doc.y !== undefined ? doc.y : defaultCardY) : defaultCardY;
-        color = doc != null ? (doc.color !== undefined ? doc.color : defaultCardColor) : defaultCardColor;
-        bgOpacity = doc != null ? (doc.bgOpacity !== undefined ? doc.bgOpacity : defaultBgOpacity) : defaultBgOpacity;
+
+    readCardDataAsync(cardId)
+      .then((card) => {
+        // Check data
+        data = card != null ? (card.data !== undefined ? card.data : '') : '';
+        w = card != null ? (card.width !== undefined ? card.width : defaultCardWidth) : defaultCardWidth;
+        h = card != null ? (card.height !== undefined ? card.height : defaultCardHeight) : defaultCardHeight;
+        x = card != null ? (card.x !== undefined ? card.x : defaultCardX) : defaultCardX;
+        y = card != null ? (card.y !== undefined ? card.y : defaultCardY) : defaultCardY;
+        color = card != null ? (card.color !== undefined ? card.color : defaultCardColor) : defaultCardColor;
+        bgOpacity = card != null ? (card.bgOpacity !== undefined ? card.bgOpacity : defaultBgOpacity) : defaultBgOpacity;
       })
       .catch((err) => {
         console.log('Load card error: ' + cardId + ', ' + err);
@@ -104,19 +138,11 @@ let buildCard = function (cardId) {
         bgOpacity = defaultBgOpacity;
       })
       .then(() => {
-        // save prev values
-        card.prevData = data;
-        card.prevX = x;
-        card.prevY = y;
-        card.prevW = w;
-        card.prevH = h;
-        card.prevColor = color;
-        card.prevBgOpacity = bgOpacity;
         card.webContents.send('card-loaded', cardId, data, x, y, w, h, color, bgOpacity);
         card.setSize(w, h);
         card.setPosition(x, y);
         card.show();
-        card.blur();        
+        card.blur();
       });
 
   });
@@ -159,70 +185,47 @@ exports.saveCard = (cardId, data, color, bgOpacity) => {
 exports.saveToCloseCard = (cardId, data, color, bgOpacity) => {
   if(data == ''){
     let card = cards[cardId];
-    cardsDB.get(cardId)
+    deleteCardDataAsync(cardId)
+      .catch((err) => {
+        console.log(err);
+      })
       .then((doc) => {
-        cardsDB.remove(doc);
         card.webContents.send('card-close');
       })
-      .catch((err) => {
-        card.webContents.send('card-close');
-      });
   }
   else{
     saveCard(cardId, data, color, bgOpacity, true);
   }
 };
 
-let saveCard = (cardId, data, color, bgOpacity, closeAfterSave) => {
-  let card = cards[cardId];
-  let pos = card.getPosition();
-  let size = card.getSize();
-  let x = pos[0];
-  let y = pos[1];
-  let w = size[0];
-  let h = size[1];
+
+
+
+const saveCard = (cardId, data, color, bgOpacity, closeAfterSave) => {
+  const card = cards[cardId];
+  const pos = card.getPosition();
+  const size = card.getSize();
+
+  const newCard = {
+    id: cardId,
+    x: pos[0],
+    y: pos[1],
+    width: size[0],
+    height: size[1],
+    color: color,
+    bgOpacity: bgOpacity,
+    data: data
+  };
   
-  if(x == card.prevX
-    && y == card.prevY
-    && w == card.prevW
-    && h == card.prevH
-    && data == card.prevData
-    && color == card.prevColor
-    && color == card.prevBgOpacity
-  ){
-    if(closeAfterSave){
+  writeOrCreateCardDataAsync(newCard)
+  .then((res) => {
+    if (closeAfterSave) {
       card.webContents.send('card-close');
     }
-    return;
-  }
-  let newDoc;
-  cardsDB.get(cardId)
-    .then((doc) => {
-      newDoc = doc;
-    })
-    .catch((err) => {
-      // create new card
-      newDoc = { _id: cardId, data: data, width: w, height: h, x: x, y: y, color: color, bgOpacity: bgOpacity };
-    })
-    .then(() => {
-      newDoc.data = card.prevData = data;
-      newDoc.x = card.prevX = x;
-      newDoc.y = card.prevY = y;
-      newDoc.width = card.prevW = w;
-      newDoc.height = card.prevH = h;
-      newDoc.color = card.prevColor = color;
-      newDoc.bgOpacity = card.prevBgOpacity = bgOpacity;
-      console.log('Saving card...: ' + newDoc._id + ',x:' + x + ',y:' + y + ',w:' + w + ',h:' + h + 'color:' + color + ',bgOpacity:' + bgOpacity + ',data:' + data);
-      cardsDB.put(newDoc)
-        .then((res) => {
-          if(closeAfterSave){
-            card.webContents.send('card-close');
-          }
-        })
-        .catch((err) => {
-          console.log('Card save error: ' + err);
-        });
-    });
+  })
+  .catch((err) => {
+    console.log(err);
+  });
 }
 
 // Create new card
@@ -246,7 +249,7 @@ exports.createCard = () => {
 };
 
 
-var PouchDB = require('pouchdb');
+
 var cardsDB = null;
 var confDB = null;
 var cardIndex = 0;
@@ -258,8 +261,8 @@ app.on('ready', () => {
   console.log('locale: ' + app.getLocale());
   i18n.setLocale(app.getLocale());
 
-  confDB = new PouchDB('conf');
-  cardsDB = new PouchDB('cards');
+  confDB = new pouchDB('conf');
+  cardsDB = new pouchDB('cards');
 
   // Load config
   confDB.get('card')
@@ -280,15 +283,15 @@ app.on('ready', () => {
 
   // load cards
   let docs = null;
-  cardsDB.allDocs()
-    .then((res) => {
-      if(res.rows.length == 0){
+  getCardsList()
+    .then((arr) => {
+      if (arr.length == 0) {
         // Create a new card
         let cardId = 'card' + cardIndex;
         buildCard(cardId);
       }
-      else{
-        for (let doc of res.rows){
+      else {
+        for (let doc of arr) {
           let cardId = doc.id;
           buildCard(cardId);
         }
@@ -322,3 +325,72 @@ exports.getCardHeight = (cardId) => {
   const size = card.getSize();
   return size[1];
 }
+
+
+
+
+
+const getCardsList = () => {
+  return new Promise((resolve, reject) => {
+    cardsDB.allDocs()
+      .then((res) => {
+        resolve(res.rows);
+      })
+      .catch((err) => {
+        reject(err);
+      });
+    });
+};
+
+const deleteCardDataAsync = (cardId) => {
+  return new Promise((resolve, reject) => {
+    cardsDB.get(cardId)
+    .then((res) => {
+      cardsDB.remove(res);
+      resolve(cardId);
+    })
+    .catch((err) => {
+      reject(err);
+    });
+  });
+};
+
+const readCardDataAsync = (cardId) => {
+  return new Promise((resolve, reject) => {
+    cardsDB.get(cardId)
+    .then((card) => {
+      resolve(card);
+    })
+    .catch((err) => {
+      reject(err);
+    })
+  });
+}
+
+const writeOrCreateCardDataAsync = (newCard) => {
+  return new Promise((resolve, reject) => {
+    console.log('Saving card...: ' + newCard.id + ',x:' + newCard.x + ',y:' + newCard.y + ',w:' + newCard.width + ',h:' + newCard.height + 'color:' + newCard.color + ',bgOpacity:' + newCard.bgOpacity + ',data:' + newCard.data);
+
+    // In PouchDB, _id must be used insted of id
+    newCard._id = newCard.id;
+    delete newCard.id;
+
+    cardsDB.get(newCard._id)
+      .then((oldCard) => {
+        // Update existing card
+        newCard._rev = oldCard._rev;
+      })
+      .catch((err) => {
+        // Create new card
+      })
+      .then(() => {
+        cardsDB.put(newCard)
+          .then((res) => {
+            resolve(res.id);
+          })
+          .catch((err) => {
+            reject('Card save error: ' + err);
+          });
+      });
+  });
+};
