@@ -9,10 +9,9 @@
 'use strict';
 
 const pouchDB = require('pouchdb');
+const uniqid = require('uniqid');
 
 var cardsDB = null;
-var confDB = null;
-var cardIndex = 0;
 
 let cardDir = './cards';
 if(process.env.NODE_CARDDIR){
@@ -20,31 +19,12 @@ if(process.env.NODE_CARDDIR){
 }
 
 module.exports.generateNewCardId = () => {
-  cardIndex++;
-  return 'card' + cardIndex;
+  // returns 18 byte unique characters
+  return uniqid();
 };
 
 module.exports.getCardsList = () => {
-  confDB = new pouchDB('conf');
   cardsDB = new pouchDB(cardDir);
-
-  // Load config
-  confDB.get('card')
-    .then((doc) => {
-      cardIndex = doc.index;
-      console.log('cardIndex: ' + cardIndex);
-    })
-    .catch((err) => {
-      // create default config
-      confDB.put({ _id: 'card', index: 0 })
-        .then((res) => {
-          console.log('Initial conf created: ' + res);
-        })
-        .catch((err) => {
-          console.log('Initial conf creation error: ' + err);
-        });
-    });
-
   return new Promise((resolve, reject) => {
     cardsDB.allDocs()
       .then((res) => {
@@ -96,19 +76,6 @@ module.exports.writeOrCreateCardDataAsync = (newCard) => {
       })
       .catch((err) => {
         // Create new card
-
-        confDB.get('card')
-          .then((doc) => {
-            doc.index = cardIndex;
-            confDB.put(doc)
-              .catch((err) => {
-                console.log('conf update error: ' + err);
-              });
-          })
-          .catch((err) => {
-            console.log('conf read error: ' + err);
-          });
-
       })
       .then(() => {
         cardsDB.put(newCard)
