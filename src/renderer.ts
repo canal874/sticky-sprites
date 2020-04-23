@@ -6,14 +6,18 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-const main = require('electron').remote.require('./main');
-const ipcRenderer = require( 'electron' ).ipcRenderer;
-const {remote, shell} = require('electron');
-const contextMenu = require('electron-context-menu');
+import { remote } from 'electron';
+import { ipcRenderer } from 'electron';
 
-const {Menu, MenuItem} = remote;
+// electron-context-menu uses CommonJS compatible export
+import contextMenu = require('electron-context-menu');
 
-const card = { id: '' };
+import { CardProp } from './modules_common/types';
+
+// Cannot find module './main' because webpack packed js files into index.js
+const main = remote.require('./main');
+
+let id: string = '';
 
 const toolbarHeight = 30;
 
@@ -24,8 +28,8 @@ let currentTitleColor = '#d0d090';
 let currentBgOpacity = 1.0;
 
 let isEditorReady = false;
-
 let isEditorOpened = false;
+let resizedByCode = false;    
 
 
 const close = () => {
@@ -44,9 +48,9 @@ const moveCursorToBottom = () => {
   if (selected_ranges.length > 0) {
     let node = selected_ranges[0].startContainer; // selecting the starting node
     let parents = node.getParents(true);
-    node = parents[parents.length - 2].getFirst();
+    node = (parents[parents.length - 2] as CKEDITOR.dom.element).getFirst() as CKEDITOR.dom.element;
     while (true) {
-      let x = node.getNext();
+      let x: CKEDITOR.dom.element = node.getNext() as CKEDITOR.dom.element;
       if (x == null) {
         break;
       }
@@ -60,7 +64,7 @@ const moveCursorToBottom = () => {
   }
 };
 
-const execAfterWysiwygChanged = (func) => {
+const execAfterWysiwygChanged = (func: any) => {
   let editor = CKEDITOR.instances['editor'];
   let s = editor.getSelection(); // getting selection
   if (s) {
@@ -73,8 +77,8 @@ const execAfterWysiwygChanged = (func) => {
 
 const startEditMode = () => {
   if(!isEditorOpened){
-    resizedByCode = true;
-    main.setCardHeight(card.id, main.getCardHeight(card.id) + toolbarHeight);
+    resizedByCode = false;
+    main.setCardHeight(id, main.getCardHeight(id) + toolbarHeight);
     isEditorOpened = true;
   }
 
@@ -92,36 +96,36 @@ const startEditMode = () => {
 
 const endEditMode = () => {
   isEditorOpened = false;  
-  main.setCardHeight(card.id, main.getCardHeight(card.id) - toolbarHeight);
+  main.setCardHeight(id, main.getCardHeight(id) - toolbarHeight);
 
   let data = CKEDITOR.instances['editor'].getData();
   document.getElementById('contents').innerHTML = data;
   document.getElementById('contents').style.visibility = 'visible';
   setTimeout(() => {
-    main.saveCard(card.id, data, currentCardColor, currentBgOpacity);
+    main.saveCard(new CardProp(id, data, undefined, undefined, undefined, undefined, currentCardColor, currentBgOpacity))    
   }, 1);
   document.getElementById('cke_editor').style.visibility = 'hidden';
 
   codeMode = false;
   document.getElementById('codeBtn').style.color = '#000000';
-  CKEDITOR.instances['editor'].setMode('wysiwyg');
+  CKEDITOR.instances['editor'].setMode('wysiwyg', () => {});
 };
 
 const startCodeMode = () => {
   codeMode = true;
   startEditMode();
   document.getElementById('codeBtn').style.color = '#a0a0a0';
-  CKEDITOR.instances['editor'].setMode('source');
+  CKEDITOR.instances['editor'].setMode('source', () => {});
   CKEDITOR.instances['editor'].focus();
 };
 
 const endCodeMode = () => {
   codeMode = false;
   document.getElementById('codeBtn').style.color = '#000000';
-  CKEDITOR.instances['editor'].setMode('wysiwyg');
+  CKEDITOR.instances['editor'].setMode('wysiwyg', () => {});
   execAfterWysiwygChanged(
     function () {
-      document.querySelector('#cke_1_contents .cke_wysiwyg_frame').style.backgroundColor = currentCardColor;
+      (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = currentCardColor;
       CKEDITOR.instances['editor'].focus();
       moveCursorToBottom();
     }
@@ -158,21 +162,21 @@ const resizeCard = () => {
 
 };
 
-const setAndSaveCardColor = (cardColor, bgOpacity) => {
-  setCardColor(cardColor, bgOpacity);
+const setAndSaveCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
+  setCardColor(bgColor, bgOpacity);
   let data = CKEDITOR.instances['editor'].getData();
-  main.saveCard(card.id, data, currentCardColor, currentBgOpacity);
+  main.saveCard(new CardProp(id, data, undefined, undefined, undefined, undefined, currentCardColor, currentBgOpacity))    
 };
 
-const setCardColor = (cardColor, bgOpacity) => {
+const setCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
   // Set card properties
   // cardColor : #HEX (e.g. #ff00ff)
   // cardColor : 0.0-1.0
 
-  currentCardColor = cardColor;
-  currentBgOpacity = bgOpacity === undefined ? 1.0 : bgOpacity;
+  currentCardColor = bgColor;
+  currentBgOpacity = bgOpacity;
   let scale = 0.8;
-  cardColor.match(/#(\w\w)(\w\w)(\w\w)/)
+  bgColor.match(/#(\w\w)(\w\w)(\w\w)/);
   let red = parseInt(RegExp.$1, 16);
   let green = parseInt(RegExp.$2, 16);
   let blue = parseInt(RegExp.$3, 16);
@@ -187,7 +191,7 @@ const setCardColor = (cardColor, bgOpacity) => {
   currentTitleColor = '#' + r + g + b;
 
   Array.from(document.getElementsByClassName('title-color')).forEach((node, index, list) =>  {
-    node.style.backgroundColor = currentTitleColor;
+    (node as HTMLElement).style.backgroundColor = currentTitleColor;
   });
 
   if (isEditorReady) {
@@ -195,7 +199,7 @@ const setCardColor = (cardColor, bgOpacity) => {
     document.getElementById('cke_1_bottom').style.backgroundColor = currentTitleColor;
     document.getElementById('cke_1_bottom').style.borderBottomColor = currentTitleColor;
     document.getElementById('cke_1_bottom').style.borderTopColor = currentTitleColor;
-    document.querySelector('#cke_1_contents .cke_wysiwyg_frame').style.backgroundColor = currentCardColor;
+    (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = currentCardColor;
   }
 };
 
@@ -204,13 +208,13 @@ contextMenu({
   showSaveImageAs: true,
   showInspectElement: false,
   append: (defaultActions, params, browserWindow) => [
-    { label: main.i18n('yellow'), click: () => { setAndSaveCardColor('#ffffa0'); } },
-    { label: main.i18n('red'), click: () => { setAndSaveCardColor('#ffd0d0'); } },
-    { label: main.i18n('green'), click: () => { setAndSaveCardColor('#d0ffd0'); } },
-    { label: main.i18n('blue'), click: () => { setAndSaveCardColor('#d0d0ff'); } },
-    { label: main.i18n('purple'), click: () => { setAndSaveCardColor('#ffd0ff'); } },
-    { label: main.i18n('gray'), click: () => { setAndSaveCardColor('#d0d0d0'); } },
-    { label: main.i18n('transparent'), click: () => { setAndSaveCardColor('#f0f0f0', 0.0); } }
+    { label: main.MESSAGE.yellow, click: () => { setAndSaveCardColor('#ffffa0'); } },
+    { label: main.MESSAGE.red, click: () => { setAndSaveCardColor('#ffd0d0'); } },
+    { label: main.MESSAGE.green, click: () => { setAndSaveCardColor('#d0ffd0'); } },
+    { label: main.MESSAGE.blue, click: () => { setAndSaveCardColor('#d0d0ff'); } },
+    { label: main.MESSAGE.purple, click: () => { setAndSaveCardColor('#ffd0ff'); } },
+    { label: main.MESSAGE.gray, click: () => { setAndSaveCardColor('#d0d0d0'); } },
+    { label: main.MESSAGE.transparent, click: () => { setAndSaveCardColor('#f0f0f0', 0.0); } }
   ]
 });
 
@@ -269,10 +273,11 @@ const initializeUIEvents = () => {
   document.getElementById('closeBtn').addEventListener('click', () => {
     let data = CKEDITOR.instances['editor'].getData();
     if (data == '') {
-      main.saveToCloseCard(card.id, data, currentCardColor, currentBgOpacity);
+      main.saveToCloseCard(new CardProp(id, data, undefined, undefined, undefined, undefined, currentCardColor, currentBgOpacity));
+      
     }
-    else if (window.confirm(main.i18n('confirm-closing'))) {
-      main.saveToCloseCard(card.id, data, currentCardColor, currentBgOpacity);
+    else if (window.confirm(main.MESSAGE.confirm_closing)) {
+      main.saveToCloseCard(new CardProp(id, data, undefined, undefined, undefined, undefined, currentCardColor, currentBgOpacity));
     }
   });
 
@@ -282,18 +287,17 @@ const initializeIPCEvents = () => {
   // ipc (inter-process communication)
 
   // Initialize card
-  ipcRenderer.on('card-loaded', (event, id, data, x, y,  width, height, color, bgOpacity) => {
-    card.id = id;
-    Object.freeze(card);
+  ipcRenderer.on('card-loaded', (event: Electron.IpcRendererEvent, _prop: CardProp) => {
+    id = _prop.id;
     
-    document.getElementById('editor').innerHTML = data;
-    document.getElementById('contents').innerHTML = data;
+    document.getElementById('editor').innerHTML = _prop.data;
+    document.getElementById('contents').innerHTML = _prop.data;
 
-    setCardColor(color, bgOpacity);
+    setCardColor(_prop.bgColor, _prop.bgOpacity);
 
     var sprBorder = parseInt(window.getComputedStyle(document.getElementById('card')).borderLeft);
-    var sprWidth = width - sprBorder*2;
-    var sprHeight = height - sprBorder*2;
+    var sprWidth = _prop.width - sprBorder*2;
+    var sprHeight = _prop.height - sprBorder*2;
     CKEDITOR.config.width =  sprWidth;
     CKEDITOR.config.height =  sprHeight - document.getElementById('titleBar').offsetHeight - toolbarHeight; 
 
@@ -305,7 +309,7 @@ const initializeIPCEvents = () => {
       document.getElementById('cke_1_bottom').style.backgroundColor = currentTitleColor;
       document.getElementById('cke_1_bottom').style.borderBottomColor = currentTitleColor;
       document.getElementById('cke_1_bottom').style.borderTopColor = currentTitleColor;
-      document.querySelector('#cke_1_contents .cke_wysiwyg_frame').style.backgroundColor = currentCardColor;
+      (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = currentCardColor;
     });
 
     setTimeout(()=>{
@@ -314,16 +318,16 @@ const initializeIPCEvents = () => {
     },300);
   });
 
-  ipcRenderer.on('card-close', (event) => {
+  ipcRenderer.on('card-close', (event: Electron.IpcRendererEvent) => {
     close();
   });
 
-  ipcRenderer.on('card-focused', (event) => {
+  ipcRenderer.on('card-focused', (event: Electron.IpcRendererEvent) => {
     document.getElementById('card').style.border = '3px solid red';
     document.getElementById('title').style.visibility = 'visible';
   });
   
-  ipcRenderer.on('card-blured', (event) => {
+  ipcRenderer.on('card-blured', (event: Electron.IpcRendererEvent) => {
     if(document.getElementById('contents').style.visibility == 'hidden'){
       endEditMode();
     }
@@ -333,25 +337,26 @@ const initializeIPCEvents = () => {
     }
   });
 
-  ipcRenderer.on('resize-byhand', (newBounds) => {
+  ipcRenderer.on('resize-byhand', (newBounds: Electron.IpcRendererEvent) => {
     resizeCard();
     queueSaveCommand();
   });
 
-  ipcRenderer.on('move-byhand', (newBounds) => {
+  ipcRenderer.on('move-byhand', (newBounds: Electron.IpcRendererEvent) => {
     queueSaveCommand();
   });
   
+  ipcRenderer.send('dom-loaded', remote.getCurrentWindow().getTitle());
 };
 
 /**
  * queueSaveCommand 
  * Queuing and execute only last save command to avoid frequent save.
  */
-let execSaveCommandTimeout = null;
+let execSaveCommandTimeout: NodeJS.Timeout = null;
 const execSaveCommand = () => {
   let data = CKEDITOR.instances['editor'].getData();
-  main.saveCard(card.id, data, currentCardColor, currentBgOpacity);
+  main.saveCard(new CardProp(id, data, undefined, undefined, undefined, undefined, currentCardColor, currentBgOpacity))
 };
 
 const queueSaveCommand = () => {
@@ -362,9 +367,6 @@ const queueSaveCommand = () => {
 /**
  * Initialize
  */
-const init = () => {
-  initializeUIEvents();
-};
 
 const onloaded = () => {
   window.removeEventListener('load', onloaded, false);
@@ -374,18 +376,11 @@ const onloaded = () => {
       resizeCard();
     }
   }, false);
+
+  initializeUIEvents();
   // Card must be loaded after CSS is rendered. 
   initializeIPCEvents();
 }
 
-if ( document.readyState === 'complete' ) {
-  init();
-} else {
-  const domLoaded = () => {
-    document.removeEventListener( 'DOMContentLoaded', domLoaded, false );
-    init();
-  };
-  document.addEventListener( 'DOMContentLoaded', domLoaded, false );
-}
-
+/** This script is inserted at the last part of <html> element */
 window.addEventListener('load', onloaded, false);
