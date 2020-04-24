@@ -31,7 +31,7 @@ Set environment variables to change runtime options.
 
 PATH to extra modules
 
-Default value is modules_ext
+Default value is ./modules_ext
 
 ### NODE_CARDDIR
 
