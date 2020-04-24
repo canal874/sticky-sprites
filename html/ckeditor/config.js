@@ -8,7 +8,7 @@ CKEDITOR.editorConfig = function( config ) {
 	config.shiftEnterMode = 1;
 	config.allowedContent = true;
 	
-	config.contentsCss = 'css/ckeditor-media-stickies-contents.css';
+	config.contentsCss = './css/ckeditor-media-stickies-contents.css';
 
 	config.toolbar = [
 		{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'FontSize', 'TextColor', 'BGColor', 'EmojiPanel' ] }

@@ -9,8 +9,8 @@ lerna-debug.log*
 # Card dir
 cards/
 
-# Temp dir
-tmp/
+# Dist dir
+dist/
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
