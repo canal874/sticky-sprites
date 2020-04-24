@@ -21,6 +21,11 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 }
 
 /**
+* i18n
+*/
+export let MESSAGE: Object = null;
+
+/**
  * Filepath
  */
 let extraModulePath = './modules_ext';
@@ -30,12 +35,6 @@ if(process.env.NODE_LIBPATH){
 // variable cannot be placed after import from.
 // import { CardIO } from extraModulePath + '/iolib.js';
 const { CardIO } = require(`${extraModulePath}/iolib`);
-
-/**
- * i18n
- */
-selectPreferredLanguage(['en', 'ja']);
-export const MESSAGE = translations.messages();
 
 /**
  * Const
@@ -205,6 +204,9 @@ export const createCard = () => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   // locale can be got after 'ready'
+  console.log('locale: ' + app.getLocale());
+  selectPreferredLanguage(['en'], [app.getLocale(), 'en']);
+  MESSAGE = translations.messages();
 
   // load cards
   CardIO.getCardIdList()
