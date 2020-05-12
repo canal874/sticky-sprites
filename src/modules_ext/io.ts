@@ -12,7 +12,7 @@
  * Common part
  */
 
-import { CardProp, CardInputOutput } from '../modules_common/types';
+import { CardProp, ICardIO } from '../modules_common/types';
 import uniqid from 'uniqid';
 
 let cardDir = './cards';
@@ -28,14 +28,14 @@ import pouchDB from 'pouchdb';
 var cardsDB: PouchDB.Database<{}> = null;
 
 
-class CardInputOutputClass implements CardInputOutput {
+class CardIOClass implements ICardIO {
 
-  generateNewCardId = (): string => {
+  public generateNewCardId = (): string => {
     // returns 18 byte unique characters
     return uniqid();
   };
 
-  getCardIdList = (): Promise<Array<string>> => {
+  public getCardIdList = (): Promise<Array<string>> => {
     // returns all card ids.
     cardsDB = new pouchDB(cardDir);
     return new Promise((resolve, reject) => {
@@ -49,7 +49,7 @@ class CardInputOutputClass implements CardInputOutput {
     });
   };
 
-  deleteCardData = (id: string): Promise<string> => {
+  public deleteCardData = (id: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       cardsDB.get(id)
         .then((res) => {
@@ -62,13 +62,13 @@ class CardInputOutputClass implements CardInputOutput {
     });
   };
 
-  readCardData = (id: string): Promise<CardProp> => {
+  public readCardData = (id: string): Promise<CardProp> => {
     return new Promise((resolve, reject) => {
       cardsDB.get(id)
         .then((doc) => {
           // type of doc cannot be resolved by @types/pouchdb-core
-          // @ts-ignore
-          resolve(new CardProp(id, doc.data, doc.x, doc.y, doc.width, doc.height, doc.bgColor, doc.bgOpacity));
+          // @ts-ignore          
+          resolve(new CardProp(id, doc.data, doc.x, doc.y, doc.width, doc.height, doc.titleColor, doc.bgColor, doc.bgOpacity));
         })
         .catch((err) => {
           reject(err);
@@ -76,7 +76,7 @@ class CardInputOutputClass implements CardInputOutput {
     });
   }
 
-  writeOrCreateCardData = (prop: CardProp): Promise<string> => {
+  public writeOrCreateCardData = (prop: CardProp): Promise<string> => {
     return new Promise((resolve, reject) => {
       console.log('Saving card...: ' + prop.id + ',x:' + prop.x + ',y:' + prop.y + ',w:' + prop.width + ',h:' + prop.height + 'color:' + prop.bgColor + ',bgOpacity:' + prop.bgOpacity + ',data:' + prop.data);
 
@@ -107,7 +107,7 @@ class CardInputOutputClass implements CardInputOutput {
   };
 }
 
-
+// Singleton.
 // Must export const CardIO.
-// CardIO is an instance of a class that implements CardInputOutput intercface.
-export const CardIO = new CardInputOutputClass();
+// CardIO is an instance of a class that implements ICardIO intercface.
+export const CardIO = new CardIOClass();

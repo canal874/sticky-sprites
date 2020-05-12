@@ -8,128 +8,19 @@
 
 import { remote } from 'electron';
 import { ipcRenderer } from 'electron';
+import { CardProp, ICardEditor } from './modules_common/types';
+import { CardEditor } from './modules_ext/editor';
+import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
 
-// electron-context-menu uses CommonJS compatible export
-import contextMenu = require('electron-context-menu');
-
-import { CardProp } from './modules_common/types';
-
-// Cannot find module './main' because webpack packed js files into index.js
 const main = remote.require('./main');
 
-let id: string = '';
+let cardEditor: ICardEditor;
 
-const toolbarHeight = 30;
-
-let codeMode = false;
-
-let currentCardColor = '#f0f0a0';
-let currentTitleColor = '#d0d090';
-let currentBgOpacity = 1.0;
-
-let isEditorReady = false;
-let isEditorOpened = false;
-let resizedByCode = false;    
+let cardProp: CardProp;
 
 
 const close = () => {
   window.close();
-};
-
-
-/**
- * Editor 
- */
-
-const moveCursorToBottom = () => {
-  let editor = CKEDITOR.instances['editor'];
-  let s = editor.getSelection(); // getting selection
-  let selected_ranges = s.getRanges(); // getting ranges
-  if (selected_ranges.length > 0) {
-    let node = selected_ranges[0].startContainer; // selecting the starting node
-    let parents = node.getParents(true);
-    node = (parents[parents.length - 2] as CKEDITOR.dom.element).getFirst() as CKEDITOR.dom.element;
-    while (true) {
-      let x: CKEDITOR.dom.element = node.getNext() as CKEDITOR.dom.element;
-      if (x == null) {
-        break;
-      }
-      node = x;
-    }
-
-    s.selectElement(node);
-    selected_ranges = s.getRanges();
-    selected_ranges[0].collapse(false);  //  false collapses the range to the end of the selected node, true before the node.
-    s.selectRanges(selected_ranges);  // putting the current selection there
-  }
-};
-
-const execAfterWysiwygChanged = (func: any) => {
-  let editor = CKEDITOR.instances['editor'];
-  let s = editor.getSelection(); // getting selection
-  if (s) {
-    func();
-  }
-  else {
-    setTimeout(() => { execAfterWysiwygChanged(func) }, 100);
-  }
-};
-
-const startEditMode = () => {
-  if(!isEditorOpened){
-    resizedByCode = false;
-    main.setCardHeight(id, main.getCardHeight(id) + toolbarHeight);
-    isEditorOpened = true;
-  }
-
-  document.getElementById('contents').style.visibility = 'hidden';
-  document.getElementById('cke_editor').style.visibility = 'visible';
-
-  execAfterWysiwygChanged(
-    function () {
-      CKEDITOR.instances['editor'].focus();
-      moveCursorToBottom();
-    }
-  );
-
-};
-
-const endEditMode = () => {
-  isEditorOpened = false;  
-  main.setCardHeight(id, main.getCardHeight(id) - toolbarHeight);
-
-  let data = CKEDITOR.instances['editor'].getData();
-  document.getElementById('contents').innerHTML = data;
-  document.getElementById('contents').style.visibility = 'visible';
-  setTimeout(() => {
-    main.saveCard(new CardProp(id, data, undefined, undefined, undefined, undefined, currentCardColor, currentBgOpacity))    
-  }, 1);
-  document.getElementById('cke_editor').style.visibility = 'hidden';
-
-  codeMode = false;
-  document.getElementById('codeBtn').style.color = '#000000';
-  CKEDITOR.instances['editor'].setMode('wysiwyg', () => {});
-};
-
-const startCodeMode = () => {
-  codeMode = true;
-  startEditMode();
-  document.getElementById('codeBtn').style.color = '#a0a0a0';
-  CKEDITOR.instances['editor'].setMode('source', () => {});
-  CKEDITOR.instances['editor'].focus();
-};
-
-const endCodeMode = () => {
-  codeMode = false;
-  document.getElementById('codeBtn').style.color = '#000000';
-  CKEDITOR.instances['editor'].setMode('wysiwyg', () => {});
-  execAfterWysiwygChanged(
-    function () {
-      (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = currentCardColor;
-      CKEDITOR.instances['editor'].focus();
-      moveCursorToBottom();
-    }
-  );
 };
 
 
@@ -149,8 +40,8 @@ const resizeCard = () => {
   document.getElementById('contents').style.width = (cardWidth - contPadding * 2) + 'px';
   document.getElementById('contents').style.height = (cardHeight - document.getElementById('titleBar').offsetHeight - contPadding * 2) + 'px';
 
-  if (isEditorReady) {
-    CKEDITOR.instances['editor'].resize(cardWidth, cardHeight - document.getElementById('titleBar').offsetHeight);
+  if (cardEditor && cardEditor.isEditorReady) {
+    cardEditor.setSize(cardWidth, cardHeight);
   }
 
   const closeBtnLeft = cardWidth - document.getElementById('closeBtn').offsetWidth;
@@ -164,8 +55,8 @@ const resizeCard = () => {
 
 const setAndSaveCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
   setCardColor(bgColor, bgOpacity);
-  let data = CKEDITOR.instances['editor'].getData();
-  main.saveCard(new CardProp(id, data, undefined, undefined, undefined, undefined, currentCardColor, currentBgOpacity))    
+  cardProp.data = CKEDITOR.instances['editor'].getData();
+  main.saveCard(cardProp)    
 };
 
 const setCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
@@ -173,14 +64,14 @@ const setCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
   // cardColor : #HEX (e.g. #ff00ff)
   // cardColor : 0.0-1.0
 
-  currentCardColor = bgColor;
-  currentBgOpacity = bgOpacity;
+  cardProp.bgColor = bgColor;
+  cardProp.bgOpacity = bgOpacity;
   let scale = 0.8;
   bgColor.match(/#(\w\w)(\w\w)(\w\w)/);
   let red = parseInt(RegExp.$1, 16);
   let green = parseInt(RegExp.$2, 16);
   let blue = parseInt(RegExp.$3, 16);
-  document.getElementById('contents').style.backgroundColor = 'rgba(' + red + ',' + green + ',' + blue + ',' + currentBgOpacity + ')';
+  document.getElementById('contents').style.backgroundColor = 'rgba(' + red + ',' + green + ',' + blue + ',' + cardProp.bgOpacity + ')';
   
   let r = Math.floor(red * scale).toString(16);
   if (r.length == 1) { r = '0' + r; }
@@ -188,18 +79,19 @@ const setCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
   if (g.length == 1) { g = '0' + g; }
   let b = Math.floor(blue * scale).toString(16);
   if (b.length == 1) { b = '0' + b; }
-  currentTitleColor = '#' + r + g + b;
+  cardProp.titleColor = '#' + r + g + b;
 
   Array.from(document.getElementsByClassName('title-color')).forEach((node, index, list) =>  {
-    (node as HTMLElement).style.backgroundColor = currentTitleColor;
+    (node as HTMLElement).style.backgroundColor = cardProp.titleColor;
   });
 
-  if (isEditorReady) {
-    document.getElementById('cke_editor').style.borderTopColor = currentTitleColor;
-    document.getElementById('cke_1_bottom').style.backgroundColor = currentTitleColor;
-    document.getElementById('cke_1_bottom').style.borderBottomColor = currentTitleColor;
-    document.getElementById('cke_1_bottom').style.borderTopColor = currentTitleColor;
-    (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = currentCardColor;
+  if (cardEditor && cardEditor.isEditorReady) {
+    document.getElementById('cke_editor').style.borderTopColor
+      = document.getElementById('cke_1_bottom').style.backgroundColor
+      = document.getElementById('cke_1_bottom').style.borderBottomColor
+      = document.getElementById('cke_1_bottom').style.borderTopColor
+      = cardProp.titleColor;
+    (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = cardProp.bgColor;
   }
 };
 
@@ -257,27 +149,22 @@ const initializeUIEvents = () => {
       return;
     }
     else{
-      startEditMode();
+      cardEditor.startEditMode();
     }
   });
 
   document.getElementById('codeBtn').addEventListener('click', () => {
-    if (!codeMode) {
-      startCodeMode();
-    }
-    else {
-      endCodeMode();
-    }
+    cardEditor.toggleCodeMode();
   });
 
   document.getElementById('closeBtn').addEventListener('click', () => {
-    let data = CKEDITOR.instances['editor'].getData();
-    if (data == '') {
-      main.saveToCloseCard(new CardProp(id, data, undefined, undefined, undefined, undefined, currentCardColor, currentBgOpacity));
+    cardProp.data = CKEDITOR.instances['editor'].getData();
+    if (cardProp.data == '') {
+      main.saveToCloseCard(cardProp);
       
     }
     else if (window.confirm(main.MESSAGE.confirm_closing)) {
-      main.saveToCloseCard(new CardProp(id, data, undefined, undefined, undefined, undefined, currentCardColor, currentBgOpacity));
+      main.saveToCloseCard(cardProp);
     }
   });
 
@@ -288,29 +175,10 @@ const initializeIPCEvents = () => {
 
   // Initialize card
   ipcRenderer.on('card-loaded', (event: Electron.IpcRendererEvent, _prop: CardProp) => {
-    id = _prop.id;
-    
-    document.getElementById('editor').innerHTML = _prop.data;
-    document.getElementById('contents').innerHTML = _prop.data;
-
+    cardProp = _prop;
     setCardColor(_prop.bgColor, _prop.bgOpacity);
 
-    var sprBorder = parseInt(window.getComputedStyle(document.getElementById('card')).borderLeft);
-    var sprWidth = _prop.width - sprBorder*2;
-    var sprHeight = _prop.height - sprBorder*2;
-    CKEDITOR.config.width =  sprWidth;
-    CKEDITOR.config.height =  sprHeight - document.getElementById('titleBar').offsetHeight - toolbarHeight; 
-
-//    CKEDITOR.config.uiColor = currentTitleColor;
-    CKEDITOR.replace('editor'); 
-    CKEDITOR.on('instanceReady', () => {
-      isEditorReady = true;
-      document.getElementById('cke_editor').style.borderTopColor = currentTitleColor;      
-      document.getElementById('cke_1_bottom').style.backgroundColor = currentTitleColor;
-      document.getElementById('cke_1_bottom').style.borderBottomColor = currentTitleColor;
-      document.getElementById('cke_1_bottom').style.borderTopColor = currentTitleColor;
-      (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = currentCardColor;
-    });
+    cardEditor = new CardEditor(cardProp);
 
     setTimeout(()=>{
       document.getElementById('card').style.visibility = 'visible';
@@ -329,10 +197,10 @@ const initializeIPCEvents = () => {
   
   ipcRenderer.on('card-blured', (event: Electron.IpcRendererEvent) => {
     if(document.getElementById('contents').style.visibility == 'hidden'){
-      endEditMode();
+      cardEditor.endEditMode();
     }
     document.getElementById('card').style.border = '3px solid transparent';
-    if(currentBgOpacity == 0){
+    if(cardProp.bgOpacity == 0){
       document.getElementById('title').style.visibility = 'hidden';
     }
   });
@@ -355,8 +223,8 @@ const initializeIPCEvents = () => {
  */
 let execSaveCommandTimeout: NodeJS.Timeout = null;
 const execSaveCommand = () => {
-  let data = CKEDITOR.instances['editor'].getData();
-  main.saveCard(new CardProp(id, data, undefined, undefined, undefined, undefined, currentCardColor, currentBgOpacity))
+  cardProp.data = CKEDITOR.instances['editor'].getData();
+  main.saveCard(cardProp);
 };
 
 const queueSaveCommand = () => {
@@ -371,8 +239,8 @@ const queueSaveCommand = () => {
 const onloaded = () => {
   window.removeEventListener('load', onloaded, false);
   window.addEventListener('resize', () => {
-    if(resizedByCode){
-      resizedByCode = false;
+    if(cardEditor && cardEditor.resizedByCode){
+      cardEditor.resizedByCode = false;
       resizeCard();
     }
   }, false);

@@ -14,27 +14,18 @@ import url from 'url';
 import path from 'path'
 import translations from './modules_common/base.msg';
 import { CardProp } from './modules_common/types';
+import { CardIO } from './modules_ext/io';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
   app.quit();
 }
 
+
 /**
 * i18n
 */
 export let MESSAGE: Object = null;
-
-/**
- * Filepath
- */
-let extraModulePath = './modules_ext';
-if(process.env.NODE_LIBPATH){
-  extraModulePath = process.env.NODE_EXTRA_MODULE_PATH;
-}
-// variable cannot be placed after import from.
-// import { CardIO } from extraModulePath + '/iolib.js';
-const { CardIO } = require(`${extraModulePath}/iolib`);
 
 /**
  * Const
@@ -169,16 +160,17 @@ export const saveCard = (prop: CardProp, closeAfterSave = false) => {
   const pos = card.window.getPosition();
   const size = card.window.getSize();
 
-  const newCard = {
-    id: prop.id,
-    x: pos[0],
-    y: pos[1],
-    width: size[0],
-    height: size[1],
-    color: prop.bgColor,
-    bgOpacity: prop.bgOpacity,
-    data: prop.data
-  };
+  const newCard = new CardProp(
+    prop.id,
+    prop.data,    
+    pos[0],
+    pos[1],
+    size[0],
+    size[1],
+    prop.titleColor,
+    prop.bgColor,
+    prop.bgOpacity
+  );
   
   CardIO.writeOrCreateCardData(newCard)
   .then(() => {
@@ -205,7 +197,7 @@ export const createCard = () => {
 app.on('ready', () => {
   // locale can be got after 'ready'
   console.log('locale: ' + app.getLocale());
-  selectPreferredLanguage(['en'], [app.getLocale(), 'en']);
+  selectPreferredLanguage(['en', 'ja'], [app.getLocale(), 'en']);
   MESSAGE = translations.messages();
 
   // load cards

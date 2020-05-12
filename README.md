@@ -27,12 +27,6 @@ Set environment variables to change runtime options.
 
 ## Variables
 
-### NODE_EXTRA_MODULE_PATH;
-
-PATH to extra modules
-
-Default value is ./modules_ext
-
 ### NODE_CARDDIR
 
 PATH to the place where cards are saved.

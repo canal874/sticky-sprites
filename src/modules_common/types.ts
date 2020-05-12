@@ -16,14 +16,27 @@ export class CardProp {
     public y: number = 70,
     public width: number = 260,
     public height: number = 176,
+    public titleColor: string = '#d0d090',
     public bgColor: string = '#ffffa0',
     public bgOpacity: number = 1.0){}
 };
 
-export interface CardInputOutput{
-  generateNewCardId(): string,
-  getCardIdList(): Promise<Array<string>>,
-  readCardData(id: string): Promise<CardProp>,
-  writeOrCreateCardData(prop: CardProp): Promise<string>,
-  deleteCardData(id: string): Promise<string>
+export interface ICardIO {
+  generateNewCardId(): string;
+  getCardIdList(): Promise<Array<string>>;
+  readCardData(id: string): Promise<CardProp>;
+  writeOrCreateCardData(prop: CardProp): Promise<string>;
+  deleteCardData(id: string): Promise<string>;
+};
+
+export interface ICardEditor {
+  resizedByCode: boolean;
+  isEditorReady: boolean;
+  readonly hasCodeMode: boolean;
+  startEditMode(): void;
+  endEditMode(): void;
+  toggleCodeMode(): void;
+  startCodeMode(): void;
+  endCodeMode(): void;
+  setSize(width: number, height: number): void;
 }
