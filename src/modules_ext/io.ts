@@ -12,7 +12,7 @@
  * Common part
  */
 
-import { CardProp, ICardIO } from '../modules_common/types';
+import { CardProp, CardPropSerializable, ICardIO } from '../modules_common/types';
 import uniqid from 'uniqid';
 
 let cardDir = './cards';
@@ -66,9 +66,23 @@ class CardIOClass implements ICardIO {
     return new Promise((resolve, reject) => {
       cardsDB.get(id)
         .then((doc) => {
-          // type of doc cannot be resolved by @types/pouchdb-core
-          // @ts-ignore          
-          resolve(new CardProp(id, doc.data, doc.x, doc.y, doc.width, doc.height, doc.titleColor, doc.bgColor, doc.bgOpacity));
+          const propsRequired: CardPropSerializable = (new CardProp('')).serialize();
+          // Checking properties retrieved from database
+          for(let key in propsRequired){
+            if(!doc.hasOwnProperty(key)){
+              console.log(`db entry id "${id}" lacks "${key}"`);
+            }
+            else{
+              // Type of doc cannot be resolved by @types/pouchdb-core
+              // @ts-ignore          
+              propsRequired[key] = doc[key];
+            }
+          }
+
+          resolve(new CardProp(id, propsRequired.data, 
+            { x: propsRequired.x, y: propsRequired.y, width: propsRequired.width, height: propsRequired.height },
+            { titleColor: propsRequired.titleColor, backgroundColor: propsRequired.backgroundColor, backgroundOpacity: propsRequired.backgroundOpacity}));
+
         })
         .catch((err) => {
           reject(err);
@@ -78,11 +92,11 @@ class CardIOClass implements ICardIO {
 
   public writeOrCreateCardData = (prop: CardProp): Promise<string> => {
     return new Promise((resolve, reject) => {
-      console.log('Saving card...: ' + prop.id + ',x:' + prop.x + ',y:' + prop.y + ',w:' + prop.width + ',h:' + prop.height + 'color:' + prop.bgColor + ',bgOpacity:' + prop.bgOpacity + ',data:' + prop.data);
+      console.log('Saving card...: ' + JSON.stringify(prop.serialize()));
 
       // In PouchDB, _id must be used insted of id in document.
       // Convert class to Object to serialize.
-      let propObj = Object.assign({ _id: prop.id, _rev: '' }, prop);
+      let propObj = Object.assign({ _id: prop.id, _rev: '' }, prop.serialize());
 
       delete propObj.id;
 

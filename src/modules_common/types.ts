@@ -8,18 +8,54 @@
 
 'use strict';
 
-export class CardProp {
+export type Rectangle = {
+  x: number,
+  y: number,
+  width: number,
+  height: number
+};
+export type CardBase = {
+  id: string,
+  data: string
+};
+export type CardStyle = {
+  titleColor: string,
+  backgroundColor: string,
+  backgroundOpacity: number
+};
+// Properties of a card that must be serialized
+// Each of them must have unique name to be able to use as a key when serialize.
+export type CardPropSerializable = CardBase & Rectangle & CardStyle;
+
+export class CardProp implements CardBase {
   constructor(
     public id: string,
     public data: string = '',
-    public x: number = 70,
-    public y: number = 70,
-    public width: number = 260,
-    public height: number = 176,
-    public titleColor: string = '#d0d090',
-    public bgColor: string = '#ffffa0',
-    public bgOpacity: number = 1.0){}
+    public rect: Rectangle = { x: 70, y: 70, width: 260, height: 176 },
+    public style: CardStyle = { titleColor: '#d0d090', backgroundColor: '#ffffa0', backgroundOpacity: 1.0 }
+  ) { }
+
+  public serialize = (): CardPropSerializable => {
+    return {
+      id: this.id,
+      data: this.data,
+      x: this.rect.x,
+      y: this.rect.y,
+      width: this.rect.width,
+      height: this.rect.height,
+      titleColor: this.style.titleColor,   
+      backgroundColor: this.style.backgroundColor,
+      backgroundOpacity: this.style.backgroundOpacity,
+    }
+  };
+
+  public static deserialize = (json: CardPropSerializable): CardProp => {
+    return new CardProp(json.id, json.data,
+      { x: json.x, y: json.y, width: json.width, height: json.height },
+      { titleColor: json.titleColor, backgroundColor: json.backgroundColor, backgroundOpacity: json.backgroundOpacity })
+  }
 };
+
 
 export interface ICardIO {
   generateNewCardId(): string;

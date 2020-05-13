@@ -19,8 +19,8 @@ const main = remote.require('./main');
 export class CardEditor implements ICardEditor{
   constructor(public cardProp: CardProp) {
     var sprBorder = parseInt(window.getComputedStyle(document.getElementById('card')).borderLeft);
-    var sprWidth = cardProp.width - sprBorder*2;
-    var sprHeight = cardProp.height - sprBorder*2;
+    var sprWidth = cardProp.rect.width - sprBorder*2;
+    var sprHeight = cardProp.rect.height - sprBorder*2;
 
     document.getElementById('editor').innerHTML = cardProp.data;
     document.getElementById('contents').innerHTML = cardProp.data;
@@ -35,8 +35,8 @@ export class CardEditor implements ICardEditor{
         = document.getElementById('cke_1_bottom').style.backgroundColor
         = document.getElementById('cke_1_bottom').style.borderBottomColor
         = document.getElementById('cke_1_bottom').style.borderTopColor
-        = cardProp.titleColor;
-      (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = cardProp.bgColor;
+        = cardProp.style.titleColor;
+      (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = cardProp.style.backgroundColor;
     });
 
 
@@ -116,7 +116,7 @@ export class CardEditor implements ICardEditor{
     document.getElementById('contents').innerHTML = data;
     document.getElementById('contents').style.visibility = 'visible';
     setTimeout(() => {
-      main.saveCard(new CardProp(this.cardProp.id, data, undefined, undefined, undefined, undefined, undefined, undefined))
+      main.saveCard(new CardProp(this.cardProp.id, data, undefined, undefined))
     }, 1);
     document.getElementById('cke_editor').style.visibility = 'hidden';
 
@@ -148,7 +148,7 @@ export class CardEditor implements ICardEditor{
     CKEDITOR.instances['editor'].setMode('wysiwyg', () => { });
     this.execAfterWysiwygChanged(
       () => {
-        (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = this.cardProp.bgColor;
+        (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = this.cardProp.style.backgroundColor;
         CKEDITOR.instances['editor'].focus();
         this.moveCursorToBottom();
       }

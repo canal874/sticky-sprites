@@ -120,9 +120,9 @@ ipcMain.on('dom-loaded', (event, id) => {
     })
     .then(() => {
       setTimeout(() => {
-        win.webContents.send('card-loaded', prop);
-        win.setSize(prop.width, prop.height);
-        win.setPosition(prop.x, prop.y);
+        win.webContents.send('card-loaded', prop.serialize()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
+        win.setSize(prop.rect.width, prop.rect.height);
+        win.setPosition(prop.rect.x, prop.rect.y);
         win.show();
         win.blur();
       }, 5000);
@@ -163,13 +163,8 @@ export const saveCard = (prop: CardProp, closeAfterSave = false) => {
   const newCard = new CardProp(
     prop.id,
     prop.data,    
-    pos[0],
-    pos[1],
-    size[0],
-    size[1],
-    prop.titleColor,
-    prop.bgColor,
-    prop.bgOpacity
+    { x: pos[0], y: pos[1], width: size[0], height: size[1]},
+    { titleColor: prop.style.titleColor, backgroundColor: prop.style.backgroundColor, backgroundOpacity: prop.style.backgroundOpacity }
   );
   
   CardIO.writeOrCreateCardData(newCard)

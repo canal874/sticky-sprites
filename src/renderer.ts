@@ -8,7 +8,7 @@
 
 import { remote } from 'electron';
 import { ipcRenderer } from 'electron';
-import { CardProp, ICardEditor } from './modules_common/types';
+import { CardProp, ICardEditor, CardPropSerializable } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
 import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
 
@@ -64,14 +64,14 @@ const setCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
   // cardColor : #HEX (e.g. #ff00ff)
   // cardColor : 0.0-1.0
 
-  cardProp.bgColor = bgColor;
-  cardProp.bgOpacity = bgOpacity;
+  cardProp.style.backgroundColor = bgColor;
+  cardProp.style.backgroundOpacity = bgOpacity;
   let scale = 0.8;
   bgColor.match(/#(\w\w)(\w\w)(\w\w)/);
   let red = parseInt(RegExp.$1, 16);
   let green = parseInt(RegExp.$2, 16);
   let blue = parseInt(RegExp.$3, 16);
-  document.getElementById('contents').style.backgroundColor = 'rgba(' + red + ',' + green + ',' + blue + ',' + cardProp.bgOpacity + ')';
+  document.getElementById('contents').style.backgroundColor = 'rgba(' + red + ',' + green + ',' + blue + ',' + cardProp.style.backgroundOpacity + ')';
   
   let r = Math.floor(red * scale).toString(16);
   if (r.length == 1) { r = '0' + r; }
@@ -79,10 +79,10 @@ const setCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
   if (g.length == 1) { g = '0' + g; }
   let b = Math.floor(blue * scale).toString(16);
   if (b.length == 1) { b = '0' + b; }
-  cardProp.titleColor = '#' + r + g + b;
+  cardProp.style.titleColor = '#' + r + g + b;
 
   Array.from(document.getElementsByClassName('title-color')).forEach((node, index, list) =>  {
-    (node as HTMLElement).style.backgroundColor = cardProp.titleColor;
+    (node as HTMLElement).style.backgroundColor = cardProp.style.titleColor;
   });
 
   if (cardEditor && cardEditor.isEditorReady) {
@@ -90,8 +90,8 @@ const setCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
       = document.getElementById('cke_1_bottom').style.backgroundColor
       = document.getElementById('cke_1_bottom').style.borderBottomColor
       = document.getElementById('cke_1_bottom').style.borderTopColor
-      = cardProp.titleColor;
-    (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = cardProp.bgColor;
+      = cardProp.style.titleColor;
+    (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = cardProp.style.backgroundColor;
   }
 };
 
@@ -174,9 +174,9 @@ const initializeIPCEvents = () => {
   // ipc (inter-process communication)
 
   // Initialize card
-  ipcRenderer.on('card-loaded', (event: Electron.IpcRendererEvent, _prop: CardProp) => {
-    cardProp = _prop;
-    setCardColor(_prop.bgColor, _prop.bgOpacity);
+  ipcRenderer.on('card-loaded', (event: Electron.IpcRendererEvent, _prop: CardPropSerializable) => {
+    cardProp = CardProp.deserialize(_prop);
+    setCardColor(cardProp.style.backgroundColor, cardProp.style.backgroundOpacity);
 
     cardEditor = new CardEditor(cardProp);
 
@@ -200,7 +200,7 @@ const initializeIPCEvents = () => {
       cardEditor.endEditMode();
     }
     document.getElementById('card').style.border = '3px solid transparent';
-    if(cardProp.bgOpacity == 0){
+    if(cardProp.style.backgroundOpacity == 0){
       document.getElementById('title').style.visibility = 'hidden';
     }
   });
