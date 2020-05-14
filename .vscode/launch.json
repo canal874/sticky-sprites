@@ -17,7 +17,8 @@
         // this args for attaching render process
         "--remote-debugging-port=9222"
       ],
-      "cwd": "${workspaceFolder}"
+      "cwd": "${workspaceFolder}",
+      "outputCapture": "std"
     },
     {
       "name": "Renderer",

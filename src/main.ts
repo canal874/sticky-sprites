@@ -97,7 +97,6 @@ class Card {
       this.window.webContents.send('card-blured');
     });
 
-    console.log(`start: ${new Date().getSeconds()}`);
     Promise.all([this.loadHTML(), loadOrCreateCardData()])
       .then(() => this.renderCard())
       .catch(
@@ -114,13 +113,11 @@ class Card {
     this.window.webContents.send('card-loaded', this.prop.serialize()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
     this.window.show();
     this.window.blur();
-    console.log(`rendered: ${new Date().getSeconds()}`);        
   }
 
   private loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
       this.window.webContents.on('did-finish-load', () => {
-      console.log(`html loaded: ${new Date().getSeconds()}`);                
         resolve();
       });
       this.window.webContents.on('did-fail-load', () => {
@@ -153,7 +150,6 @@ class Card {
           reject();
         })
         .then(() => {
-          console.log(`card loaded: ${new Date().getSeconds()}`);
           resolve();
         })
     });
