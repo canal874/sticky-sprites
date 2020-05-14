@@ -69,7 +69,11 @@ class CardIOClass implements ICardIO {
           const propsRequired: CardPropSerializable = (new CardProp('')).serialize();
           // Checking properties retrieved from database
           for(let key in propsRequired){
-            if(!doc.hasOwnProperty(key)){
+            if(key == 'id'){
+              // skip
+              // pouchDB does not have id but has _id.
+            }
+            else if(!doc.hasOwnProperty(key)){
               console.log(`db entry id "${id}" lacks "${key}"`);
             }
             else{

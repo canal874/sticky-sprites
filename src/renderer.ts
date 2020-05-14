@@ -25,13 +25,6 @@ const close = () => {
 
 
 const resizeCard = () => {
-  if(window.innerWidth < main.getMinimumWindowWidth()){
-    // CSS has not been rendered yet.
-    console.log('retry resize..');
-    setTimeout(resizeCard, 500);
-    return;
-  }
-
   const cardBorder = parseInt(window.getComputedStyle(document.getElementById('card')).borderLeft);
   const cardWidth = window.innerWidth - cardBorder * 2;
   const cardHeight = window.innerHeight - cardBorder * 2;
@@ -170,53 +163,6 @@ const initializeUIEvents = () => {
 
 }
 
-const initializeIPCEvents = () => {
-  // ipc (inter-process communication)
-
-  // Initialize card
-  ipcRenderer.on('card-loaded', (event: Electron.IpcRendererEvent, _prop: CardPropSerializable) => {
-    cardProp = CardProp.deserialize(_prop);
-    setCardColor(cardProp.style.backgroundColor, cardProp.style.backgroundOpacity);
-
-    cardEditor = new CardEditor(cardProp);
-
-    setTimeout(()=>{
-      document.getElementById('card').style.visibility = 'visible';
-      resizeCard();
-    },300);
-  });
-
-  ipcRenderer.on('card-close', (event: Electron.IpcRendererEvent) => {
-    close();
-  });
-
-  ipcRenderer.on('card-focused', (event: Electron.IpcRendererEvent) => {
-    document.getElementById('card').style.border = '3px solid red';
-    document.getElementById('title').style.visibility = 'visible';
-  });
-  
-  ipcRenderer.on('card-blured', (event: Electron.IpcRendererEvent) => {
-    if(document.getElementById('contents').style.visibility == 'hidden'){
-      cardEditor.endEditMode();
-    }
-    document.getElementById('card').style.border = '3px solid transparent';
-    if(cardProp.style.backgroundOpacity == 0){
-      document.getElementById('title').style.visibility = 'hidden';
-    }
-  });
-
-  ipcRenderer.on('resize-byhand', (newBounds: Electron.IpcRendererEvent) => {
-    resizeCard();
-    queueSaveCommand();
-  });
-
-  ipcRenderer.on('move-byhand', (newBounds: Electron.IpcRendererEvent) => {
-    queueSaveCommand();
-  });
-  
-  ipcRenderer.send('dom-loaded', remote.getCurrentWindow().getTitle());
-};
-
 /**
  * queueSaveCommand 
  * Queuing and execute only last save command to avoid frequent save.
@@ -246,9 +192,53 @@ const onloaded = () => {
   }, false);
 
   initializeUIEvents();
-  // Card must be loaded after CSS is rendered. 
-  initializeIPCEvents();
 }
 
+
+const initializeIPCEvents = () => {
+  // ipc (inter-process communication)
+
+  // Initialize card
+  ipcRenderer.on('card-loaded', (event: Electron.IpcRendererEvent, _prop: CardPropSerializable) => {
+    cardProp = CardProp.deserialize(_prop);
+    setCardColor(cardProp.style.backgroundColor, cardProp.style.backgroundOpacity);
+
+    cardEditor = new CardEditor(cardProp);
+
+    document.getElementById('card').style.visibility = 'visible';
+    resizeCard();
+
+  });
+
+  ipcRenderer.on('card-close', (event: Electron.IpcRendererEvent) => {
+    close();
+  });
+
+  ipcRenderer.on('card-focused', (event: Electron.IpcRendererEvent) => {
+    document.getElementById('card').style.border = '3px solid red';
+    document.getElementById('title').style.visibility = 'visible';
+  });
+  
+  ipcRenderer.on('card-blured', (event: Electron.IpcRendererEvent) => {
+    if(document.getElementById('contents').style.visibility == 'hidden'){
+      cardEditor.endEditMode();
+    }
+    document.getElementById('card').style.border = '3px solid transparent';
+    if(cardProp.style.backgroundOpacity == 0){
+      document.getElementById('title').style.visibility = 'hidden';
+    }
+  });
+
+  ipcRenderer.on('resize-byhand', (newBounds: Electron.IpcRendererEvent) => {
+    resizeCard();
+    queueSaveCommand();
+  });
+
+  ipcRenderer.on('move-byhand', (newBounds: Electron.IpcRendererEvent) => {
+    queueSaveCommand();
+  });
+};
+
 /** This script is inserted at the last part of <html> element */
+initializeIPCEvents();
 window.addEventListener('load', onloaded, false);

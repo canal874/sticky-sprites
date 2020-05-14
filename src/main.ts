@@ -44,10 +44,12 @@ const cards:Map<string, Card> = new Map<string, Card>();
 class Card {
   public prop: CardProp;
   public window: BrowserWindow;
-  constructor(public id: string) {
-    if (!id) {
-      return;
-    }
+
+  constructor(public id?: string) {
+    let loadOrCreateCardData = this.loadCardData;
+    if(this.id === undefined || this.id == ''){
+      loadOrCreateCardData = this.createCardData;
+    } 
 
     this.window = new BrowserWindow({
       webPreferences: {
@@ -95,40 +97,68 @@ class Card {
       this.window.webContents.send('card-blured');
     });
 
-    this.window.loadURL(url.format({
-      pathname: path.join(__dirname, 'index.html'),
-      protocol: 'file:',
-      slashes: true
-    }))
+    console.log(`start: ${new Date().getSeconds()}`);
+    Promise.all([this.loadHTML(), loadOrCreateCardData()])
+      .then(() => this.renderCard())
+      .catch(
+        /** 
+         * TODO:
+         * Alert to user and backup broken data.
+         */
+      );
+  }
+
+  private renderCard(): void {
+    this.window.setSize(this.prop.rect.width, this.prop.rect.height);
+    this.window.setPosition(this.prop.rect.x, this.prop.rect.y);
+    this.window.webContents.send('card-loaded', this.prop.serialize()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
+    this.window.show();
+    this.window.blur();
+    console.log(`rendered: ${new Date().getSeconds()}`);        
+  }
+
+  private loadHTML: () => Promise<void> = () => {
+    return new Promise((resolve, reject) => {
+      this.window.webContents.on('did-finish-load', () => {
+      console.log(`html loaded: ${new Date().getSeconds()}`);                
+        resolve();
+      });
+      this.window.webContents.on('did-fail-load', () => {
+        reject();
+      });      
+      this.window.loadURL(url.format({
+        pathname: path.join(__dirname, 'index.html'),
+        protocol: 'file:',
+        slashes: true
+      }))
+    });
+  }
+
+  private createCardData: () => Promise<void> = () => {
+    return new Promise((resolve) => {
+      this.id = CardIO.generateNewCardId();
+      this.prop = new CardProp(this.id);
+      resolve();
+    });
+  }
+
+  private loadCardData: () => Promise<void> = () => {
+    return new Promise((resolve, reject) => {
+      CardIO.readCardData(this.id)
+        .then((_prop: CardProp) => {
+          this.prop = _prop;
+        })
+        .catch((err: string) => {
+          console.log('Load card error: ' + this.id + ', ' + err);
+          reject();
+        })
+        .then(() => {
+          console.log(`card loaded: ${new Date().getSeconds()}`);
+          resolve();
+        })
+    });
   }
 }
-
-//----------------------
-// Initialize a cardWindow
-//----------------------
-ipcMain.on('dom-loaded', (event, id) => {
-  console.log('dom-loaded: ' + id);
-  const win = cards.get(id).window;
-  let prop: CardProp = null;
-  CardIO.readCardData(id)
-    .then((_prop: CardProp) => {
-      prop = _prop;
-    })
-    .catch((err: string) => {
-      console.log('Load card error: ' + id + ', ' + err);
-      prop = new CardProp(id);
-    })
-    .then(() => {
-      setTimeout(() => {
-        win.webContents.send('card-loaded', prop.serialize()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
-        win.setSize(prop.rect.width, prop.rect.height);
-        win.setPosition(prop.rect.x, prop.rect.y);
-        win.show();
-        win.blur();
-      }, 5000);
-    });
-});
-
 
 app.on('window-all-closed', () => {
   app.quit();
@@ -180,8 +210,8 @@ export const saveCard = (prop: CardProp, closeAfterSave = false) => {
 
 // Create new card
 export const createCard = () => {
-  const id = CardIO.generateNewCardId();
-  cards.set(id, new Card(id));
+  const card = new Card();
+  cards.set(card.id, card);
 };
 
 
@@ -200,8 +230,8 @@ app.on('ready', () => {
     .then((arr:Array<string>) => {
       if (arr.length == 0) {
         // Create a new card
-        const id = CardIO.generateNewCardId();
-        cards.set(id, new Card(id));
+        const card = new Card();
+        cards.set(card.id, card);
       }
       else {
         for (let id of arr) {
