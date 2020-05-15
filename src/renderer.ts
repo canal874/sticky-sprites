@@ -72,9 +72,8 @@ const initializeUIEvents = () => {
       // ...
       // ...
 
-      var data = '<img src="'+ file.path + '" width="' + width + '" height="' + height + '"';
-      CKEDITOR.instances['editor'].setData(data);
-      document.getElementById('contents').innerHTML = data;
+      cardProp.data = '<img src="'+ file.path + '" width="' + width + '" height="' + height + '">';
+      render([CardRenderOptions.ContentsData]);
     };
     dropImg.src = file.path;
 
@@ -149,8 +148,9 @@ const onloaded = () => {
     }
   };
 
+  initializeUIEvents();
+
   cardEditor.loadUI(cardCssStyle).then(() => {
-    initializeUIEvents();
     ipcRenderer.send('finish-load');
   }
   );
