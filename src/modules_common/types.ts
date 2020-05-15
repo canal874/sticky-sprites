@@ -66,13 +66,33 @@ export interface ICardIO {
 };
 
 export interface ICardEditor {
-  resizedByCode: boolean;
-  isEditorReady: boolean;
   readonly hasCodeMode: boolean;
+
+  loadUI(cardCssStyle: CardCssStyle): Promise<void>; // A Promise resolves when required initialiation is finished.
+  loadCard(prop: CardProp): void; // Loading a card after loadUI().
+
   startEditMode(): void;
   endEditMode(): void;
   toggleCodeMode(): void;
   startCodeMode(): void;
   endCodeMode(): void;
-  setSize(width: number, height: number): void;
+
+  setSize(width?: number, height?: number): void;
+  setColor(backgroundColor: string, titleColor: string): void;
 }
+
+export type CardCssStyle = {
+  padding: {
+    left: number,
+    right: number,
+    top: number,
+    bottom: number
+  },
+  border: {
+    left: number,
+    right: number,
+    top: number,
+    bottom: number
+  }
+}
+

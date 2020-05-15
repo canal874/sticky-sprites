@@ -107,9 +107,10 @@ body > #card > #cke_editor #cke_1_bottom{
 */
 
 body > #card > #cke_editor{
-  margin-top: 18px;
+  top: 18px;  
   border: 0px;
   visibility: hidden;
+  position: absolute;
 }
 
 body > #card > #cke_editor .cke_combo::after,

@@ -6,41 +6,18 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 /**
  * Common part
  */
 
-import { CardProp, ICardEditor } from '../modules_common/types';
+import { CardProp, ICardEditor, CardCssStyle } from '../modules_common/types';
+import { render, setRenderOffsetHeight, CardRenderOptions } from '../card_renderer';
 import { remote } from 'electron';
+
 const main = remote.require('./main');
 
 export class CardEditor implements ICardEditor{
-  constructor(public cardProp: CardProp) {
-    var sprBorder = parseInt(window.getComputedStyle(document.getElementById('card')).borderLeft);
-    var sprWidth = cardProp.rect.width - sprBorder*2;
-    var sprHeight = cardProp.rect.height - sprBorder*2;
-
-    document.getElementById('editor').innerHTML = cardProp.data;
-    document.getElementById('contents').innerHTML = cardProp.data;
-
-    CKEDITOR.config.width =  sprWidth;
-    CKEDITOR.config.height =  sprHeight - document.getElementById('titleBar').offsetHeight - this.toolbarHeight; 
-
-    CKEDITOR.replace('editor'); 
-    CKEDITOR.on('instanceReady', () => {
-      this.isEditorReady = true;
-      document.getElementById('cke_editor').style.borderTopColor
-        = document.getElementById('cke_1_bottom').style.backgroundColor
-        = document.getElementById('cke_1_bottom').style.borderBottomColor
-        = document.getElementById('cke_1_bottom').style.borderTopColor
-        = cardProp.style.titleColor;
-      (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = cardProp.style.backgroundColor;
-    });
-
-
-  }
+  constructor() {}
 
   /**
    * Private
@@ -48,6 +25,11 @@ export class CardEditor implements ICardEditor{
   private isEditorOpened = false;
   private codeMode = false;
   private toolbarHeight = 30;
+
+  
+  private cardProp: CardProp = new CardProp('');
+
+  private cardCssStyle: CardCssStyle;
   
   private moveCursorToBottom = () => {
     let editor = CKEDITOR.instances['editor'];
@@ -72,57 +54,88 @@ export class CardEditor implements ICardEditor{
     }
   };
 
-  private execAfterWysiwygChanged = (func: any) => {
-    let editor = CKEDITOR.instances['editor'];
-    let s = editor.getSelection(); // getting selection
-    if (s) {
-      func();
-    }
-    else {
-      setTimeout(() => { this.execAfterWysiwygChanged(func) }, 100);
-    }
-  };
 
   /**
    * Public
    */
-  public resizedByCode = false;    
   public hasCodeMode = true;
-  public isEditorReady: boolean = false;
+
+  loadUI = (_cardCssStyle: CardCssStyle) => {
+    this.cardCssStyle = _cardCssStyle;
+    return new Promise<void>((resolve, reject) => {
+      CKEDITOR.replace('editor'); 
+      console.log('loading editor..');
+      CKEDITOR.on('instanceReady', () => {
+        resolve();
+      });
+    });
+  };
+
+  loadCard = (prop: CardProp) => {
+    this.cardProp = prop;
+  }
+
+  waitUntilActivationComplete = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        const editor = CKEDITOR.instances['editor'];
+        const timer = setInterval(() => {
+          const s = editor.getSelection();
+          if (s) {
+            clearInterval(timer);
+            resolve();
+          }
+        }, 100);
+      });
+  };
 
   startEditMode = () => {
+    // Load card data from cardProp
+
     if (!this.isEditorOpened) {
-      this.resizedByCode = false;
-      main.setCardHeight(this.cardProp.id, main.getCardHeight(this.cardProp.id) + this.toolbarHeight);
+      // Expand card to add toolbar.
+      const expandedHeight = this.cardProp.rect.height + this.toolbarHeight;
+      main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, expandedHeight);
+      setRenderOffsetHeight(-this.toolbarHeight);      
       this.isEditorOpened = true;
+
+      this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
+
+      this.setSize();
     }
+    
+    CKEDITOR.instances['editor'].setData(this.cardProp.data, {
+       callback: () => {
+        document.getElementById('contents').style.visibility = 'hidden';
+        document.getElementById('cke_editor').style.visibility = 'visible';
 
-    document.getElementById('contents').style.visibility = 'hidden';
-    document.getElementById('cke_editor').style.visibility = 'visible';
-    this.execAfterWysiwygChanged(
-      () => {
-        CKEDITOR.instances['editor'].focus();
-        this.moveCursorToBottom();
+        this.waitUntilActivationComplete().then(() => {
+          CKEDITOR.instances['editor'].focus();
+          this.moveCursorToBottom();
+        })
       }
-    );
-
+    });
   };
 
   endEditMode = () => {
     this.isEditorOpened = false;
-    main.setCardHeight(this.cardProp.id, main.getCardHeight(this.cardProp.id) - this.toolbarHeight);
 
+    // Save data to CardProp
     let data = CKEDITOR.instances['editor'].getData();
-    document.getElementById('contents').innerHTML = data;
-    document.getElementById('contents').style.visibility = 'visible';
-    setTimeout(() => {
-      main.saveCard(new CardProp(this.cardProp.id, data, undefined, undefined))
-    }, 1);
+    this.cardProp.data = data;
+
+    main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, this.cardProp.rect.height);
+    setRenderOffsetHeight(0);
+    render([ CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize ]);
+
+    // Hide editor
+    document.getElementById('contents').style.visibility = 'visible';    
     document.getElementById('cke_editor').style.visibility = 'hidden';
 
     this.codeMode = false;
     document.getElementById('codeBtn').style.color = '#000000';
     CKEDITOR.instances['editor'].setMode('wysiwyg', () => { });
+
+    main.saveCard(new CardProp(this.cardProp.id, data, undefined, undefined))
   };
 
 
@@ -134,6 +147,7 @@ export class CardEditor implements ICardEditor{
       this.endCodeMode();
     }
   }
+
   startCodeMode = () => {
     this.codeMode = true;
     this.startEditMode();
@@ -146,16 +160,27 @@ export class CardEditor implements ICardEditor{
     this.codeMode = false;
     document.getElementById('codeBtn').style.color = '#000000';
     CKEDITOR.instances['editor'].setMode('wysiwyg', () => { });
-    this.execAfterWysiwygChanged(
-      () => {
-        (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = this.cardProp.style.backgroundColor;
-        CKEDITOR.instances['editor'].focus();
-        this.moveCursorToBottom();
-      }
-    );
+    this.waitUntilActivationComplete().then(() => {
+      this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
+      CKEDITOR.instances['editor'].focus();
+      this.moveCursorToBottom();
+    });
   };
 
-  setSize = (width: number, height: number) => {
-      CKEDITOR.instances['editor'].resize(width, height - document.getElementById('titleBar').offsetHeight);
-  }
+  setSize = (width: number = this.cardProp.rect.width - this.cardCssStyle.border.left - this.cardCssStyle.border.right,
+            height: number = this.cardProp.rect.height + this.toolbarHeight - this.cardCssStyle.border.top - this.cardCssStyle.border.bottom - document.getElementById('titleBar').offsetHeight): void => {
+      // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
+      CKEDITOR.instances['editor'].resize(width, height);
+  };
+
+  setColor = (backgroundColor: string, titleColor: string): void => {
+    document.getElementById('cke_editor').style.borderTopColor
+      = document.getElementById('cke_1_bottom').style.backgroundColor
+      = document.getElementById('cke_1_bottom').style.borderBottomColor
+      = document.getElementById('cke_1_bottom').style.borderTopColor
+      = titleColor;
+    (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = backgroundColor;
+  };
+
 }
+  

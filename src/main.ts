@@ -74,6 +74,8 @@ class Card {
     });
 
     // Resized by hand
+    // will-resize is only emitted when the window is being resized manually.
+    // Resizing the window with setBounds/setSize will not emit this event.
     this.window.on('will-resize', (event, newBounds) => {
       this.window.webContents.send('resize-byhand', newBounds);
     });
@@ -110,14 +112,18 @@ class Card {
   private renderCard(): void {
     this.window.setSize(this.prop.rect.width, this.prop.rect.height);
     this.window.setPosition(this.prop.rect.x, this.prop.rect.y);
-    this.window.webContents.send('card-loaded', this.prop.serialize()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
+    console.log('load:' + JSON.stringify(this.prop.serialize()));
+    this.window.webContents.send('render-card', this.prop.serialize()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
     this.window.show();
     this.window.blur();
   }
 
   private loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
-      this.window.webContents.on('did-finish-load', () => {
+      ipcMain.on('finish-load', () => {
+      // Don't use 'did-finish-load' event.
+      // loadHTML resolves after loading HTML and processing required script are finished.
+      //     this.window.webContents.on('did-finish-load', () => {
         resolve();
       });
       this.window.webContents.on('did-fail-load', () => {
@@ -247,19 +253,7 @@ export const log = (txt: string) => {
   console.log(txt);
 }
 
-export const getMinimumWindowWidth = () => {
-  return minimumWindowWidth;
-}
-
-export const setCardHeight = (id: string, height: number) => {
+export const setWindowSize = (id: string, width: number, height: number) => {
   const card = cards.get(id);  
-  const size = card.window.getSize();
-  const w = size[0];
-  card.window.setSize(w, height);
-}
-
-export const getCardHeight = (id: string) => {
-  const card = cards.get(id);  
-  const size = card.window.getSize();
-  return size[1];
+  card.window.setSize(width, height);  
 }
