@@ -66,7 +66,14 @@ export class CardEditor implements ICardEditor{
       CKEDITOR.replace('editor'); 
       console.log('loading editor..');
       CKEDITOR.on('instanceReady', () => {
-        resolve();
+        const checkTimer = setInterval(()=>{
+          // Checking existence of 'cke_editor' 
+          // because 'instanceReady' event is incredible.
+          if(document.getElementById('cke_editor')){
+            clearInterval(checkTimer);
+            resolve();
+          }
+        }, 200);
       });
     });
   };
