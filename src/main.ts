@@ -21,6 +21,8 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
   app.quit();
 }
 
+// Increase max listeners
+ipcMain.setMaxListeners(1000);
 
 /**
 * i18n
@@ -59,11 +61,13 @@ class Card {
       transparent: true,
       frame: false,
       show: false,
-      // window title must be card id. This enables some tricks that can access the card window.
-      // BrowserWindow.getTitle() can get card id.
-      // Other apps can also get card id by getting window title.
+
+      // Set window title to card id.
+      // This enables some tricks that can access the card window from other apps.
       title: id  
     });
+    this.window.setMaxListeners(20);
+
 
     // Open hyperlink on external browser window
     // by preventing to open it on new electron window
@@ -99,7 +103,7 @@ class Card {
       this.window.webContents.send('card-blured');
     });
 
-    Promise.all([this.loadHTML(), loadOrCreateCardData()])
+    Promise.all([this.readyToShow(), this.loadHTML(), loadOrCreateCardData()])
       .then(() => this.renderCard())
       .catch(
         /** 
@@ -114,16 +118,23 @@ class Card {
     this.window.setPosition(this.prop.rect.x, this.prop.rect.y);
     console.log('load:' + JSON.stringify(this.prop.serialize()));
     this.window.webContents.send('render-card', this.prop.serialize()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
-    this.window.show();
-    this.window.blur();
+    this.window.showInactive();
   }
+
+  private readyToShow: () => Promise<void> = () => {
+    return new Promise((resolve) => {
+      this.window.once('ready-to-show', () => {
+        resolve();
+      })
+    });
+  };
 
   private loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
-      ipcMain.on('finish-load', () => {
-      // Don't use 'did-finish-load' event.
-      // loadHTML resolves after loading HTML and processing required script are finished.
-      //     this.window.webContents.on('did-finish-load', () => {
+      ipcMain.once('finish-load', () => {
+        // Don't use 'did-finish-load' event.
+        // loadHTML resolves after loading HTML and processing required script are finished.
+        //     this.window.webContents.on('did-finish-load', () => {
         resolve();
       });
       this.window.webContents.on('did-fail-load', () => {
@@ -150,13 +161,11 @@ class Card {
       CardIO.readCardData(this.id)
         .then((_prop: CardProp) => {
           this.prop = _prop;
+          resolve();                  
         })
         .catch((err: string) => {
           console.log('Load card error: ' + this.id + ', ' + err);
           reject();
-        })
-        .then(() => {
-          resolve();
         })
     });
   }
