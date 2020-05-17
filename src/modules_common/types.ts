@@ -67,12 +67,12 @@ export interface ICardIO {
 
 export interface ICardEditor {
   readonly hasCodeMode: boolean;
-
+  isOpened: boolean;
   loadUI(cardCssStyle: CardCssStyle): Promise<void>; // A Promise resolves when required initialiation is finished.
   loadCard(prop: CardProp): void; // Loading a card after loadUI().
 
   startEditMode(): void;
-  endEditMode(): void;
+  endEditMode(): boolean;
   toggleCodeMode(): void;
   startCodeMode(): void;
   endCodeMode(): void;
@@ -95,4 +95,3 @@ export type CardCssStyle = {
     bottom: number
   }
 }
-

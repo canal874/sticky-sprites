@@ -12,6 +12,7 @@ import { CardProp, ICardEditor, CardPropSerializable, Rectangle, CardCssStyle } 
 import { CardEditor } from './modules_ext/editor';
 import { render, initCardRenderer, getRenderOffsetWidth, getRenderOffsetHeight, CardRenderOptions } from './card_renderer';
 import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
+import { saveCard } from './main';
 
 const main = remote.require('./main');
 
@@ -23,6 +24,10 @@ let cardEditor: ICardEditor = new CardEditor();
 
 const close = () => {
   window.close();
+};
+
+const saveCardContents = () => {
+  main.saveCard(cardProp);
 };
 
 const setAndSaveCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
@@ -99,13 +104,16 @@ const initializeUIEvents = () => {
   });
 
   document.getElementById('closeBtn').addEventListener('click', () => {
-    cardProp.data = CKEDITOR.instances['editor'].getData();
+    if(cardEditor.isOpened){
+      if (cardEditor.endEditMode() && cardProp.data != '') {
+        saveCardContents();
+      }
+    }
     if (cardProp.data == '') {
-      main.saveToCloseCard(cardProp);
-      
+      main.deleteCard(cardProp);
     }
     else if (window.confirm(main.MESSAGE.confirm_closing)) {
-      main.saveToCloseCard(cardProp);
+      close();  
     }
   });
 
@@ -117,7 +125,6 @@ const initializeUIEvents = () => {
  */
 let execSaveCommandTimeout: NodeJS.Timeout = null;
 const execSaveCommand = () => {
-  cardProp.data = CKEDITOR.instances['editor'].getData();
   main.saveCard(cardProp);
 };
 
@@ -169,11 +176,18 @@ const initializeIPCEvents = () => {
 
     cardEditor.loadCard(cardProp);
 
+    if(cardProp.style.backgroundOpacity == 0){
+      document.getElementById('title').style.visibility = 'hidden';
+    }
     document.getElementById('card').style.visibility = 'visible';
   });
 
   ipcRenderer.on('card-close', (event: Electron.IpcRendererEvent) => {
     close();
+  });
+
+  ipcRenderer.on('card-saved', (event: Electron.IpcRendererEvent) => {
+
   });
 
   ipcRenderer.on('card-focused', (event: Electron.IpcRendererEvent) => {
@@ -183,7 +197,9 @@ const initializeIPCEvents = () => {
   
   ipcRenderer.on('card-blured', (event: Electron.IpcRendererEvent) => {
     if(document.getElementById('contents').style.visibility == 'hidden'){
-      cardEditor.endEditMode();
+      if(cardEditor.endEditMode()){
+        saveCardContents();
+      }
     }
     document.getElementById('card').style.border = '3px solid transparent';
     if(cardProp.style.backgroundOpacity == 0){

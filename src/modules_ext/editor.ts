@@ -22,7 +22,6 @@ export class CardEditor implements ICardEditor{
   /**
    * Private
    */
-  private isEditorOpened = false;
   private codeMode = false;
   private toolbarHeight = 30;
 
@@ -59,6 +58,7 @@ export class CardEditor implements ICardEditor{
    * Public
    */
   public hasCodeMode = true;
+  public isOpened = false;
 
   loadUI = (_cardCssStyle: CardCssStyle) => {
     this.cardCssStyle = _cardCssStyle;
@@ -98,12 +98,12 @@ export class CardEditor implements ICardEditor{
   startEditMode = () => {
     // Load card data from cardProp
 
-    if (!this.isEditorOpened) {
+    if (!this.isOpened) {
       // Expand card to add toolbar.
       const expandedHeight = this.cardProp.rect.height + this.toolbarHeight;
       main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, expandedHeight);
       setRenderOffsetHeight(-this.toolbarHeight);      
-      this.isEditorOpened = true;
+      this.isOpened = true;
 
       this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
 
@@ -123,11 +123,15 @@ export class CardEditor implements ICardEditor{
     });
   };
 
-  endEditMode = () => {
-    this.isEditorOpened = false;
+  endEditMode = (): boolean => {
+    this.isOpened = false;
 
+    let contentsChanged = false;
     // Save data to CardProp
-    let data = CKEDITOR.instances['editor'].getData();
+    const data = CKEDITOR.instances['editor'].getData();
+    if(this.cardProp.data != data){
+      contentsChanged = true;
+    }
     this.cardProp.data = data;
 
     main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, this.cardProp.rect.height);
@@ -142,7 +146,7 @@ export class CardEditor implements ICardEditor{
     document.getElementById('codeBtn').style.color = '#000000';
     CKEDITOR.instances['editor'].setMode('wysiwyg', () => { });
 
-    main.saveCard(new CardProp(this.cardProp.id, data, undefined, undefined))
+    return contentsChanged;
   };
 
 
