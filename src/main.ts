@@ -180,23 +180,19 @@ app.on('window-all-closed', () => {
 //-----------------------------------
 
 // Save card
-export const saveToCloseCard = (prop:CardProp) => {
-  if(prop.data == ''){
-    CardIO.deleteCardData(prop.id)
-      .catch((err:string) => {
-        console.log(err);
-      })
-      .then(() => {
-        console.log('closing :' + prop.id);
-        cards.get(prop.id).window.webContents.send('card-close');
-      })
-  }
-  else{
-    saveCard(prop, true);
-  }
+export const deleteCard = (prop: CardProp) => {
+  CardIO.deleteCardData(prop.id)
+    .catch((err: string) => {
+      console.log(err);
+    })
+    .then(() => {
+      console.log('deleted :' + prop.id);
+      cards.get(prop.id).window.webContents.send('card-close');
+    })
+
 };
 
-export const saveCard = (prop: CardProp, closeAfterSave = false) => {
+export const saveCard = (prop: CardProp) => {
   const card = cards.get(prop.id);
   const pos = card.window.getPosition();
   const size = card.window.getSize();
@@ -210,9 +206,7 @@ export const saveCard = (prop: CardProp, closeAfterSave = false) => {
   
   CardIO.writeOrCreateCardData(newCard)
   .then(() => {
-    if (closeAfterSave) {
-      card.window.webContents.send('card-close');
-    }
+    card.window.webContents.send('card-saved');
   })
   .catch((err: string) => {
     console.log(err);
@@ -258,10 +252,6 @@ app.on('ready', () => {
 //-----------------------------------
 // Utils
 //-----------------------------------
-export const log = (txt: string) => {
-  console.log(txt);
-}
-
 export const setWindowSize = (id: string, width: number, height: number) => {
   const card = cards.get(id);  
   card.window.setSize(width, height);  
