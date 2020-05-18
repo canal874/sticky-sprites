@@ -80,6 +80,9 @@ export class CardEditor implements ICardEditor{
 
   loadCard = (prop: CardProp) => {
     this.cardProp = prop;
+    // I don't know why, but style.display should be initially set to 'none' 
+    // because it disturbs dragging titleBar.
+    document.getElementById('cke_editor')!.style.display = 'none';
   }
 
   waitUntilActivationComplete = (): Promise<void> => {
@@ -96,8 +99,10 @@ export class CardEditor implements ICardEditor{
   };
 
   startEditMode = () => {
-    // Load card data from cardProp
+    // style.display is initially set to 'none'.
+    document.getElementById('cke_editor')!.style.display = 'block';
 
+    // Load card data from cardProp    
     if (!this.isOpened) {
       // Expand card to add toolbar.
       const expandedHeight = this.cardProp.rect.height + this.toolbarHeight;
@@ -111,14 +116,13 @@ export class CardEditor implements ICardEditor{
     }
     
     CKEDITOR.instances['editor'].setData(this.cardProp.data, {
-       callback: () => {
+       callback: async () => {
         document.getElementById('contents')!.style.visibility = 'hidden';
         document.getElementById('cke_editor')!.style.visibility = 'visible';
 
-        this.waitUntilActivationComplete().then(() => {
-          CKEDITOR.instances['editor'].focus();
-          this.moveCursorToBottom();
-        })
+        await this.waitUntilActivationComplete();
+        CKEDITOR.instances['editor'].focus();
+        this.moveCursorToBottom();
       }
     });
   };
@@ -167,15 +171,14 @@ export class CardEditor implements ICardEditor{
     CKEDITOR.instances['editor'].focus();
   };
 
-  endCodeMode = () => {
+  endCodeMode = async () => {
     this.codeMode = false;
     document.getElementById('codeBtn')!.style.color = '#000000';
     CKEDITOR.instances['editor'].setMode('wysiwyg', () => { });
-    this.waitUntilActivationComplete().then(() => {
-      this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
-      CKEDITOR.instances['editor'].focus();
-      this.moveCursorToBottom();
-    });
+    await this.waitUntilActivationComplete();
+    this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
+    CKEDITOR.instances['editor'].focus();
+    this.moveCursorToBottom();
   };
 
   setSize = (width: number = this.cardProp.rect.width - this.cardCssStyle.border.left - this.cardCssStyle.border.right,
