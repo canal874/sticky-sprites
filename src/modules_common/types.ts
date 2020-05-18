@@ -29,7 +29,7 @@ export type CardPropSerializable = CardBase & Rectangle & CardStyle;
 
 export class CardProp implements CardBase {
   constructor(
-    public id: string,
+    public id: string = '',
     public data: string = '',
     public rect: Rectangle = { x: 70, y: 70, width: 260, height: 176 },
     public style: CardStyle = { titleColor: '#d0d090', backgroundColor: '#ffffa0', backgroundOpacity: 1.0 }

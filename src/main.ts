@@ -15,6 +15,7 @@ import path from 'path'
 import translations from './modules_common/base.msg';
 import { CardProp } from './modules_common/types';
 import { CardIO } from './modules_ext/io';
+import { resolve } from 'dns';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -27,7 +28,7 @@ ipcMain.setMaxListeners(1000);
 /**
 * i18n
 */
-export let MESSAGE: Object = null;
+export let MESSAGE: Object = {};
 
 /**
  * Const
@@ -44,12 +45,13 @@ const cards:Map<string, Card> = new Map<string, Card>();
 
 
 class Card {
-  public prop: CardProp;
+  public prop!: CardProp; // ! is Definite assignment assertion
   public window: BrowserWindow;
 
-  constructor(public id?: string) {
+  constructor(public id: string = '') {
     let loadOrCreateCardData = this.loadCardData;
-    if(this.id === undefined || this.id == ''){
+    if(this.id == ''){
+      this.id = CardIO.generateNewCardId();
       loadOrCreateCardData = this.createCardData;
     } 
 
@@ -93,7 +95,7 @@ class Card {
       // Dereference the window object, usually you would store windows
       // in an array if your app supports multi windows, this is the time
       // when you should delete the corresponding element.
-      cards.delete(id);
+      cards.delete(this.id);
     });
 
     this.window.on('focus', () => {
@@ -103,14 +105,13 @@ class Card {
       this.window.webContents.send('card-blured');
     });
 
-    Promise.all([this.readyToShow(), this.loadHTML(), loadOrCreateCardData()])
-      .then(() => this.renderCard())
-      .catch(
-        /** 
-         * TODO:
-         * Alert to user and backup broken data.
-         */
-      );
+    Promise.all([this.readyToShow(), this.loadHTML(), loadOrCreateCardData()]).then(([res1, res2, _prop]) => {
+      this.prop = _prop;
+      this.renderCard();
+    }).catch(() => { 
+      throw 'Cannot load card';
+    });
+
   }
 
   private renderCard(): void {
@@ -148,20 +149,15 @@ class Card {
     });
   }
 
-  private createCardData: () => Promise<void> = () => {
-    return new Promise((resolve) => {
-      this.id = CardIO.generateNewCardId();
-      this.prop = new CardProp(this.id);
-      resolve();
-    });
+  private createCardData: () => Promise<CardProp> = () => {
+    return Promise.resolve(new CardProp(this.id));
   }
 
-  private loadCardData: () => Promise<void> = () => {
+  private loadCardData: () => Promise<CardProp> = () => {
     return new Promise((resolve, reject) => {
       CardIO.readCardData(this.id)
         .then((_prop: CardProp) => {
-          this.prop = _prop;
-          resolve();                  
+          resolve(_prop);                  
         })
         .catch((err: string) => {
           console.log('Load card error: ' + this.id + ', ' + err);
@@ -187,26 +183,26 @@ export const deleteCard = (prop: CardProp) => {
     })
     .then(() => {
       console.log('deleted :' + prop.id);
-      cards.get(prop.id).window.webContents.send('card-close');
+      cards.get(prop.id)?.window.webContents.send('card-close');
     })
 
 };
 
 export const saveCard = (prop: CardProp) => {
   const card = cards.get(prop.id);
-  const pos = card.window.getPosition();
-  const size = card.window.getSize();
+  const pos = card?.window.getPosition();
+  const size = card?.window.getSize();
 
   const newCard = new CardProp(
     prop.id,
     prop.data,    
-    { x: pos[0], y: pos[1], width: size[0], height: size[1]},
+    pos &&  size ? { x: pos[0], y: pos[1], width: size[0], height: size[1]} : undefined,
     { titleColor: prop.style.titleColor, backgroundColor: prop.style.backgroundColor, backgroundOpacity: prop.style.backgroundOpacity }
   );
   
   CardIO.writeOrCreateCardData(newCard)
   .then(() => {
-    card.window.webContents.send('card-saved');
+    card?.window.webContents.send('card-saved');
   })
   .catch((err: string) => {
     console.log(err);
@@ -240,12 +236,17 @@ app.on('ready', () => {
       }
       else {
         for (let id of arr) {
-          cards.set(id, new Card(id));
+          try{
+            cards.set(id, new Card(id));
+          }
+          catch(e){
+            console.error(e);
+          }
         }
       }
     })
-    .catch((err:string) => {
-      console.log('cards load error: ' + err);
+    .catch((err: string) => {
+      console.log(`Cannot load a list of cards: ${err}`);
     });
 });
 
@@ -254,5 +255,5 @@ app.on('ready', () => {
 //-----------------------------------
 export const setWindowSize = (id: string, width: number, height: number) => {
   const card = cards.get(id);  
-  card.window.setSize(width, height);  
+  card?.window.setSize(width, height);  
 }

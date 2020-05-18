@@ -28,7 +28,7 @@ export class CardEditor implements ICardEditor{
   
   private cardProp: CardProp = new CardProp('');
 
-  private cardCssStyle: CardCssStyle;
+  private cardCssStyle!: CardCssStyle; // cardCssStyle is set by loadUI()
   
   private moveCursorToBottom = () => {
     let editor = CKEDITOR.instances['editor'];
@@ -112,8 +112,8 @@ export class CardEditor implements ICardEditor{
     
     CKEDITOR.instances['editor'].setData(this.cardProp.data, {
        callback: () => {
-        document.getElementById('contents').style.visibility = 'hidden';
-        document.getElementById('cke_editor').style.visibility = 'visible';
+        document.getElementById('contents')!.style.visibility = 'hidden';
+        document.getElementById('cke_editor')!.style.visibility = 'visible';
 
         this.waitUntilActivationComplete().then(() => {
           CKEDITOR.instances['editor'].focus();
@@ -139,11 +139,11 @@ export class CardEditor implements ICardEditor{
     render([ CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize ]);
 
     // Hide editor
-    document.getElementById('contents').style.visibility = 'visible';    
-    document.getElementById('cke_editor').style.visibility = 'hidden';
+    document.getElementById('contents')!.style.visibility = 'visible';    
+    document.getElementById('cke_editor')!.style.visibility = 'hidden';
 
     this.codeMode = false;
-    document.getElementById('codeBtn').style.color = '#000000';
+    document.getElementById('codeBtn')!.style.color = '#000000';
     CKEDITOR.instances['editor'].setMode('wysiwyg', () => { });
 
     return contentsChanged;
@@ -162,14 +162,14 @@ export class CardEditor implements ICardEditor{
   startCodeMode = () => {
     this.codeMode = true;
     this.startEditMode();
-    document.getElementById('codeBtn').style.color = '#a0a0a0';
+    document.getElementById('codeBtn')!.style.color = '#a0a0a0';
     CKEDITOR.instances['editor'].setMode('source', () => { });
     CKEDITOR.instances['editor'].focus();
   };
 
   endCodeMode = () => {
     this.codeMode = false;
-    document.getElementById('codeBtn').style.color = '#000000';
+    document.getElementById('codeBtn')!.style.color = '#000000';
     CKEDITOR.instances['editor'].setMode('wysiwyg', () => { });
     this.waitUntilActivationComplete().then(() => {
       this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
@@ -179,16 +179,16 @@ export class CardEditor implements ICardEditor{
   };
 
   setSize = (width: number = this.cardProp.rect.width - this.cardCssStyle.border.left - this.cardCssStyle.border.right,
-            height: number = this.cardProp.rect.height + this.toolbarHeight - this.cardCssStyle.border.top - this.cardCssStyle.border.bottom - document.getElementById('titleBar').offsetHeight): void => {
+            height: number = this.cardProp.rect.height + this.toolbarHeight - this.cardCssStyle.border.top - this.cardCssStyle.border.bottom - document.getElementById('titleBar')!.offsetHeight): void => {
       // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
       CKEDITOR.instances['editor'].resize(width, height);
   };
 
   setColor = (backgroundColor: string, titleColor: string): void => {
-    document.getElementById('cke_editor').style.borderTopColor
-      = document.getElementById('cke_1_bottom').style.backgroundColor
-      = document.getElementById('cke_1_bottom').style.borderBottomColor
-      = document.getElementById('cke_1_bottom').style.borderTopColor
+    document.getElementById('cke_editor')!.style.borderTopColor
+      = document.getElementById('cke_1_bottom')!.style.backgroundColor
+      = document.getElementById('cke_1_bottom')!.style.borderBottomColor
+      = document.getElementById('cke_1_bottom')!.style.borderTopColor
       = titleColor;
     (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = backgroundColor;
   };

@@ -65,33 +65,34 @@ const initializeUIEvents = () => {
   document.ondrop = (e) => {
     e.preventDefault();
 
-    var file = e.dataTransfer.files[0];
+    var file = e.dataTransfer?.files[0];
 
     var dropImg = new Image();
-    dropImg.onload = () => {
-      var width = dropImg.naturalWidth;
-      var height = dropImg.naturalHeight;
+    if (file) {
+      dropImg.onload = () => {
+        var width = dropImg.naturalWidth;
+        var height = dropImg.naturalHeight;
 
-      // TODO:
-      // Adjust img to card size
-      // ...
-      // ...
+        // TODO:
+        // Adjust img to card size
+        // ...
+        // ...
 
-      cardProp.data = '<img src="'+ file.path + '" width="' + width + '" height="' + height + '">';
-      render([CardRenderOptions.ContentsData]);
-    };
-    dropImg.src = file.path;
-
+        cardProp.data = '<img src="' + file!.path + '" width="' + width + '" height="' + height + '">';
+        render([CardRenderOptions.ContentsData]);
+      };
+      dropImg.src = file.path;
+    }
     return false;
   };
 
 
-  document.getElementById('newBtn').addEventListener('click', () => {
+  document.getElementById('newBtn')?.addEventListener('click', () => {
     main.createCard();
   });
 
-  document.getElementById('contents').addEventListener('click', () => {
-    if(window.getSelection().toString() != ''){
+  document.getElementById('contents')?.addEventListener('click', () => {
+    if(window.getSelection()?.toString() != ''){
       return;
     }
     else{
@@ -99,11 +100,11 @@ const initializeUIEvents = () => {
     }
   });
 
-  document.getElementById('codeBtn').addEventListener('click', () => {
+  document.getElementById('codeBtn')?.addEventListener('click', () => {
     cardEditor.toggleCodeMode();
   });
 
-  document.getElementById('closeBtn').addEventListener('click', () => {
+  document.getElementById('closeBtn')?.addEventListener('click', () => {
     if(cardEditor.isOpened){
       if (cardEditor.endEditMode() && cardProp.data != '') {
         saveCardContents();
@@ -123,7 +124,7 @@ const initializeUIEvents = () => {
  * queueSaveCommand 
  * Queuing and execute only last save command to avoid frequent save.
  */
-let execSaveCommandTimeout: NodeJS.Timeout = null;
+let execSaveCommandTimeout: NodeJS.Timeout;
 const execSaveCommand = () => {
   main.saveCard(cardProp);
 };
@@ -140,18 +141,19 @@ const queueSaveCommand = () => {
 const onloaded = () => {
   window.removeEventListener('load', onloaded, false);
 
+
   cardCssStyle = {
     padding: {
-      left: parseInt(window.getComputedStyle(document.getElementById('contents')).paddingLeft),
-      right: parseInt(window.getComputedStyle(document.getElementById('contents')).paddingRight),
-      top: parseInt(window.getComputedStyle(document.getElementById('contents')).paddingTop),
-      bottom: parseInt(window.getComputedStyle(document.getElementById('contents')).paddingBottom),
+      left: parseInt(window.getComputedStyle(document.getElementById('contents')!).paddingLeft),
+      right: parseInt(window.getComputedStyle(document.getElementById('contents')!).paddingRight),
+      top: parseInt(window.getComputedStyle(document.getElementById('contents')!).paddingTop),
+      bottom: parseInt(window.getComputedStyle(document.getElementById('contents')!).paddingBottom),
     },
     border: {
-      left: parseInt(window.getComputedStyle(document.getElementById('card')).borderLeft),
-      right: parseInt(window.getComputedStyle(document.getElementById('card')).borderRight),
-      top: parseInt(window.getComputedStyle(document.getElementById('card')).borderTop),
-      bottom: parseInt(window.getComputedStyle(document.getElementById('card')).borderBottom)
+      left: parseInt(window.getComputedStyle(document.getElementById('card')!).borderLeft),
+      right: parseInt(window.getComputedStyle(document.getElementById('card')!).borderRight),
+      top: parseInt(window.getComputedStyle(document.getElementById('card')!).borderTop),
+      bottom: parseInt(window.getComputedStyle(document.getElementById('card')!).borderBottom)
     }
   };
 
@@ -177,9 +179,9 @@ const initializeIPCEvents = () => {
     cardEditor.loadCard(cardProp);
 
     if(cardProp.style.backgroundOpacity == 0){
-      document.getElementById('title').style.visibility = 'hidden';
+      document.getElementById('title')!.style.visibility = 'hidden';
     }
-    document.getElementById('card').style.visibility = 'visible';
+    document.getElementById('card')!.style.visibility = 'visible';
   });
 
   ipcRenderer.on('card-close', (event: Electron.IpcRendererEvent) => {
@@ -191,19 +193,19 @@ const initializeIPCEvents = () => {
   });
 
   ipcRenderer.on('card-focused', (event: Electron.IpcRendererEvent) => {
-    document.getElementById('card').style.border = '3px solid red';
-    document.getElementById('title').style.visibility = 'visible';
+    document.getElementById('card')!.style.border = '3px solid red';
+    document.getElementById('title')!.style.visibility = 'visible';
   });
   
   ipcRenderer.on('card-blured', (event: Electron.IpcRendererEvent) => {
-    if(document.getElementById('contents').style.visibility == 'hidden'){
+    if(document.getElementById('contents')!.style.visibility == 'hidden'){
       if(cardEditor.endEditMode()){
         saveCardContents();
       }
     }
-    document.getElementById('card').style.border = '3px solid transparent';
+    document.getElementById('card')!.style.border = '3px solid transparent';
     if(cardProp.style.backgroundOpacity == 0){
-      document.getElementById('title').style.visibility = 'hidden';
+      document.getElementById('title')!.style.visibility = 'hidden';
     }
   });
 

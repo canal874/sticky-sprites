@@ -25,7 +25,7 @@ if(process.env.NODE_CARDDIR){
  */
 
 import pouchDB from 'pouchdb';
-var cardsDB: PouchDB.Database<{}> = null;
+var cardsDB: PouchDB.Database<{}>;
 
 
 class CardIOClass implements ICardIO {

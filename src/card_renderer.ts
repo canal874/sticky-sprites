@@ -44,31 +44,31 @@ export enum CardRenderOptions {
 }
 
 const renderTitleBar = () => {
-  const closeBtnLeft = cardProp.rect.width - cardCssStyle.border.left - cardCssStyle.border.right - document.getElementById('closeBtn').offsetWidth;
-  document.getElementById('closeBtn').style.left = closeBtnLeft + 'px';
-  const titleBarLeft = document.getElementById('codeBtn').offsetLeft + document.getElementById('codeBtn').offsetWidth;
+  const closeBtnLeft = cardProp.rect.width - cardCssStyle.border.left - cardCssStyle.border.right - document.getElementById('closeBtn')!.offsetWidth;
+  document.getElementById('closeBtn')!.style.left = closeBtnLeft + 'px';
+  const titleBarLeft = document.getElementById('codeBtn')!.offsetLeft + document.getElementById('codeBtn')!.offsetWidth;
   const barwidth = closeBtnLeft - titleBarLeft;
-  document.getElementById('titleBar').style.left = titleBarLeft + 'px';
-  document.getElementById('titleBar').style.width = barwidth + 'px';
+  document.getElementById('titleBar')!.style.left = titleBarLeft + 'px';
+  document.getElementById('titleBar')!.style.width = barwidth + 'px';
 
 };
 
 const renderContentsData = () => {
-  document.getElementById('contents').innerHTML = cardProp.data;
+  document.getElementById('contents')!.innerHTML = cardProp.data;
 };
 
 const renderContentsSize = () => {
   // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
-  document.getElementById('contents').style.width = (
+  document.getElementById('contents')!.style.width = (
     cardProp.rect.width
     - cardCssStyle.border.left - cardCssStyle.border.right
     - cardCssStyle.padding.left - cardCssStyle.padding.right
   ) + 'px';
 
-  document.getElementById('contents').style.height = (
+  document.getElementById('contents')!.style.height = (
     cardProp.rect.height
     - cardCssStyle.border.top - cardCssStyle.border.bottom
-    - document.getElementById('titleBar').offsetHeight
+    - document.getElementById('titleBar')!.offsetHeight
     - cardCssStyle.padding.top - cardCssStyle.padding.bottom
   ) + 'px';
 };
@@ -84,7 +84,7 @@ const setCardColor = () => {
   let red = parseInt(RegExp.$1, 16);
   let green = parseInt(RegExp.$2, 16);
   let blue = parseInt(RegExp.$3, 16);
-  document.getElementById('contents').style.backgroundColor = 'rgba(' + red + ',' + green + ',' + blue + ',' + cardProp.style.backgroundOpacity + ')';
+  document.getElementById('contents')!.style.backgroundColor = 'rgba(' + red + ',' + green + ',' + blue + ',' + cardProp.style.backgroundOpacity + ')';
 
   let r = Math.floor(red * scale).toString(16);
   if (r.length == 1) { r = '0' + r; }
