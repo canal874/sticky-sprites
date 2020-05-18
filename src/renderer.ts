@@ -12,7 +12,6 @@ import { CardProp, ICardEditor, CardPropSerializable, Rectangle, CardCssStyle } 
 import { CardEditor } from './modules_ext/editor';
 import { render, initCardRenderer, getRenderOffsetWidth, getRenderOffsetHeight, CardRenderOptions } from './card_renderer';
 import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
-import { saveCard } from './main';
 
 const main = remote.require('./main');
 

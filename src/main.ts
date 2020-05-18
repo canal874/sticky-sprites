@@ -189,21 +189,26 @@ export const deleteCard = (prop: CardProp) => {
 };
 
 export const saveCard = (prop: CardProp) => {
-  const card = cards.get(prop.id);
-
   const newCard = new CardProp(
     prop.id,
     prop.data,    
     { x: prop.rect.x, y: prop.rect.y, width: prop.rect.width, height: prop.rect.height},
     { titleColor: prop.style.titleColor, backgroundColor: prop.style.backgroundColor, backgroundOpacity: prop.style.backgroundOpacity }
-  );
+  );  
   
   CardIO.writeOrCreateCardData(newCard)
   .then(() => {
-    card?.window.webContents.send('card-saved');
+    const card = cards.get(prop.id);
+    if(card){
+      card.prop = prop;
+      card.window.webContents.send('card-saved');
+    }
+    else{
+      throw 'The card is not registered in cards.';
+    }
   })
   .catch((err: string) => {
-    console.log(err);
+    console.error(err);
   });
 }
 
