@@ -50,7 +50,6 @@ const renderTitleBar = () => {
   const barwidth = closeBtnLeft - titleBarLeft;
   document.getElementById('titleBar')!.style.left = titleBarLeft + 'px';
   document.getElementById('titleBar')!.style.width = barwidth + 'px';
-
 };
 
 const renderContentsData = () => {
