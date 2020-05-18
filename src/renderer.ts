@@ -161,8 +161,7 @@ const onloaded = () => {
 
   cardEditor.loadUI(cardCssStyle).then(() => {
     ipcRenderer.send('finish-load');
-  }
-  );
+  });
 }
 
 
@@ -209,7 +208,7 @@ const initializeIPCEvents = () => {
     }
   });
 
-  ipcRenderer.on('resize-byhand', (event: Electron.IpcRendererEvent, newBounds: Rectangle) => {
+  ipcRenderer.on('resize-byhand', (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
     cardProp.rect.width = newBounds.width + getRenderOffsetWidth();
     cardProp.rect.height = newBounds.height + getRenderOffsetHeight();
 
@@ -218,7 +217,10 @@ const initializeIPCEvents = () => {
     queueSaveCommand();
   });
 
-  ipcRenderer.on('move-byhand', (newBounds: Electron.IpcRendererEvent) => {
+  ipcRenderer.on('move-byhand', (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
+    cardProp.rect.x = newBounds.x;
+    cardProp.rect.y = newBounds.y;
+
     queueSaveCommand();
   });
 };
