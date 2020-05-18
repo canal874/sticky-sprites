@@ -137,7 +137,7 @@ const queueSaveCommand = () => {
  * Initialize
  */
 
-const onloaded = () => {
+const onloaded = async () => {
   window.removeEventListener('load', onloaded, false);
 
 
@@ -158,9 +158,8 @@ const onloaded = () => {
 
   initializeUIEvents();
 
-  cardEditor.loadUI(cardCssStyle).then(() => {
-    ipcRenderer.send('finish-load');
-  });
+  await cardEditor.loadUI(cardCssStyle);
+  ipcRenderer.send('finish-load');
 }
 
 
