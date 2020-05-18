@@ -16,6 +16,7 @@ import translations from './modules_common/base.msg';
 import { CardProp } from './modules_common/types';
 import { CardIO } from './modules_ext/io';
 import { resolve } from 'dns';
+import { Z_FULL_FLUSH } from 'zlib';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -63,6 +64,9 @@ class Card {
       transparent: true,
       frame: false,
       show: false,
+
+      maximizable: false,
+      fullscreenable: false,
 
       // Set window title to card id.
       // This enables some tricks that can access the card window from other apps.
