@@ -20,6 +20,7 @@ body > .card{
   border: 3px solid transparent;
   box-sizing: border-box;
   visibility: hidden;
+  z-index: 0;
 }
 
 body > .card > .title{
@@ -28,18 +29,23 @@ body > .card > .title{
   left: 0px;
   padding: 0px;
   margin: 0px;
+  z-index: 10;
 }
 
 body > .card > .title > .title-body{
   /*
     -webkit-app-region:drag prevents JavaScript mouse events.
+    -webkit-user-select: none  is also needed.
   */
   -webkit-app-region: drag;
+  -webkit-user-select: none;
+
   position: absolute;
   top: 0px;
   height: 18px;
   padding: 0px;
   margin: 0px;
+  z-index: 20;
 }
 
 body > .card > .title > .title-btn{
@@ -51,6 +57,7 @@ body > .card > .title > .title-btn{
   font-size: 14px;
   padding: 1px; 
   cursor: pointer;
+  z-index: 30;
 }
 
 body > .card > .title > .titlebar{
