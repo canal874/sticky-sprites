@@ -10,7 +10,8 @@
  * Common part
  */
 
-import { CardProp, ICardEditor, CardCssStyle } from '../modules_common/types';
+import { CardProp } from '../modules_common/card';
+import { ICardEditor, CardCssStyle } from '../modules_common/types';
 import { render, setRenderOffsetHeight, CardRenderOptions } from '../card_renderer';
 import { remote } from 'electron';
 

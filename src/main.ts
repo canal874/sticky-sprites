@@ -6,17 +6,13 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { selectPreferredLanguage } from 'typed-intl';
 import url from 'url';
 import path from 'path'
 import translations from './modules_common/base.msg';
-import { CardProp } from './modules_common/types';
+import { CardProp } from './modules_common/card';
 import { CardIO } from './modules_ext/io';
-import { resolve } from 'dns';
-import { Z_FULL_FLUSH } from 'zlib';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require

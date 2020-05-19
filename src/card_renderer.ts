@@ -6,7 +6,8 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardProp, CardCssStyle, ICardEditor } from './modules_common/types';
+import { CardProp } from './modules_common/card'; 
+import { CardCssStyle, ICardEditor } from './modules_common/types';
 
 let cardProp: CardProp;
 let cardCssStyle: CardCssStyle;

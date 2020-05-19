@@ -6,13 +6,12 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 /**
  * Common part
  */
 
-import { CardProp, CardPropSerializable, ICardIO } from '../modules_common/types';
+import { CardProp, CardPropSerializable } from '../modules_common/card';
+import { ICardIO } from '../modules_common/types';
 import uniqid from 'uniqid';
 
 let cardDir = './cards';

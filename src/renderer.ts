@@ -8,7 +8,8 @@
 
 import { remote } from 'electron';
 import { ipcRenderer } from 'electron';
-import { CardProp, ICardEditor, CardPropSerializable, Rectangle, CardCssStyle } from './modules_common/types';
+import { CardProp, CardPropSerializable } from './modules_common/card';
+import { ICardEditor, CardCssStyle } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
 import { render, initCardRenderer, getRenderOffsetWidth, getRenderOffsetHeight, CardRenderOptions } from './card_renderer';
 import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
