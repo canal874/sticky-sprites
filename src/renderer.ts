@@ -47,9 +47,10 @@ contextMenu({
   append: (defaultActions, params, browserWindow) => [
     { label: main.MESSAGE.white, click: () => { setAndSaveCardColor('#ffffff'); } },    
     { label: main.MESSAGE.yellow, click: () => { setAndSaveCardColor('#ffffa0'); } },
-    { label: main.MESSAGE.red, click: () => { setAndSaveCardColor('#ffd0d0'); } },
+    { label: main.MESSAGE.red, click: () => { setAndSaveCardColor('#ffb0b0'); } },
     { label: main.MESSAGE.green, click: () => { setAndSaveCardColor('#d0ffd0'); } },
     { label: main.MESSAGE.blue, click: () => { setAndSaveCardColor('#d0d0ff'); } },
+    { label: main.MESSAGE.orange, click: () => { setAndSaveCardColor('#ffb000'); } },    
     { label: main.MESSAGE.purple, click: () => { setAndSaveCardColor('#ffd0ff'); } },
     { label: main.MESSAGE.gray, click: () => { setAndSaveCardColor('#d0d0d0'); } },
     { label: main.MESSAGE.transparent, click: () => { setAndSaveCardColor('#ffffff', 0.0); } }

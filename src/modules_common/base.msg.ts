@@ -6,7 +6,8 @@ export default translate({
 	'yellow': 'yellow',
 	'red': 'red',
 	'green': 'green',
-	'blue': 'blue',
+  'blue': 'blue',
+  'orange': 'orange',  
 	'purple': 'purple',
 	'gray': 'gray',
 	'transparent': 'transparent'
@@ -16,7 +17,8 @@ export default translate({
 	'yellow': '黄',
 	'red': '赤',
 	'green': '緑',
-	'blue': '青',
+  'blue': '青',
+  'orange': 'オレンジ',  
 	'purple': '紫',
 	'gray': 'グレー',
 	'transparent': '透明'
