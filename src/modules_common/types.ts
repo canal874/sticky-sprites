@@ -22,8 +22,8 @@ export interface ICardEditor {
   loadUI(cardCssStyle: CardCssStyle): Promise<void>; // A Promise resolves when required initialiation is finished.
   loadCard(prop: CardProp): void; // Loading a card after loadUI().
 
-  startEditMode(): void;
-  endEditMode(): boolean;
+  startEdit(): void;
+  endEdit(): [boolean, string];
   toggleCodeMode(): void;
   startCodeMode(): void;
   endCodeMode(): void;

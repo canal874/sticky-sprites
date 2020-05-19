@@ -96,7 +96,7 @@ const initializeUIEvents = () => {
       return;
     }
     else{
-      cardEditor.startEditMode();
+      cardEditor.startEdit();
     }
   });
 
@@ -106,7 +106,10 @@ const initializeUIEvents = () => {
 
   document.getElementById('closeBtn')?.addEventListener('click', () => {
     if(cardEditor.isOpened){
-      if (cardEditor.endEditMode() && cardProp.data != '') {
+      const [dataChanged, data] = cardEditor.endEdit()
+      if (dataChanged && data != '') {        
+        cardProp.data = data;        
+        render([ CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize ]);        
         saveCardContents();
       }
     }
@@ -197,7 +200,10 @@ const initializeIPCEvents = () => {
   
   ipcRenderer.on('card-blured', (event: Electron.IpcRendererEvent) => {
     if(document.getElementById('contents')!.style.visibility == 'hidden'){
-      if(cardEditor.endEditMode()){
+      const [dataChanged, data] = cardEditor.endEdit()
+      if(dataChanged){        
+        cardProp.data = data;
+        render([ CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize ]);
         saveCardContents();
       }
     }

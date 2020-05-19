@@ -12,7 +12,7 @@
 
 import { CardProp } from '../modules_common/card';
 import { ICardEditor, CardCssStyle } from '../modules_common/types';
-import { render, setRenderOffsetHeight, CardRenderOptions } from '../card_renderer';
+import { setRenderOffsetHeight } from '../card_renderer';
 import { remote } from 'electron';
 
 const main = remote.require('./main');
@@ -99,7 +99,7 @@ export class CardEditor implements ICardEditor{
       });
   };
 
-  startEditMode = () => {
+  startEdit = () => {
     // style.display is initially set to 'none'.
     document.getElementById('cke_editor')!.style.display = 'block';
 
@@ -128,20 +128,18 @@ export class CardEditor implements ICardEditor{
     });
   };
 
-  endEditMode = (): boolean => {
+  endEdit = (): [boolean, string] => {
     this.isOpened = false;
 
-    let contentsChanged = false;
+    let dataChanged = false;
     // Save data to CardProp
     const data = CKEDITOR.instances['editor'].getData();
     if(this.cardProp.data != data){
-      contentsChanged = true;
+      dataChanged = true;
     }
-    this.cardProp.data = data;
 
     main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, this.cardProp.rect.height);
     setRenderOffsetHeight(0);
-    render([ CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize ]);
 
     // Hide editor
     document.getElementById('contents')!.style.visibility = 'visible';    
@@ -151,7 +149,7 @@ export class CardEditor implements ICardEditor{
     document.getElementById('codeBtn')!.style.color = '#000000';
     CKEDITOR.instances['editor'].setMode('wysiwyg', () => { });
 
-    return contentsChanged;
+    return [dataChanged, data];
   };
 
 
@@ -166,7 +164,7 @@ export class CardEditor implements ICardEditor{
 
   startCodeMode = () => {
     this.codeMode = true;
-    this.startEditMode();
+    this.startEdit();
     document.getElementById('codeBtn')!.style.color = '#a0a0a0';
     CKEDITOR.instances['editor'].setMode('source', () => { });
     CKEDITOR.instances['editor'].focus();
