@@ -94,6 +94,7 @@ body > .card > .contents{
   margin: 0px;
   border: 0px;
   z-index: 10;
+  word-wrap: break-word;
 }
 
 
