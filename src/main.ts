@@ -176,7 +176,6 @@ app.on('window-all-closed', () => {
 // Serialization
 //-----------------------------------
 
-// Save card
 export const deleteCard = (prop: CardProp) => {
   CardIO.deleteCardData(prop.id)
     .catch((err: string) => {

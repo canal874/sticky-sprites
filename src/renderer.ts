@@ -26,6 +26,9 @@ const close = () => {
   window.close();
 };
 
+/**
+ * Save
+ */
 const saveCardContents = () => {
   main.saveCard(cardProp);
 };
@@ -40,6 +43,23 @@ const setAndSaveCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
   main.saveCard(cardProp);
 };
 
+/**
+ * queueSaveCommand 
+ * Queuing and execute only last save command to avoid frequent save.
+ */
+let execSaveCommandTimeout: NodeJS.Timeout;
+const execSaveCommand = () => {
+  main.saveCard(cardProp);
+};
+
+const queueSaveCommand = () => {
+  clearTimeout(execSaveCommandTimeout);
+  execSaveCommandTimeout = setTimeout(execSaveCommand, 1000);
+}
+
+/**
+ * Context Menu
+ */
 contextMenu({
   window: remote.getCurrentWindow(),
   showSaveImageAs: true,
@@ -57,6 +77,10 @@ contextMenu({
   ]
 });
 
+
+/**
+ * Initialize
+ */
 const initializeUIEvents = () => {
   document.ondragover = (e) => {
     e.preventDefault();
@@ -124,27 +148,8 @@ const initializeUIEvents = () => {
 
 }
 
-/**
- * queueSaveCommand 
- * Queuing and execute only last save command to avoid frequent save.
- */
-let execSaveCommandTimeout: NodeJS.Timeout;
-const execSaveCommand = () => {
-  main.saveCard(cardProp);
-};
-
-const queueSaveCommand = () => {
-  clearTimeout(execSaveCommandTimeout);
-  execSaveCommandTimeout = setTimeout(execSaveCommand, 1000);
-}
-
-/**
- * Initialize
- */
-
 const onloaded = async () => {
   window.removeEventListener('load', onloaded, false);
-
 
   cardCssStyle = {
     padding: {
@@ -166,7 +171,6 @@ const onloaded = async () => {
   await cardEditor.loadUI(cardCssStyle);
   ipcRenderer.send('finish-load');
 }
-
 
 const initializeIPCEvents = () => {
   // ipc (inter-process communication)
@@ -231,6 +235,5 @@ const initializeIPCEvents = () => {
   });
 };
 
-/** This script is inserted at the last part of <html> element */
 initializeIPCEvents();
 window.addEventListener('load', onloaded, false);
