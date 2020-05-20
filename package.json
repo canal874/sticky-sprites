@@ -1,7 +1,7 @@
 {
   "name": "media-stickies",
   "productName": "MediaStickies",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Small sticky browser windows",
   "main": "dist/main.js",
   "scripts": {
