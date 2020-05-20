@@ -52,9 +52,7 @@ const waitUnfinishedSaveTasks = () => {
   });
 }
 const close = async () => {
-  await waitUnfinishedSaveTasks().catch((e)=>{ 
-    // TODO: Handle save error.
-  });
+  await waitUnfinishedSaveTasks();
   window.close();  
 };
 
@@ -73,7 +71,9 @@ const saveData = async () => {
   }, 1000);
   const taskId = uniqid();
   unfinishedSaveTasks.set(taskId, 1);
-  await ipcRenderer.invoke('save', cardProp.toObject());
+  await ipcRenderer.invoke('save', cardProp.toObject()).catch((e)=>{
+    // TODO: Handle save error.
+  });
   unfinishedSaveTasks.delete(taskId); 
   clearTimeout(timeout);
   setTitleMessage('');
