@@ -41,7 +41,7 @@ export class CardProp implements CardBase {
       y: this.rect.y,
       width: this.rect.width,
       height: this.rect.height,
-      titleColor: this.style.titleColor,   
+      titleColor: this.style.titleColor,
       backgroundColor: this.style.backgroundColor,
       backgroundOpacity: this.style.backgroundOpacity,
     }

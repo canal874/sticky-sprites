@@ -93,7 +93,7 @@ const initializeUIEvents = () => {
     var file = e.dataTransfer?.files[0];
 
     var dropImg = new Image();
-    if (file) {
+    if(file) {
       dropImg.onload = () => {
         var width = dropImg.naturalWidth;
         var height = dropImg.naturalHeight;
@@ -117,7 +117,7 @@ const initializeUIEvents = () => {
   });
 
   document.getElementById('contents')?.addEventListener('click', () => {
-    if (window.getSelection()?.toString() != '') {
+    if(window.getSelection()?.toString() != '') {
       return;
     }
     else {
@@ -130,18 +130,18 @@ const initializeUIEvents = () => {
   });
 
   document.getElementById('closeBtn')?.addEventListener('click', () => {
-    if (cardEditor.isOpened) {
+    if(cardEditor.isOpened) {
       const [dataChanged, data] = cardEditor.endEdit()
-      if (dataChanged && data != '') {
+      if(dataChanged && data != '') {
         cardProp.data = data;
         render([CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize]);
         saveCardContents();
       }
     }
-    if (cardProp.data == '') {
+    if(cardProp.data == '') {
       main.deleteCard(cardProp);
     }
-    else if (window.confirm(main.MESSAGE.confirm_closing)) {
+    else if(window.confirm(main.MESSAGE.confirm_closing)) {
       close();
     }
   });
@@ -184,7 +184,7 @@ const initializeIPCEvents = () => {
 
     cardEditor.loadCard(cardProp);
 
-    if (cardProp.style.backgroundOpacity == 0) {
+    if(cardProp.style.backgroundOpacity == 0) {
       document.getElementById('title')!.style.visibility = 'hidden';
     }
     document.getElementById('card')!.style.visibility = 'visible';
@@ -204,16 +204,16 @@ const initializeIPCEvents = () => {
   });
 
   ipcRenderer.on('card-blured', (event: Electron.IpcRendererEvent) => {
-    if (cardEditor.isOpened) {
+    if(cardEditor.isOpened) {
       const [dataChanged, data] = cardEditor.endEdit()
-      if (dataChanged) {
+      if(dataChanged) {
         cardProp.data = data;
         render([CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize]);
         saveCardContents();
       }
     }
     document.getElementById('card')!.style.border = '3px solid transparent';
-    if (cardProp.style.backgroundOpacity == 0) {
+    if(cardProp.style.backgroundOpacity == 0) {
       document.getElementById('title')!.style.visibility = 'hidden';
     }
   });

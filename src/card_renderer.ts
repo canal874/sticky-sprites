@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardProp } from './modules_common/card'; 
+import { CardProp } from './modules_common/card';
 import { CardCssStyle, ICardEditor } from './modules_common/types';
 
 let cardProp: CardProp;
@@ -29,9 +29,9 @@ export const setRenderOffsetHeight = (h: number) => {
   renderOffsetHeight = h;
 }
 
-export const initCardRenderer = (prop: CardProp, style: CardCssStyle, editor: ICardEditor ) => {
+export const initCardRenderer = (prop: CardProp, style: CardCssStyle, editor: ICardEditor) => {
   cardProp = prop;
-  cardCssStyle = style; 
+  cardCssStyle = style;
   cardEditor = editor;
 };
 
@@ -87,11 +87,11 @@ const setCardColor = () => {
   document.getElementById('contents')!.style.backgroundColor = 'rgba(' + red + ',' + green + ',' + blue + ',' + cardProp.style.backgroundOpacity + ')';
 
   let r = Math.floor(red * scale).toString(16);
-  if (r.length == 1) { r = '0' + r; }
+  if(r.length == 1) { r = '0' + r; }
   let g = Math.floor(green * scale).toString(16);
-  if (g.length == 1) { g = '0' + g; }
+  if(g.length == 1) { g = '0' + g; }
   let b = Math.floor(blue * scale).toString(16);
-  if (b.length == 1) { b = '0' + b; }
+  if(b.length == 1) { b = '0' + b; }
   cardProp.style.titleColor = '#' + r + g + b;
 
   Array.from(document.getElementsByClassName('title-color')).forEach((node, index, list) => {
@@ -104,17 +104,17 @@ const renderEditorSize = () => {
 }
 
 export const render = (options: CardRenderOptions[] = [CardRenderOptions.All]) => {
-  for (let opt of options) {
-    if (opt == CardRenderOptions.Color || opt == CardRenderOptions.All)
+  for(let opt of options) {
+    if(opt == CardRenderOptions.Color || opt == CardRenderOptions.All)
       setCardColor();
-    if (opt == CardRenderOptions.TitleBar || opt == CardRenderOptions.All)
+    if(opt == CardRenderOptions.TitleBar || opt == CardRenderOptions.All)
       renderTitleBar();
-    if (opt == CardRenderOptions.ContentsData || opt == CardRenderOptions.All)
+    if(opt == CardRenderOptions.ContentsData || opt == CardRenderOptions.All)
       renderContentsData();
-    if (opt == CardRenderOptions.ContentsSize || opt == CardRenderOptions.All)
+    if(opt == CardRenderOptions.ContentsSize || opt == CardRenderOptions.All)
       renderContentsSize();
-    if (opt == CardRenderOptions.EditorSize || opt == CardRenderOptions.All)
-      renderEditorSize();      
+    if(opt == CardRenderOptions.EditorSize || opt == CardRenderOptions.All)
+      renderEditorSize();
   }
 };
 

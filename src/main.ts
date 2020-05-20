@@ -16,7 +16,7 @@ import { CardProp } from './modules_common/card';
 import { CardIO } from './modules_ext/io';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
+if(require('electron-squirrel-startup')) { // eslint-disable-line global-require
   app.quit();
 }
 
@@ -39,7 +39,7 @@ const minimumWindowWidth = 30;
  * A small sticky windows is called 'card'.
  */
 
-const cards:Map<string, Card> = new Map<string, Card>();
+const cards: Map<string, Card> = new Map<string, Card>();
 
 
 class Card {
@@ -48,10 +48,10 @@ class Card {
 
   constructor(public id: string = '') {
     let loadOrCreateCardData = this.loadCardData;
-    if(this.id == ''){
+    if(this.id == '') {
       this.id = CardIO.generateNewCardId();
       loadOrCreateCardData = this.createCardData;
-    } 
+    }
 
     this.window = new BrowserWindow({
       webPreferences: {
@@ -67,7 +67,7 @@ class Card {
 
       // Set window title to card id.
       // This enables some tricks that can access the card window from other apps.
-      title: id  
+      title: id
     });
     this.window.setMaxListeners(20);
 
@@ -109,7 +109,7 @@ class Card {
     Promise.all([this.readyToShow(), this.loadHTML(), loadOrCreateCardData()]).then(([res1, res2, _prop]) => {
       this.prop = _prop;
       this.renderCard();
-    }).catch(() => { 
+    }).catch(() => {
       throw 'Cannot load card';
     });
 
@@ -141,7 +141,7 @@ class Card {
       });
       this.window.webContents.on('did-fail-load', () => {
         reject();
-      });      
+      });
       this.window.loadURL(url.format({
         pathname: path.join(__dirname, 'index.html'),
         protocol: 'file:',
@@ -158,7 +158,7 @@ class Card {
     return new Promise((resolve, reject) => {
       CardIO.readCardData(this.id)
         .then((_prop: CardProp) => {
-          resolve(_prop);                  
+          resolve(_prop);
         })
         .catch((err: string) => {
           logger.error('Load card error: ' + this.id + ', ' + err);
@@ -191,25 +191,25 @@ export const deleteCard = (prop: CardProp) => {
 export const saveCard = (prop: CardProp) => {
   const newCard = new CardProp(
     prop.id,
-    prop.data,    
-    { x: prop.rect.x, y: prop.rect.y, width: prop.rect.width, height: prop.rect.height},
+    prop.data,
+    { x: prop.rect.x, y: prop.rect.y, width: prop.rect.width, height: prop.rect.height },
     { titleColor: prop.style.titleColor, backgroundColor: prop.style.backgroundColor, backgroundOpacity: prop.style.backgroundOpacity }
-  );  
-  
+  );
+
   CardIO.writeOrCreateCardData(newCard)
-  .then(() => {
-    const card = cards.get(prop.id);
-    if(card){
-      card.prop = prop;
-      card.window.webContents.send('card-saved');
-    }
-    else{
-      throw 'The card is not registered in cards.';
-    }
-  })
-  .catch((err: string) => {
-    logger.error(err);
-  });
+    .then(() => {
+      const card = cards.get(prop.id);
+      if(card) {
+        card.prop = prop;
+        card.window.webContents.send('card-saved');
+      }
+      else {
+        throw 'The card is not registered in cards.';
+      }
+    })
+    .catch((err: string) => {
+      logger.error(err);
+    });
 }
 
 // Create new card
@@ -231,18 +231,18 @@ app.on('ready', () => {
 
   // load cards
   CardIO.getCardIdList()
-    .then((arr:Array<string>) => {
-      if (arr.length == 0) {
+    .then((arr: Array<string>) => {
+      if(arr.length == 0) {
         // Create a new card
         const card = new Card();
         cards.set(card.id, card);
       }
       else {
-        for (let id of arr) {
-          try{
+        for(let id of arr) {
+          try {
             cards.set(id, new Card(id));
           }
-          catch(e){
+          catch(e) {
             throw `Cannot create a Card instance of ${id}: ${e}`;
             logger.error(e);
           }
@@ -258,6 +258,6 @@ app.on('ready', () => {
 // Utils
 //-----------------------------------
 export const setWindowSize = (id: string, width: number, height: number) => {
-  const card = cards.get(id);  
-  card?.window.setSize(width, height);  
+  const card = cards.get(id);
+  card?.window.setSize(width, height);
 }

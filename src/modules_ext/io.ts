@@ -16,7 +16,7 @@ import uniqid from 'uniqid';
 import { logger } from '../modules_common/utils';
 
 let cardDir = './cards';
-if(process.env.NODE_CARDDIR){
+if(process.env.NODE_CARDDIR) {
   cardDir = process.env.NODE_CARDDIR;
 }
 
@@ -68,24 +68,24 @@ class CardIOClass implements ICardIO {
         .then((doc) => {
           const propsRequired: CardPropSerializable = (new CardProp('')).serialize();
           // Checking properties retrieved from database
-          for(let key in propsRequired){
-            if(key == 'id'){
+          for(let key in propsRequired) {
+            if(key == 'id') {
               // skip
               // pouchDB does not have id but has _id.
             }
-            else if(!doc.hasOwnProperty(key)){
+            else if(!doc.hasOwnProperty(key)) {
               logger.warn(`db entry id "${id}" lacks "${key}"`);
             }
-            else{
+            else {
               // Type of doc cannot be resolved by @types/pouchdb-core
               // @ts-ignore          
               propsRequired[key] = doc[key];
             }
           }
 
-          resolve(new CardProp(id, propsRequired.data, 
+          resolve(new CardProp(id, propsRequired.data,
             { x: propsRequired.x, y: propsRequired.y, width: propsRequired.width, height: propsRequired.height },
-            { titleColor: propsRequired.titleColor, backgroundColor: propsRequired.backgroundColor, backgroundOpacity: propsRequired.backgroundOpacity}));
+            { titleColor: propsRequired.titleColor, backgroundColor: propsRequired.backgroundColor, backgroundOpacity: propsRequired.backgroundOpacity }));
 
         })
         .catch((err) => {

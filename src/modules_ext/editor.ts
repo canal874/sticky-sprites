@@ -17,8 +17,8 @@ import { remote } from 'electron';
 
 const main = remote.require('./main');
 
-export class CardEditor implements ICardEditor{
-  constructor() {}
+export class CardEditor implements ICardEditor {
+  constructor() { }
 
   /**
    * Private
@@ -26,22 +26,22 @@ export class CardEditor implements ICardEditor{
   private codeMode = false;
   private toolbarHeight = 30;
 
-  
+
   private cardProp: CardProp = new CardProp('');
 
   private cardCssStyle!: CardCssStyle; // cardCssStyle is set by loadUI()
-  
+
   private moveCursorToBottom = () => {
     let editor = CKEDITOR.instances['editor'];
     let s = editor.getSelection(); // getting selection
     let selected_ranges = s.getRanges(); // getting ranges
-    if (selected_ranges.length > 0) {
+    if(selected_ranges.length > 0) {
       let node = selected_ranges[0].startContainer; // selecting the starting node
       let parents = node.getParents(true);
       node = (parents[parents.length - 2] as CKEDITOR.dom.element).getFirst() as CKEDITOR.dom.element;
-      while (true) {
+      while(true) {
         let x: CKEDITOR.dom.element = node.getNext() as CKEDITOR.dom.element;
-        if (x == null) {
+        if(x == null) {
           break;
         }
         node = x;
@@ -64,12 +64,12 @@ export class CardEditor implements ICardEditor{
   loadUI = (_cardCssStyle: CardCssStyle) => {
     this.cardCssStyle = _cardCssStyle;
     return new Promise<void>((resolve, reject) => {
-      CKEDITOR.replace('editor'); 
+      CKEDITOR.replace('editor');
       CKEDITOR.on('instanceReady', () => {
-        const checkTimer = setInterval(()=>{
+        const checkTimer = setInterval(() => {
           // Checking existence of 'cke_editor' 
           // because 'instanceReady' event is incredible.
-          if(document.getElementById('cke_editor')){
+          if(document.getElementById('cke_editor')) {
             clearInterval(checkTimer);
             resolve();
           }
@@ -87,15 +87,15 @@ export class CardEditor implements ICardEditor{
 
   waitUntilActivationComplete = (): Promise<void> => {
     return new Promise((resolve, reject) => {
-        const editor = CKEDITOR.instances['editor'];
-        const timer = setInterval(() => {
-          const s = editor.getSelection();
-          if (s) {
-            clearInterval(timer);
-            resolve();
-          }
-        }, 100);
-      });
+      const editor = CKEDITOR.instances['editor'];
+      const timer = setInterval(() => {
+        const s = editor.getSelection();
+        if(s) {
+          clearInterval(timer);
+          resolve();
+        }
+      }, 100);
+    });
   };
 
   startEdit = () => {
@@ -103,20 +103,20 @@ export class CardEditor implements ICardEditor{
     document.getElementById('cke_editor')!.style.display = 'block';
 
     // Load card data from cardProp    
-    if (!this.isOpened) {
+    if(!this.isOpened) {
       // Expand card to add toolbar.
       const expandedHeight = this.cardProp.rect.height + this.toolbarHeight;
       main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, expandedHeight);
-      setRenderOffsetHeight(-this.toolbarHeight);      
+      setRenderOffsetHeight(-this.toolbarHeight);
       this.isOpened = true;
 
       this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
 
       this.setSize();
     }
-    
+
     CKEDITOR.instances['editor'].setData(this.cardProp.data, {
-       callback: async () => {
+      callback: async () => {
         document.getElementById('contents')!.style.visibility = 'hidden';
         document.getElementById('cke_editor')!.style.visibility = 'visible';
 
@@ -133,7 +133,7 @@ export class CardEditor implements ICardEditor{
     let dataChanged = false;
     // Save data to CardProp
     const data = CKEDITOR.instances['editor'].getData();
-    if(this.cardProp.data != data){
+    if(this.cardProp.data != data) {
       dataChanged = true;
     }
 
@@ -141,7 +141,7 @@ export class CardEditor implements ICardEditor{
     setRenderOffsetHeight(0);
 
     // Hide editor
-    document.getElementById('contents')!.style.visibility = 'visible';    
+    document.getElementById('contents')!.style.visibility = 'visible';
     document.getElementById('cke_editor')!.style.visibility = 'hidden';
 
     this.codeMode = false;
@@ -152,11 +152,11 @@ export class CardEditor implements ICardEditor{
   };
 
 
-  toggleCodeMode = () =>{
-    if(!this.codeMode){
+  toggleCodeMode = () => {
+    if(!this.codeMode) {
       this.startCodeMode();
     }
-    else{
+    else {
       this.endCodeMode();
     }
   }
@@ -180,9 +180,9 @@ export class CardEditor implements ICardEditor{
   };
 
   setSize = (width: number = this.cardProp.rect.width - this.cardCssStyle.border.left - this.cardCssStyle.border.right,
-            height: number = this.cardProp.rect.height + this.toolbarHeight - this.cardCssStyle.border.top - this.cardCssStyle.border.bottom - document.getElementById('titleBar')!.offsetHeight): void => {
-      // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
-      CKEDITOR.instances['editor'].resize(width, height);
+    height: number = this.cardProp.rect.height + this.toolbarHeight - this.cardCssStyle.border.top - this.cardCssStyle.border.bottom - document.getElementById('titleBar')!.offsetHeight): void => {
+    // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
+    CKEDITOR.instances['editor'].resize(width, height);
   };
 
   setColor = (backgroundColor: string, titleColor: string): void => {
@@ -195,4 +195,4 @@ export class CardEditor implements ICardEditor{
   };
 
 }
-  
+
