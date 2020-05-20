@@ -18,7 +18,7 @@ const main = remote.require('./main');
 
 let cardProp: CardProp = new CardProp('');
 
-let cardCssStyle: CardCssStyle = { padding: { left: 0, right: 0, top: 0, bottom: 0 }, border: { left: 0, right: 0, top: 0, bottom: 0 }}
+let cardCssStyle: CardCssStyle = { padding: { left: 0, right: 0, top: 0, bottom: 0 }, border: { left: 0, right: 0, top: 0, bottom: 0 } }
 
 let cardEditor: ICardEditor = new CardEditor();
 
@@ -65,12 +65,12 @@ contextMenu({
   showSaveImageAs: true,
   showInspectElement: false,
   append: (defaultActions, params, browserWindow) => [
-    { label: main.MESSAGE.white, click: () => { setAndSaveCardColor('#ffffff'); } },    
+    { label: main.MESSAGE.white, click: () => { setAndSaveCardColor('#ffffff'); } },
     { label: main.MESSAGE.yellow, click: () => { setAndSaveCardColor('#ffffa0'); } },
     { label: main.MESSAGE.red, click: () => { setAndSaveCardColor('#ffb0b0'); } },
     { label: main.MESSAGE.green, click: () => { setAndSaveCardColor('#d0ffd0'); } },
     { label: main.MESSAGE.blue, click: () => { setAndSaveCardColor('#d0d0ff'); } },
-    { label: main.MESSAGE.orange, click: () => { setAndSaveCardColor('#ffb000'); } },    
+    { label: main.MESSAGE.orange, click: () => { setAndSaveCardColor('#ffb000'); } },
     { label: main.MESSAGE.purple, click: () => { setAndSaveCardColor('#ffd0ff'); } },
     { label: main.MESSAGE.gray, click: () => { setAndSaveCardColor('#d0d0d0'); } },
     { label: main.MESSAGE.transparent, click: () => { setAndSaveCardColor('#ffffff', 0.0); } }
@@ -117,10 +117,10 @@ const initializeUIEvents = () => {
   });
 
   document.getElementById('contents')?.addEventListener('click', () => {
-    if(window.getSelection()?.toString() != ''){
+    if (window.getSelection()?.toString() != '') {
       return;
     }
-    else{
+    else {
       cardEditor.startEdit();
     }
   });
@@ -130,11 +130,11 @@ const initializeUIEvents = () => {
   });
 
   document.getElementById('closeBtn')?.addEventListener('click', () => {
-    if(cardEditor.isOpened){
+    if (cardEditor.isOpened) {
       const [dataChanged, data] = cardEditor.endEdit()
-      if (dataChanged && data != '') {        
-        cardProp.data = data;        
-        render([ CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize ]);        
+      if (dataChanged && data != '') {
+        cardProp.data = data;
+        render([CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize]);
         saveCardContents();
       }
     }
@@ -142,7 +142,7 @@ const initializeUIEvents = () => {
       main.deleteCard(cardProp);
     }
     else if (window.confirm(main.MESSAGE.confirm_closing)) {
-      close();  
+      close();
     }
   });
 
@@ -184,7 +184,7 @@ const initializeIPCEvents = () => {
 
     cardEditor.loadCard(cardProp);
 
-    if(cardProp.style.backgroundOpacity == 0){
+    if (cardProp.style.backgroundOpacity == 0) {
       document.getElementById('title')!.style.visibility = 'hidden';
     }
     document.getElementById('card')!.style.visibility = 'visible';
@@ -202,18 +202,18 @@ const initializeIPCEvents = () => {
     document.getElementById('card')!.style.border = '3px solid red';
     document.getElementById('title')!.style.visibility = 'visible';
   });
-  
+
   ipcRenderer.on('card-blured', (event: Electron.IpcRendererEvent) => {
-    if(document.getElementById('contents')!.style.visibility == 'hidden'){
+    if (cardEditor.isOpened) {
       const [dataChanged, data] = cardEditor.endEdit()
-      if(dataChanged){        
+      if (dataChanged) {
         cardProp.data = data;
-        render([ CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize ]);
+        render([CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize]);
         saveCardContents();
       }
     }
     document.getElementById('card')!.style.border = '3px solid transparent';
-    if(cardProp.style.backgroundOpacity == 0){
+    if (cardProp.style.backgroundOpacity == 0) {
       document.getElementById('title')!.style.visibility = 'hidden';
     }
   });
