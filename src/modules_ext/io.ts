@@ -13,6 +13,7 @@
 import { CardProp, CardPropSerializable } from '../modules_common/card';
 import { ICardIO } from '../modules_common/types';
 import uniqid from 'uniqid';
+import { logger } from '../modules_common/utils';
 
 let cardDir = './cards';
 if(process.env.NODE_CARDDIR){
@@ -73,7 +74,7 @@ class CardIOClass implements ICardIO {
               // pouchDB does not have id but has _id.
             }
             else if(!doc.hasOwnProperty(key)){
-              console.log(`db entry id "${id}" lacks "${key}"`);
+              logger.warn(`db entry id "${id}" lacks "${key}"`);
             }
             else{
               // Type of doc cannot be resolved by @types/pouchdb-core
@@ -95,7 +96,7 @@ class CardIOClass implements ICardIO {
 
   public writeOrCreateCardData = (prop: CardProp): Promise<string> => {
     return new Promise((resolve, reject) => {
-      console.log('Saving card...: ' + JSON.stringify(prop.serialize()));
+      logger.debug('Saving card...: ' + JSON.stringify(prop.serialize()));
 
       // In PouchDB, _id must be used insted of id in document.
       // Convert class to Object to serialize.

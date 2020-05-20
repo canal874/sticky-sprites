@@ -8,6 +8,7 @@
 
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { selectPreferredLanguage } from 'typed-intl';
+import { logger } from './modules_common/utils';
 import url from 'url';
 import path from 'path'
 import translations from './modules_common/base.msg';
@@ -117,7 +118,7 @@ class Card {
   private renderCard(): void {
     this.window.setSize(this.prop.rect.width, this.prop.rect.height);
     this.window.setPosition(this.prop.rect.x, this.prop.rect.y);
-    console.log('load:' + JSON.stringify(this.prop.serialize()));
+    logger.debug('load:' + JSON.stringify(this.prop.serialize()));
     this.window.webContents.send('render-card', this.prop.serialize()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
     this.window.showInactive();
   }
@@ -160,7 +161,7 @@ class Card {
           resolve(_prop);                  
         })
         .catch((err: string) => {
-          console.log('Load card error: ' + this.id + ', ' + err);
+          logger.error('Load card error: ' + this.id + ', ' + err);
           reject();
         })
     });
@@ -179,10 +180,10 @@ app.on('window-all-closed', () => {
 export const deleteCard = (prop: CardProp) => {
   CardIO.deleteCardData(prop.id)
     .catch((err: string) => {
-      console.log(err);
+      logger.error(err);
     })
     .then(() => {
-      console.log('deleted :' + prop.id);
+      logger.debug('deleted :' + prop.id);
       cards.get(prop.id)?.window.webContents.send('card-close');
     })
 
@@ -208,7 +209,7 @@ export const saveCard = (prop: CardProp) => {
     }
   })
   .catch((err: string) => {
-    console.error(err);
+    logger.error(err);
   });
 }
 
@@ -225,7 +226,7 @@ export const createCard = () => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   // locale can be got after 'ready'
-  console.log('locale: ' + app.getLocale());
+  logger.debug('locale: ' + app.getLocale());
   selectPreferredLanguage(['en', 'ja'], [app.getLocale(), 'en']);
   MESSAGE = translations.messages();
 
@@ -243,13 +244,14 @@ app.on('ready', () => {
             cards.set(id, new Card(id));
           }
           catch(e){
-            console.error(e);
+            throw `Cannot create a Card instance of ${id}: ${e}`;
+            logger.error(e);
           }
         }
       }
     })
     .catch((err: string) => {
-      console.log(`Cannot load a list of cards: ${err}`);
+      logger.error(`Cannot load a list of cards: ${err}`);
     });
 });
 

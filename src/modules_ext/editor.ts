@@ -65,7 +65,6 @@ export class CardEditor implements ICardEditor{
     this.cardCssStyle = _cardCssStyle;
     return new Promise<void>((resolve, reject) => {
       CKEDITOR.replace('editor'); 
-      console.log('loading editor..');
       CKEDITOR.on('instanceReady', () => {
         const checkTimer = setInterval(()=>{
           // Checking existence of 'cke_editor' 
