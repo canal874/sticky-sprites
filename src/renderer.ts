@@ -12,7 +12,9 @@ import { CardProp, CardPropSerializable } from './modules_common/card';
 import { ICardEditor, CardCssStyle } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
 import { render, initCardRenderer, getRenderOffsetWidth, getRenderOffsetHeight, CardRenderOptions } from './card_renderer';
+import uniqid from 'uniqid';
 import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
+import { logger } from './modules_common/utils';
 
 const main = remote.require('./main');
 
@@ -22,16 +24,60 @@ let cardCssStyle: CardCssStyle = { padding: { left: 0, right: 0, top: 0, bottom:
 
 let cardEditor: ICardEditor = new CardEditor();
 
-const close = () => {
-  window.close();
+let unfinishedSaveTasks: Map<string, 1> = new Map(); // This stores latest task ID for saving data which is working on Main process. A key is task ID and a value is always 1.
+
+const waitUnfinishedSaveTasks = () => {
+  return new Promise((resolve, reject) => {
+    if(unfinishedSaveTasks.size > 0) {
+      let timeoutCounter = 0;
+      const timer = setInterval(() => {
+        if(unfinishedSaveTasks.size == 0) {
+          clearInterval(timer);
+          resolve();
+        }
+        else if(timeoutCounter >= 10) {
+          if(window.confirm(main.MESSAGE.confirm_wait_more)) {
+            timeoutCounter = 0;
+          }
+          else {
+            reject();
+          }
+        }
+        timeoutCounter++;
+      }, 500);
+    }
+    else {
+      resolve();
+    }
+  });
+}
+const close = async () => {
+  await waitUnfinishedSaveTasks().catch((e)=>{ 
+    // TODO: Handle save error.
+  });
+  window.close();  
 };
+
+const setTitleMessage = (msg: string) => {
+  if(document.getElementById('titleMessage')){
+    document.getElementById('titleMessage')!.innerHTML = msg;
+  }
+}
 
 /**
  * Save
  */
-const saveCardContents = () => {
-  main.saveCard(cardProp);
-};
+const saveData = async () => {
+  const timeout = setTimeout(() => {
+    setTitleMessage('[saving...]');
+  }, 1000);
+  const taskId = uniqid();
+  unfinishedSaveTasks.set(taskId, 1);
+  await ipcRenderer.invoke('save', cardProp.toObject());
+  unfinishedSaveTasks.delete(taskId); 
+  clearTimeout(timeout);
+  setTitleMessage('');
+}
 
 const setAndSaveCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
   cardProp.style.backgroundColor = bgColor;
@@ -40,7 +86,7 @@ const setAndSaveCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
 
   cardEditor.setColor(cardProp.style.backgroundColor, cardProp.style.titleColor);
 
-  main.saveCard(cardProp);
+  saveData();
 };
 
 /**
@@ -49,7 +95,7 @@ const setAndSaveCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
  */
 let execSaveCommandTimeout: NodeJS.Timeout;
 const execSaveCommand = () => {
-  main.saveCard(cardProp);
+  saveData();
 };
 
 const queueSaveCommand = () => {
@@ -135,7 +181,7 @@ const initializeUIEvents = () => {
       if(dataChanged && data != '') {
         cardProp.data = data;
         render([CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize]);
-        saveCardContents();
+        saveData();
       }
     }
     if(cardProp.data == '') {
@@ -177,7 +223,7 @@ const initializeIPCEvents = () => {
 
   // Render card data
   ipcRenderer.on('render-card', (event: Electron.IpcRendererEvent, _prop: CardPropSerializable) => {
-    cardProp = CardProp.deserialize(_prop);
+    cardProp = CardProp.fromObject(_prop);
 
     initCardRenderer(cardProp, cardCssStyle, cardEditor);
     render();
@@ -194,10 +240,6 @@ const initializeIPCEvents = () => {
     close();
   });
 
-  ipcRenderer.on('card-saved', (event: Electron.IpcRendererEvent) => {
-
-  });
-
   ipcRenderer.on('card-focused', (event: Electron.IpcRendererEvent) => {
     document.getElementById('card')!.style.border = '3px solid red';
     document.getElementById('title')!.style.visibility = 'visible';
@@ -209,7 +251,7 @@ const initializeIPCEvents = () => {
       if(dataChanged) {
         cardProp.data = data;
         render([CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize]);
-        saveCardContents();
+        saveData();
       }
     }
     document.getElementById('card')!.style.border = '3px solid transparent';

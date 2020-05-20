@@ -33,7 +33,7 @@ export class CardProp implements CardBase {
     public style: CardStyle = { titleColor: '#d0d090', backgroundColor: '#ffffa0', backgroundOpacity: 1.0 }
   ) { }
 
-  public serialize = (): CardPropSerializable => {
+  public toObject = (): CardPropSerializable => {
     return {
       id: this.id,
       data: this.data,
@@ -47,7 +47,7 @@ export class CardProp implements CardBase {
     }
   };
 
-  public static deserialize = (json: CardPropSerializable): CardProp => {
+  public static fromObject = (json: CardPropSerializable): CardProp => {
     return new CardProp(json.id, json.data,
       { x: json.x, y: json.y, width: json.width, height: json.height },
       { titleColor: json.titleColor, backgroundColor: json.backgroundColor, backgroundOpacity: json.backgroundOpacity })

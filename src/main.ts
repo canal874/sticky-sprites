@@ -12,8 +12,9 @@ import { logger } from './modules_common/utils';
 import url from 'url';
 import path from 'path'
 import translations from './modules_common/base.msg';
-import { CardProp } from './modules_common/card';
+import { CardProp, CardPropSerializable } from './modules_common/card';
 import { CardIO } from './modules_ext/io';
+import { sleep } from './modules_common/utils';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if(require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -40,7 +41,6 @@ const minimumWindowWidth = 30;
  */
 
 const cards: Map<string, Card> = new Map<string, Card>();
-
 
 class Card {
   public prop!: CardProp; // ! is Definite assignment assertion
@@ -118,8 +118,8 @@ class Card {
   private renderCard(): void {
     this.window.setSize(this.prop.rect.width, this.prop.rect.height);
     this.window.setPosition(this.prop.rect.x, this.prop.rect.y);
-    logger.debug('load:' + JSON.stringify(this.prop.serialize()));
-    this.window.webContents.send('render-card', this.prop.serialize()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
+    logger.debug('load:' + JSON.stringify(this.prop.toObject()));
+    this.window.webContents.send('render-card', this.prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
     this.window.showInactive();
   }
 
@@ -172,9 +172,30 @@ app.on('window-all-closed', () => {
   app.quit();
 });
 
-//-----------------------------------
-// Serialization
-//-----------------------------------
+/**
+ * Card I/O
+ */
+
+ipcMain.handle('save', async (event, cardPropObj: CardPropSerializable) => {
+  const prop = CardProp.fromObject(cardPropObj);
+
+  // for debug  
+  // await sleep(30000);
+
+  await CardIO.writeOrCreateCardData(prop)
+    .then(() => {
+      const card = cards.get(prop.id);
+      if(card) {
+        card.prop = prop;
+      }
+      else {
+        throw 'The card is not registered in cards.';
+      }
+    })
+    .catch((err: string) => {
+      throw err;
+    });
+});
 
 export const deleteCard = (prop: CardProp) => {
   CardIO.deleteCardData(prop.id)
@@ -188,36 +209,10 @@ export const deleteCard = (prop: CardProp) => {
 
 };
 
-export const saveCard = (prop: CardProp) => {
-  const newCard = new CardProp(
-    prop.id,
-    prop.data,
-    { x: prop.rect.x, y: prop.rect.y, width: prop.rect.width, height: prop.rect.height },
-    { titleColor: prop.style.titleColor, backgroundColor: prop.style.backgroundColor, backgroundOpacity: prop.style.backgroundOpacity }
-  );
-
-  CardIO.writeOrCreateCardData(newCard)
-    .then(() => {
-      const card = cards.get(prop.id);
-      if(card) {
-        card.prop = prop;
-        card.window.webContents.send('card-saved');
-      }
-      else {
-        throw 'The card is not registered in cards.';
-      }
-    })
-    .catch((err: string) => {
-      logger.error(err);
-    });
-}
-
-// Create new card
 export const createCard = () => {
   const card = new Card();
   cards.set(card.id, card);
 };
-
 
 
 // This method will be called when Electron has finished

@@ -60,11 +60,17 @@ body > .card > .title > .title-btn{
   z-index: 30;
 }
 
-body > .card > .title > .titlebar{
-  left: 39px;
-  width:207px;
+body > .card > .title > .title-bar{
+  text-align: right;
 }
 
+body > .card > .title > .title-bar > .title-message{
+  font-size: 14px;
+  height: 100%;
+  width: 100%;
+  text-align: right;
+  color:black;
+}
 body > .card > .title > .new-btn{
   left:0px;
 } 
@@ -81,6 +87,7 @@ body > .card > .title > .code-btn{
 body > .card > .title > .close-btn{
   left: 246px;
 }
+
   
 body > .card > .contents{
   padding: 2px;

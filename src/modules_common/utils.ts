@@ -14,3 +14,7 @@ import log4js from 'log4js';
 export const logger = log4js.getLogger();
 logger.level = 'all';
 //logger.level = 'error';
+
+
+export const sleep = (msec: number) => new Promise(resolve => setTimeout(resolve, msec));
+

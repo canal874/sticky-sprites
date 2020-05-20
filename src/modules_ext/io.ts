@@ -66,7 +66,7 @@ class CardIOClass implements ICardIO {
     return new Promise((resolve, reject) => {
       cardsDB.get(id)
         .then((doc) => {
-          const propsRequired: CardPropSerializable = (new CardProp('')).serialize();
+          const propsRequired: CardPropSerializable = (new CardProp('')).toObject();
           // Checking properties retrieved from database
           for(let key in propsRequired) {
             if(key == 'id') {
@@ -96,11 +96,11 @@ class CardIOClass implements ICardIO {
 
   public writeOrCreateCardData = (prop: CardProp): Promise<string> => {
     return new Promise((resolve, reject) => {
-      logger.debug('Saving card...: ' + JSON.stringify(prop.serialize()));
+      logger.debug('Saving card...: ' + JSON.stringify(prop.toObject()));
 
       // In PouchDB, _id must be used insted of id in document.
       // Convert class to Object to serialize.
-      let propObj = Object.assign({ _id: prop.id, _rev: '' }, prop.serialize());
+      let propObj = Object.assign({ _id: prop.id, _rev: '' }, prop.toObject());
 
       delete propObj.id;
 
