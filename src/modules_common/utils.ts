@@ -7,6 +7,7 @@
  */
 
 import log4js from 'log4js';
+import moment from 'moment';
 
 /**
  * logger
@@ -18,3 +19,4 @@ logger.level = 'all';
 
 export const sleep = (msec: number) => new Promise(resolve => setTimeout(resolve, msec));
 
+export const getCurrentDate = () => { return moment.utc().format('YYYY-MM-DD HH:mm:ss'); }

@@ -180,7 +180,7 @@ ipcMain.handle('save', async (event, cardPropObj: CardPropSerializable) => {
   const prop = CardProp.fromObject(cardPropObj);
 
   // for debug  
-  // await sleep(30000);
+  // await sleep(10000);
 
   await CardIO.writeOrCreateCardData(prop)
     .then(() => {

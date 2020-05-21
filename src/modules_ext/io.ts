@@ -85,7 +85,8 @@ class CardIOClass implements ICardIO {
 
           resolve(new CardProp(id, propsRequired.data,
             { x: propsRequired.x, y: propsRequired.y, width: propsRequired.width, height: propsRequired.height },
-            { titleColor: propsRequired.titleColor, backgroundColor: propsRequired.backgroundColor, backgroundOpacity: propsRequired.backgroundOpacity }));
+            { titleColor: propsRequired.titleColor, backgroundColor: propsRequired.backgroundColor, backgroundOpacity: propsRequired.backgroundOpacity },
+            { created_date: propsRequired.created_date, modified_date: propsRequired.modified_date }));
 
         })
         .catch((err) => {

@@ -12,9 +12,8 @@ import { CardProp, CardPropSerializable } from './modules_common/card';
 import { ICardEditor, CardCssStyle } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
 import { render, initCardRenderer, getRenderOffsetWidth, getRenderOffsetHeight, CardRenderOptions } from './card_renderer';
-import uniqid from 'uniqid';
 import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
-import { logger } from './modules_common/utils';
+import { logger, getCurrentDate } from './modules_common/utils';
 
 const main = remote.require('./main');
 
@@ -24,14 +23,14 @@ let cardCssStyle: CardCssStyle = { padding: { left: 0, right: 0, top: 0, bottom:
 
 let cardEditor: ICardEditor = new CardEditor();
 
-let unfinishedSaveTasks: Map<string, 1> = new Map(); // This stores latest task ID for saving data which is working on Main process. A key is task ID and a value is always 1.
+let unfinishedSaveTasks: Array<CardPropSerializable> = new Array();
 
 const waitUnfinishedSaveTasks = () => {
   return new Promise((resolve, reject) => {
-    if(unfinishedSaveTasks.size > 0) {
+    if(unfinishedSaveTasks.length > 0) {
       let timeoutCounter = 0;
       const timer = setInterval(() => {
-        if(unfinishedSaveTasks.size == 0) {
+        if(unfinishedSaveTasks.length == 0) {
           clearInterval(timer);
           resolve();
         }
@@ -40,6 +39,7 @@ const waitUnfinishedSaveTasks = () => {
             timeoutCounter = 0;
           }
           else {
+            clearInterval(timer);            
             reject();
           }
         }
@@ -65,18 +65,38 @@ const setTitleMessage = (msg: string) => {
 /**
  * Save
  */
-const saveData = async () => {
-  const timeout = setTimeout(() => {
-    setTitleMessage('[saving...]');
-  }, 1000);
-  const taskId = uniqid();
-  unfinishedSaveTasks.set(taskId, 1);
-  await ipcRenderer.invoke('save', cardProp.toObject()).catch((e)=>{
-    // TODO: Handle save error.
-  });
-  unfinishedSaveTasks.delete(taskId); 
-  clearTimeout(timeout);
-  setTitleMessage('');
+const execSaveTask = async () => {
+  if(unfinishedSaveTasks.length == 1) {
+    const timeout = setTimeout(() => {
+      setTitleMessage('[saving...]');
+    }, 1000);
+
+    // Execute the first task
+    await ipcRenderer.invoke('save', unfinishedSaveTasks[0]).catch((e) => {
+      // TODO: Handle save error.
+    });
+    const finishedPropObject = unfinishedSaveTasks.shift();
+    logger.debug(`Dequeue unfinishedSaveTask: ${finishedPropObject?.modified_date}`);
+    clearTimeout(timeout);
+    setTitleMessage('');
+    if(unfinishedSaveTasks.length > 0) {
+      execSaveTask();
+    }
+  }
+};
+
+const saveData = () => {
+  cardProp.date.modified_date = getCurrentDate();
+  const propObject = cardProp.toObject();
+  while(unfinishedSaveTasks.length > 1){
+    const poppedPropObject = unfinishedSaveTasks.pop();
+    logger.debug(`Skip unfinishedSaveTask: ${poppedPropObject?.modified_date}`);
+  }
+  logger.debug(`Enqueue unfinishedSaveTask: ${propObject.modified_date}`);
+  // Here, current length of unfinishedSaveTasks should be 0 or 1.
+  unfinishedSaveTasks.push(propObject);
+  // Here, current length of unfinishedSaveTasks is 1 or 2.
+  execSaveTask();
 }
 
 const setAndSaveCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
