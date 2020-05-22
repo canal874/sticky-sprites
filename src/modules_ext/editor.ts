@@ -107,7 +107,8 @@ export class CardEditor implements ICardEditor {
 
       /**
        * This is workaround for Japanese IME & CKEditor on Windows.
-       * IME window is unintentionally shown only at the first time of inputing Japanese.
+       * IME window is unintentionally opened only at the first time of inputing Japanese.
+       * Expected behavior is that IME aloways work inline on CKEditor.
        * A silly workaround is to blur and focus this browser window.
        */
       // workaround start
