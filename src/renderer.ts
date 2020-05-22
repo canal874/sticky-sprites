@@ -209,7 +209,7 @@ const initializeUIEvents = () => {
     if(cardEditor.isOpened) {
       const [dataChanged, data] = cardEditor.endEdit()
       cardProp.data = data;      
-      if(dataChanged && cardProp.data == '') {  
+      if(dataChanged && cardProp.data != '') {  
         render([CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize]);
         saveData();
       }
