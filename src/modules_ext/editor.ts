@@ -13,7 +13,8 @@
 import { CardProp } from '../modules_common/card';
 import { ICardEditor, CardCssStyle } from '../modules_common/types';
 import { setRenderOffsetHeight } from '../card_renderer';
-import { remote } from 'electron';
+import { remote, ipcRenderer } from 'electron';
+import { sleep, logger } from '../modules_common/utils';
 
 const main = remote.require('./main');
 
@@ -26,6 +27,7 @@ export class CardEditor implements ICardEditor {
   private codeMode = false;
   private toolbarHeight = 30;
 
+  private startEditorFirstTime = true;
 
   private cardProp: CardProp = new CardProp('');
 
@@ -97,10 +99,26 @@ export class CardEditor implements ICardEditor {
       }, 100);
     });
   };
+  
+  startEdit = async () => {
+    if(this.startEditorFirstTime){
+      // style.display is initially set to 'none'.
+      document.getElementById('cke_editor')!.style.display = 'block';
 
-  startEdit = () => {
-    // style.display is initially set to 'none'.
-    document.getElementById('cke_editor')!.style.display = 'block';
+      /**
+       * This is workaround for Japanese IME & CKEditor on Windows.
+       * IME window is unintentionally shown only at the first time of inputing Japanese.
+       * A silly workaround is to blur and focus this browser window.
+       */
+      // workaround start
+      this.startEditorFirstTime = false;      
+      await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);
+      setTimeout(() => {
+        this.startEdit();
+      },100);
+      return;
+      // workaround end
+    }
 
     // Load card data from cardProp    
     if(!this.isOpened) {

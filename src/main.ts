@@ -256,3 +256,10 @@ export const setWindowSize = (id: string, width: number, height: number) => {
   const card = cards.get(id);
   card?.window.setSize(width, height);
 }
+
+
+ipcMain.handle('blurAndFocus', async (event, id: string) => {
+  const card = cards.get(id);
+  card?.window.blur();
+  card?.window.focus();
+});

@@ -110,7 +110,7 @@ body > .card > .contents{
  */ 
 
  body > #card > .cke_screen_reader_only{
-  display:none;
+  display: none;
 }
 
 /* Hide #cke_1_bottom when toolbar exists on the top position.
