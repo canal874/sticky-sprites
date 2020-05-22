@@ -82,9 +82,6 @@ export class CardEditor implements ICardEditor {
 
   loadCard = (prop: CardProp) => {
     this.cardProp = prop;
-    // I don't know why, but style.display should be initially set to 'none' 
-    // because it disturbs dragging titleBar.
-    document.getElementById('cke_editor')!.style.display = 'none';
   }
 
   waitUntilActivationComplete = (): Promise<void> => {
@@ -102,9 +99,6 @@ export class CardEditor implements ICardEditor {
   
   startEdit = async () => {
     if(this.startEditorFirstTime){
-      // style.display is initially set to 'none'.
-      document.getElementById('cke_editor')!.style.display = 'block';
-
       /**
        * This is workaround for Japanese IME & CKEditor on Windows.
        * IME window is unintentionally opened only at the first time of inputing Japanese.
