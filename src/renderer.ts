@@ -35,10 +35,20 @@ const waitUnfinishedSaveTasks = () => {
           resolve();
         }
         else if(timeoutCounter >= 10) {
-          if(window.confirm(main.MESSAGE.confirm_wait_more)) {
+
+          const res = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+            type: 'question',
+            buttons: ['Ok', 'Cancel'],
+            defaultId: 0,
+            cancelId: 1,
+            message: main.MESSAGE.confirm_wait_more
+          })
+          if(res == 0){
+            // OK
             timeoutCounter = 0;
           }
-          else {
+          else if(res == 1){
+            // Cancel
             clearInterval(timer);            
             reject();
           }
@@ -227,7 +237,9 @@ const initializeUIEvents = () => {
         else if(res.response == 1){
           // Cancel
         }
-      })
+      }).catch((e) => {
+        logger.debug(e);
+      });
     }
 
   });
