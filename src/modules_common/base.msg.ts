@@ -1,8 +1,10 @@
 import { translate } from 'typed-intl';
 
 export default translate({
-  'confirm_closing': 'Close OK? (If you want to delete the sticky, let it empty before closing it.)',
+  'confirm_closing': 'Close OK?\n(If you want to delete the sticky, let it empty before closing it.)',
   'confirm_wait_more': 'It takes a long time to save. Do you want to wait a little longer?\nIf you press Cancel, your changes will not be saved.',
+  'btn_close_card': 'Close',
+  'btn_cancel': 'Cancel',
   'white': 'white',
   'yellow': 'yellow',
   'red': 'red',
@@ -13,9 +15,11 @@ export default translate({
   'gray': 'gray',
   'transparent': 'transparent'
 }).supporting('ja', {
-  'confirm_closing': '付箋を閉じても良いですか？（付箋は削除されません。削除したい場合、付箋の内容を消してから閉じてください）',
+  'confirm_closing': '付箋を閉じても良いですか？\n（付箋は削除されません。削除したい場合、付箋の内容を消してから閉じてください）',
   'confirm_wait_more': '保存に時間が掛かっています。もう少し待ちますか？\nキャンセルを押すと、変更した内容は保存されない場合があります。', 
-  'white': '白',
+  'btn_close_card': '閉じる',
+  'btn_cancel': 'キャンセル',
+    'white': '白',
   'yellow': '黄',
   'red': '赤',
   'green': '緑',

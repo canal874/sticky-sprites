@@ -198,8 +198,8 @@ const initializeUIEvents = () => {
   document.getElementById('closeBtn')?.addEventListener('click', () => {
     if(cardEditor.isOpened) {
       const [dataChanged, data] = cardEditor.endEdit()
-      if(dataChanged && data != '') {
-        cardProp.data = data;
+      cardProp.data = data;      
+      if(dataChanged && cardProp.data == '') {  
         render([CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize]);
         saveData();
       }
@@ -207,9 +207,29 @@ const initializeUIEvents = () => {
     if(cardProp.data == '') {
       main.deleteCard(cardProp);
     }
-    else if(window.confirm(main.MESSAGE.confirm_closing)) {
-      close();
+    else{
+      /**
+       * Don't use window.confirm(main.MESSAGE.confirm_closing)
+       * It disturbs correct behavior of CKEditor.
+       * Caret of CKEditor is disappeared just after push Cancel button of window.confirm()
+       */
+      remote.dialog.showMessageBox(remote.getCurrentWindow(), {
+        type: 'question',
+        buttons: [main.MESSAGE.btn_close_card, 'Cancel'],
+        defaultId: 0,
+        cancelId: 1,
+        message: main.MESSAGE.confirm_closing
+      }).then((res) => {
+        if(res.response == 0){
+          // OK
+          close();
+        }
+        else if(res.response == 1){
+          // Cancel
+        }
+      })
     }
+
   });
 
 }
@@ -261,11 +281,13 @@ const initializeIPCEvents = () => {
   });
 
   ipcRenderer.on('card-focused', (event: Electron.IpcRendererEvent) => {
+    logger.debug('card-focused');
     document.getElementById('card')!.style.border = '3px solid red';
     document.getElementById('title')!.style.visibility = 'visible';
   });
 
   ipcRenderer.on('card-blured', (event: Electron.IpcRendererEvent) => {
+    logger.debug('card-blured');
     if(cardEditor.isOpened) {
       const [dataChanged, data] = cardEditor.endEdit()
       if(dataChanged) {
