@@ -34,7 +34,7 @@ CKEDITOR.editorConfig = function( config ) {
 //    'embedbase,' +
 		'enterkey,' +
 		'entities,' +
-		'emoji,' +
+//		'emoji,' +
 //		'filebrowser,' +
 		'find,' +
 //		'flash,' +
