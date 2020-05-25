@@ -20,6 +20,7 @@ body > .card{
   border: 3px solid transparent;
   box-sizing: border-box;
   visibility: hidden;
+  overflow: hidden;
   z-index: 0;
 }
 

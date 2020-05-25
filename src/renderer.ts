@@ -192,11 +192,13 @@ const initializeUIEvents = () => {
     main.createCard();
   });
 
-  document.getElementById('contents')?.addEventListener('click', () => {
+  document.getElementById('contents')?.addEventListener('click', async () => {
+    // 'contents' can be clicked when cardEditor.editorType is 'Markup'
     if(window.getSelection()?.toString() != '') {
       return;
     }
     else {
+      await cardEditor.showEditor();
       cardEditor.startEdit();
     }
   });
@@ -207,6 +209,9 @@ const initializeUIEvents = () => {
 
   document.getElementById('closeBtn')?.addEventListener('click', () => {
     if(cardEditor.isOpened) {
+      if(cardEditor.editorType == 'Markup'){    
+        cardEditor.hideEditor(); 
+      }
       const [dataChanged, data] = cardEditor.endEdit()
       cardProp.data = data;      
       render([CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize]);
@@ -286,6 +291,10 @@ const initializeIPCEvents = () => {
       document.getElementById('title')!.style.visibility = 'hidden';
     }
     document.getElementById('card')!.style.visibility = 'visible';
+
+    if(cardEditor.editorType == 'WYSYWIG'){
+      cardEditor.showEditor();
+    }
   });
 
   ipcRenderer.on('card-close', (event: Electron.IpcRendererEvent) => {
@@ -296,11 +305,18 @@ const initializeIPCEvents = () => {
     logger.debug('card-focused');
     document.getElementById('card')!.style.border = '3px solid red';
     document.getElementById('title')!.style.visibility = 'visible';
+    
+    if(cardEditor.editorType == 'WYSYWIG'){
+      cardEditor.startEdit();
+    }
   });
 
   ipcRenderer.on('card-blured', (event: Electron.IpcRendererEvent) => {
     logger.debug('card-blured');
     if(cardEditor.isOpened) {
+      if(cardEditor.editorType == 'Markup'){    
+        cardEditor.hideEditor(); 
+      }
       const [dataChanged, data] = cardEditor.endEdit()
       if(dataChanged) {
         cardProp.data = data;

@@ -8,7 +8,8 @@ This looks like sticky notes but accepts any HTML and can have a transparent bac
 
 Just type 'npm run cleanstart' on the project root directory.
 
-'clean start' copies required files from html/ to dist/ . After that you can type 'npm start' to run app.
+'cleanstart' copies required files from html/ to dist/ and starts app. 
+After that you can type 'npm start' to start app.
 
 
 # Build installer
@@ -32,3 +33,38 @@ Set environment variables to change runtime options.
 PATH to the place where cards are saved.
 
 Default value is ./cards
+
+Welcome to the media-stickies wiki!
+
+
+# Editor Type
+
+2 editor types are available.
+
+## WYSIWYG
+
+WYSIWYG editor has only one common mode for viewing and editing.
+You can edit rich text directly on a sticky.
+
+* HTML is rendered on a WYSIWYG editor.
+* Text can be selected when a card is focused.
+* An editor is always shown.
+* An editor toobar is shown only when a card is focused.
+
+## Markup
+
+Markup editor has two mode for viewing or editing.
+You can edit markuped text on a built-in editor and view rendered HTML on a sticky.
+
+* HTML is rendered on <div id='contents'>
+* Text can be selected when a card is focused.
+* An editor and its toolbar are shown only when #contents is clicked.
+
+## Event Trigger
+
+| Event | WYSIWYG | Markup |
+| :---: |  :---:  | :---:  |
+| render-card | showEditor() | - |
+| card-focused | startEdit() | - |
+| click | - | showEditor()<br>startEdit() |
+| card-blured | endEdit() | hideEditor()<br>endEdit() |

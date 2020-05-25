@@ -11,7 +11,7 @@
  */
 
 import { CardProp } from '../modules_common/card';
-import { ICardEditor, CardCssStyle } from '../modules_common/types';
+import { ICardEditor, CardCssStyle, EditorType } from '../modules_common/types';
 import { setRenderOffsetHeight } from '../card_renderer';
 import { remote, ipcRenderer } from 'electron';
 import { sleep, logger } from '../modules_common/utils';
@@ -60,7 +60,11 @@ export class CardEditor implements ICardEditor {
   /**
    * Public
    */
+  public editorType: EditorType = 'WYSYWIG';
+//  public editorType: EditorType = 'Markup';
+
   public hasCodeMode = true;
+
   public isOpened = false;
 
   loadUI = (_cardCssStyle: CardCssStyle) => {
@@ -97,6 +101,37 @@ export class CardEditor implements ICardEditor {
     });
   };
   
+  showEditor = () => {
+    if(!this.isOpened) {
+      this.isOpened = true;
+
+      this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
+      this.setSize();
+
+      document.getElementById('contents')!.style.visibility = 'hidden';
+      document.getElementById('cke_editor')!.style.visibility = 'visible';
+
+      return new Promise<void>((resolve, reject) => {
+        try{
+          CKEDITOR.instances['editor'].setData(this.cardProp.data, {
+            callback: () => { resolve(); }
+          });
+        } catch(e){
+          reject();
+        }
+      });
+    }
+    else{
+      return Promise.resolve();
+    }
+  };
+
+  hideEditor = () => {
+    this.isOpened = false;    
+    document.getElementById('contents')!.style.visibility = 'visible';
+    document.getElementById('cke_editor')!.style.visibility = 'hidden';
+  };
+
   startEdit = async () => {
     if(this.startEditorFirstTime){
       /**
@@ -108,41 +143,30 @@ export class CardEditor implements ICardEditor {
       // workaround start
       this.startEditorFirstTime = false;      
       await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);
-      setTimeout(() => {
+      setTimeout(async () => {
+        await this.showEditor();
         this.startEdit();
       },100);
       return;
       // workaround end
     }
 
-    // Load card data from cardProp    
-    if(!this.isOpened) {
+    if(this.isOpened) {
       // Expand card to add toolbar.
       const expandedHeight = this.cardProp.rect.height + this.toolbarHeight;
       main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, expandedHeight);
       setRenderOffsetHeight(-this.toolbarHeight);
-      this.isOpened = true;
-
-      this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
-
       this.setSize();
-    }
 
-    CKEDITOR.instances['editor'].setData(this.cardProp.data, {
-      callback: async () => {
-        document.getElementById('contents')!.style.visibility = 'hidden';
-        document.getElementById('cke_editor')!.style.visibility = 'visible';
-
-        await this.waitUntilActivationComplete();
-        CKEDITOR.instances['editor'].focus();
+      await this.waitUntilActivationComplete();
+      CKEDITOR.instances['editor'].focus();
+      if(this.editorType == 'Markup'){        
         this.moveCursorToBottom();
       }
-    });
+    }
   };
 
   endEdit = (): [boolean, string] => {
-    this.isOpened = false;
-
     let dataChanged = false;
     // Save data to CardProp
     const data = CKEDITOR.instances['editor'].getData();
@@ -152,10 +176,6 @@ export class CardEditor implements ICardEditor {
 
     main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, this.cardProp.rect.height);
     setRenderOffsetHeight(0);
-
-    // Hide editor
-    document.getElementById('contents')!.style.visibility = 'visible';
-    document.getElementById('cke_editor')!.style.visibility = 'hidden';
 
     this.codeMode = false;
     document.getElementById('codeBtn')!.style.color = '#000000';
