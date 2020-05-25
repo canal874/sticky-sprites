@@ -179,6 +179,7 @@ export class CardEditor implements ICardEditor {
 
     this.codeMode = false;
     document.getElementById('codeBtn')!.style.color = '#000000';
+    CKEDITOR.instances['editor'].getSelection().removeAllRanges();
     CKEDITOR.instances['editor'].setMode('wysiwyg', () => { });
 
     return [dataChanged, data];
