@@ -1,5 +1,5 @@
-/**
- * @license Copyright (c) 2003-2020, CKSource - Frederico Knabben. All rights reserved.
+﻿/**
+ * Copyright (c) 2003-2020, CKSource - Frederico Knabben. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -7,16 +7,17 @@ CKEDITOR.editorConfig = function( config ) {
 	config.enterMode = 2;
 	config.shiftEnterMode = 1;
 	config.allowedContent = true;
-	
+
 	config.contentsCss = './css/ckeditor-media-stickies-contents.css';
 
 	config.toolbar = [
-		{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'FontSize', 'TextColor', 'BGColor', 'EmojiPanel' ] }
+		{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'FontSize', 'TextColor', 'BGColor' ] }
 	];
 
 	config.plugins =
 //		'about,' +
 //		'a11yhelp,' +
+//    'autoembed,' +
 		'autolink,' +
 		'basicstyles,' +
 		'bidi,' +
@@ -29,9 +30,11 @@ CKEDITOR.editorConfig = function( config ) {
 		'dialogadvtab,' +
 		'div,' +
 //		'elementspath,' +
+//    'embed,' +
+//    'embedbase,' +
 		'enterkey,' +
 		'entities,' +
-		'emoji,' + 
+		'emoji,' +
 //		'filebrowser,' +
 		'find,' +
 //		'flash,' +
@@ -43,7 +46,7 @@ CKEDITOR.editorConfig = function( config ) {
 		'htmlwriter,' +
 //		'image,' +
 		'image2,' +
-		'iframe,' +
+//		'iframe,' +
 		'indentlist,' +
 		'indentblock,' +
 		'justify,' +
@@ -85,4 +88,3 @@ CKEDITOR.editorConfig = function( config ) {
 	config.fontSize_defaultLabel = '16';
 };
 
-// %LEAVE_UNMINIFIED% %REMOVE_LINE%
