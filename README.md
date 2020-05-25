@@ -56,7 +56,7 @@ You can edit rich text directly on a sticky.
 Markup editor has two mode for viewing or editing.
 You can edit markuped text on a built-in editor and view rendered HTML on a sticky.
 
-* HTML is rendered on <div id='contents'>
+* HTML is rendered on &lt;div id='contents'&gt;
 * Text can be selected when a card is focused.
 * An editor and its toolbar are shown only when #contents is clicked.
 
