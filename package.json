@@ -1,14 +1,14 @@
 {
   "name": "media-stickies",
   "productName": "MediaStickies",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Small sticky browser windows",
   "main": "dist/main.js",
   "scripts": {
     "cleanstart": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && tsc && electron-forge start",
     "start": "tsc && electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make",
+    "make": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && tsc && electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts ."
   },
