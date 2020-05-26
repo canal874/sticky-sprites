@@ -22,10 +22,10 @@ CKEDITOR.editorConfig = function( config ) {
 		'basicstyles,' +
 		'bidi,' +
 		'blockquote,' +
-		'clipboard,' +
+//		'clipboard,' +
 		'colorbutton,' +
 		'colordialog,' +
-		'copyformatting,' +
+//		'copyformatting,' +
 //		'contextmenu,' +
 		'dialogadvtab,' +
 		'div,' +
@@ -41,7 +41,7 @@ CKEDITOR.editorConfig = function( config ) {
 		'floatingspace,' +
 		'font,' +
 //		'format,' +
-		'forms,' +
+//		'forms,' +
 		'horizontalrule,' +
 		'htmlwriter,' +
 //		'image,' +
@@ -53,15 +53,15 @@ CKEDITOR.editorConfig = function( config ) {
 		'language,' +
 		'link,' +
 		'list,' +
-		'liststyle,' +
+//		'liststyle,' +
 		'magicline,' +
 //		'maximize,' +
 //		'newpage,' +
 //		'pagebreak,' +
-		'pastefromgdocs,' +
-		'pastefromlibreoffice,' +
-		'pastefromword,' +
-		'pastetext,' +
+//		'pastefromgdocs,' +
+//		'pastefromlibreoffice,' +
+//		'pastefromword,' +
+//		'pastetext,' +
 //		'preview,' +
 //		'print,' +
 //		'removeformat,' +
@@ -76,8 +76,8 @@ CKEDITOR.editorConfig = function( config ) {
 //		'stylescombo,' +
 		'tab,' +
 		'table,' +
-		'tableselection,' +
-		'tabletools,' +
+//		'tableselection,' +
+//		'tabletools,' +
 //		'templates,' +
 		'toolbar,' +
 		'undo,' +
