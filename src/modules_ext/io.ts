@@ -132,7 +132,9 @@ class CardIOClass implements ICardIO {
           // Update existing card
           propObj._rev = oldCard._rev;
         })
-        .catch(/* Create new card */)
+        .catch(() => {
+          /* Create new card */
+        })
         .then(() => {
           cardsDB
             .put(propObj)
@@ -140,8 +142,11 @@ class CardIOClass implements ICardIO {
               resolve(res.id);
             })
             .catch(err => {
-              reject('Card save error: ' + err);
+              throw 'Card save error: ' + err;
             });
+        })
+        .catch(err => {
+          reject(err);
         });
     });
   };

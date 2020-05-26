@@ -201,7 +201,7 @@ ipcMain.handle('save', async (event, cardPropObj: CardPropSerializable) => {
   // for debug
   // await sleep(10000);
 
-  await CardIO.writeOrCreateCardData(prop)
+  CardIO.writeOrCreateCardData(prop)
     .then(() => {
       const card = cards.get(prop.id);
       if (card) {
@@ -212,7 +212,7 @@ ipcMain.handle('save', async (event, cardPropObj: CardPropSerializable) => {
       }
     })
     .catch((err: string) => {
-      throw err;
+      logger.debug(err);
     });
 });
 
