@@ -60,7 +60,7 @@ export class CardEditor implements ICardEditor {
    * Public
    */
   public editorType: EditorType = 'WYSYWIG'; // CKEditor should be WYSIWYG Editor Type
-  //  public editorType: EditorType = 'Markup';  // for testing Markup Editor Type
+  // public editorType: EditorType = 'Markup'; // for testing Markup Editor Type
 
   public hasCodeMode = true;
 
@@ -107,16 +107,7 @@ export class CardEditor implements ICardEditor {
      * Expected behavior is that IME aloways work inline on CKEditor.
      * A silly workaround is to blur and focus this browser window.
      */
-    // workaround start
-    if (this.editorType == 'WYSYWIG') {
-      // card is blured when showEditor is called.
-      await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);
-    }
-    else if (this.editorType == 'Markup') {
-      // card is focused when showEditor is called.
-      await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);
-    }
-    // workaround end
+    await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);
   };
 
   private setData = (): Promise<void> => {
