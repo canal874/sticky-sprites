@@ -101,7 +101,27 @@ export class CardEditor implements ICardEditor {
     });
   };
   
-  showEditor = () => {
+  showEditor = async () => {
+    if(this.startEditorFirstTime){
+      /**
+       * This is workaround for Japanese IME & CKEditor on Windows.
+       * IME window is unintentionally opened only at the first time of inputing Japanese.
+       * Expected behavior is that IME aloways work inline on CKEditor.
+       * A silly workaround is to blur and focus this browser window.
+       */
+      // workaround start
+      this.startEditorFirstTime = false;
+      if(this.editorType == 'WYSYWIG'){
+        // card is blured when showEditor is called.
+        await ipcRenderer.invoke('focusAndBlur', this.cardProp.id);
+      }
+      else if(this.editorType == 'Markup'){
+        // card is focused when showEditor is called.
+        await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);
+      }
+      // workaround end
+    }
+
     if(!this.isOpened) {
       this.isOpened = true;
 
@@ -133,24 +153,6 @@ export class CardEditor implements ICardEditor {
   };
 
   startEdit = async () => {
-    if(this.startEditorFirstTime){
-      /**
-       * This is workaround for Japanese IME & CKEditor on Windows.
-       * IME window is unintentionally opened only at the first time of inputing Japanese.
-       * Expected behavior is that IME aloways work inline on CKEditor.
-       * A silly workaround is to blur and focus this browser window.
-       */
-      // workaround start
-      this.startEditorFirstTime = false;      
-      await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);
-      setTimeout(async () => {
-        await this.showEditor();
-        this.startEdit();
-      },100);
-      return;
-      // workaround end
-    }
-
     if(this.isOpened) {
       // Expand card to add toolbar.
       const expandedHeight = this.cardProp.rect.height + this.toolbarHeight;

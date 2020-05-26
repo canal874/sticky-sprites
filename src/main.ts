@@ -263,3 +263,9 @@ ipcMain.handle('blurAndFocus', async (event, id: string) => {
   card?.window.blur();
   card?.window.focus();
 });
+
+ipcMain.handle('focusAndBlur', async (event, id: string) => {
+  const card = cards.get(id);
+  card?.window.focus();
+  card?.window.blur();
+});
