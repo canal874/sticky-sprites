@@ -1,4 +1,4 @@
-/** 
+/**
  * @license MediaSticky
  * Copyright (c) Hidekazu Kubota
  *
@@ -9,36 +9,43 @@
 import { getCurrentDate } from './utils';
 
 export type Rectangle = {
-  x: number,
-  y: number,
-  width: number,
-  height: number
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 };
 export type CardBase = {
-  id: string,
-  data: string
+  id: string;
+  data: string;
 };
 export type CardStyle = {
-  titleColor: string,
-  backgroundColor: string,
-  backgroundOpacity: number
+  titleColor: string;
+  backgroundColor: string;
+  backgroundOpacity: number;
 };
 export type CardDate = {
-  created_date: string,
-  modified_date: string
-}
+  createdDate: string;
+  modifiedDate: string;
+};
 // Properties of a card that must be serialized
 // Each of them must have unique name to be able to use as a key when serialize.
 export type CardPropSerializable = CardBase & Rectangle & CardStyle & CardDate;
 
 export class CardProp implements CardBase {
-  constructor(
+  constructor (
     public id: string = '',
     public data: string = '',
     public rect: Rectangle = { x: 70, y: 70, width: 260, height: 176 },
-    public style: CardStyle = { titleColor: '#d0d090', backgroundColor: '#ffffa0', backgroundOpacity: 1.0 },
-    public date: CardDate = { created_date: getCurrentDate(), modified_date: getCurrentDate() }
-  ) { }
+    public style: CardStyle = {
+      titleColor: '#d0d090',
+      backgroundColor: '#ffffa0',
+      backgroundOpacity: 1.0,
+    },
+    public date: CardDate = {
+      createdDate: getCurrentDate(),
+      modifiedDate: getCurrentDate(),
+    }
+  ) {}
 
   public toObject = (): CardPropSerializable => {
     return {
@@ -51,17 +58,25 @@ export class CardProp implements CardBase {
       titleColor: this.style.titleColor,
       backgroundColor: this.style.backgroundColor,
       backgroundOpacity: this.style.backgroundOpacity,
-      created_date: this.date.created_date,
-      modified_date: this.date.modified_date
-    }
+      createdDate: this.date.createdDate,
+      modifiedDate: this.date.modifiedDate,
+    };
   };
 
   public static fromObject = (json: CardPropSerializable): CardProp => {
-    return new CardProp(json.id, json.data,
+    return new CardProp(
+      json.id,
+      json.data,
       { x: json.x, y: json.y, width: json.width, height: json.height },
-      { titleColor: json.titleColor, backgroundColor: json.backgroundColor, backgroundOpacity: json.backgroundOpacity },
-      { created_date: json.created_date, modified_date: json.modified_date })
-  }
-};
-
-
+      {
+        titleColor: json.titleColor,
+        backgroundColor: json.backgroundColor,
+        backgroundOpacity: json.backgroundOpacity,
+      },
+      {
+        createdDate: json.createdDate,
+        modifiedDate: json.modifiedDate,
+      }
+    );
+  };
+}

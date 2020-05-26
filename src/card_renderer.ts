@@ -18,18 +18,22 @@ let renderOffsetWidth: number = 0; // Offset of card height from actual window w
 
 export const getRenderOffsetWidth = () => {
   return renderOffsetWidth;
-}
+};
 export const setRenderOffsetWidth = (w: number) => {
   renderOffsetWidth = w;
-}
+};
 export const getRenderOffsetHeight = () => {
   return renderOffsetHeight;
-}
+};
 export const setRenderOffsetHeight = (h: number) => {
   renderOffsetHeight = h;
-}
+};
 
-export const initCardRenderer = (prop: CardProp, style: CardCssStyle, editor: ICardEditor) => {
+export const initCardRenderer = (
+  prop: CardProp,
+  style: CardCssStyle,
+  editor: ICardEditor
+) => {
   cardProp = prop;
   cardCssStyle = style;
   cardEditor = editor;
@@ -41,13 +45,19 @@ export enum CardRenderOptions {
   TitleBar,
   ContentsData,
   ContentsSize,
-  EditorSize
+  EditorSize,
 }
 
 const renderTitleBar = () => {
-  const closeBtnLeft = cardProp.rect.width - cardCssStyle.border.left - cardCssStyle.border.right - document.getElementById('closeBtn')!.offsetWidth;
+  const closeBtnLeft =
+    cardProp.rect.width -
+    cardCssStyle.border.left -
+    cardCssStyle.border.right -
+    document.getElementById('closeBtn')!.offsetWidth;
   document.getElementById('closeBtn')!.style.left = closeBtnLeft + 'px';
-  const titleBarLeft = document.getElementById('codeBtn')!.offsetLeft + document.getElementById('codeBtn')!.offsetWidth;
+  const titleBarLeft =
+    document.getElementById('codeBtn')!.offsetLeft +
+    document.getElementById('codeBtn')!.offsetWidth;
   const barwidth = closeBtnLeft - titleBarLeft;
   document.getElementById('titleBar')!.style.left = titleBarLeft + 'px';
   document.getElementById('titleBar')!.style.width = barwidth + 'px';
@@ -59,20 +69,23 @@ const renderContentsData = () => {
 
 const renderContentsSize = () => {
   // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
-  document.getElementById('contents')!.style.width = (
-    cardProp.rect.width
-    - cardCssStyle.border.left - cardCssStyle.border.right
-    - cardCssStyle.padding.left - cardCssStyle.padding.right
-  ) + 'px';
+  document.getElementById('contents')!.style.width =
+    cardProp.rect.width -
+    cardCssStyle.border.left -
+    cardCssStyle.border.right -
+    cardCssStyle.padding.left -
+    cardCssStyle.padding.right +
+    'px';
 
-  document.getElementById('contents')!.style.height = (
-    cardProp.rect.height
-    - cardCssStyle.border.top - cardCssStyle.border.bottom
-    - document.getElementById('titleBar')!.offsetHeight
-    - cardCssStyle.padding.top - cardCssStyle.padding.bottom
-  ) + 'px';
+  document.getElementById('contents')!.style.height =
+    cardProp.rect.height -
+    cardCssStyle.border.top -
+    cardCssStyle.border.bottom -
+    document.getElementById('titleBar')!.offsetHeight -
+    cardCssStyle.padding.top -
+    cardCssStyle.padding.bottom +
+    'px';
 };
-
 
 const setCardColor = () => {
   // Set card properties
@@ -84,37 +97,53 @@ const setCardColor = () => {
   let red = parseInt(RegExp.$1, 16);
   let green = parseInt(RegExp.$2, 16);
   let blue = parseInt(RegExp.$3, 16);
-  document.getElementById('contents')!.style.backgroundColor = 'rgba(' + red + ',' + green + ',' + blue + ',' + cardProp.style.backgroundOpacity + ')';
+  document.getElementById('contents')!.style.backgroundColor =
+    'rgba(' +
+    red +
+    ',' +
+    green +
+    ',' +
+    blue +
+    ',' +
+    cardProp.style.backgroundOpacity +
+    ')';
 
   let r = Math.floor(red * scale).toString(16);
-  if(r.length == 1) { r = '0' + r; }
+  if (r.length == 1) {
+    r = '0' + r;
+  }
   let g = Math.floor(green * scale).toString(16);
-  if(g.length == 1) { g = '0' + g; }
+  if (g.length == 1) {
+    g = '0' + g;
+  }
   let b = Math.floor(blue * scale).toString(16);
-  if(b.length == 1) { b = '0' + b; }
+  if (b.length == 1) {
+    b = '0' + b;
+  }
   cardProp.style.titleColor = '#' + r + g + b;
 
-  Array.from(document.getElementsByClassName('title-color')).forEach((node, index, list) => {
+  Array.from(document.getElementsByClassName('title-color')).forEach(node => {
     (node as HTMLElement).style.backgroundColor = cardProp.style.titleColor;
   });
 };
 
 const renderEditorSize = () => {
   cardEditor.setSize();
-}
+};
 
-export const render = (options: CardRenderOptions[] = [CardRenderOptions.All]) => {
-  for(let opt of options) {
-    if(opt == CardRenderOptions.Color || opt == CardRenderOptions.All)
+export const render = (
+  options: CardRenderOptions[] = [CardRenderOptions.All]
+) => {
+  for (let opt of options) {
+    if (opt == CardRenderOptions.Color || opt == CardRenderOptions.All)
       setCardColor();
-    if(opt == CardRenderOptions.TitleBar || opt == CardRenderOptions.All)
+    if (opt == CardRenderOptions.TitleBar || opt == CardRenderOptions.All)
       renderTitleBar();
-    if(opt == CardRenderOptions.ContentsData || opt == CardRenderOptions.All)
+    if (opt == CardRenderOptions.ContentsData || opt == CardRenderOptions.All)
       renderContentsData();
-    if(opt == CardRenderOptions.ContentsSize || opt == CardRenderOptions.All)
+    if (opt == CardRenderOptions.ContentsSize || opt == CardRenderOptions.All)
       renderContentsSize();
-    if(opt == CardRenderOptions.EditorSize || opt == CardRenderOptions.All)
+    if (opt == CardRenderOptions.EditorSize || opt == CardRenderOptions.All)
       renderEditorSize();
   }
 };
-

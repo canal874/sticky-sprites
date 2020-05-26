@@ -1,4 +1,4 @@
-/** 
+/**
  * @license MediaSticky
  * Copyright (c) Hidekazu Kubota
  *
@@ -14,13 +14,11 @@ import { CardProp } from '../modules_common/card';
 import { ICardEditor, CardCssStyle, EditorType } from '../modules_common/types';
 import { setRenderOffsetHeight } from '../card_renderer';
 import { remote, ipcRenderer } from 'electron';
-import { sleep, logger } from '../modules_common/utils';
+// import { sleep, logger } from '../modules_common/utils';
 
 const main = remote.require('./main');
 
 export class CardEditor implements ICardEditor {
-  constructor() { }
-
   /**
    * Private
    */
@@ -33,75 +31,76 @@ export class CardEditor implements ICardEditor {
 
   private cardCssStyle!: CardCssStyle; // cardCssStyle is set by loadUI()
 
-  private moveCursorToBottom = () => {
-    let editor = CKEDITOR.instances['editor'];
-    let s = editor.getSelection(); // getting selection
-    let selected_ranges = s.getRanges(); // getting ranges
-    if(selected_ranges.length > 0) {
-      let node = selected_ranges[0].startContainer; // selecting the starting node
-      let parents = node.getParents(true);
-      node = (parents[parents.length - 2] as CKEDITOR.dom.element).getFirst() as CKEDITOR.dom.element;
-      while(true) {
-        let x: CKEDITOR.dom.element = node.getNext() as CKEDITOR.dom.element;
-        if(x == null) {
+  private moveCursorToBottom = (): void => {
+    const editor = CKEDITOR.instances['editor'];
+    const s = editor.getSelection(); // getting selection
+    let selectedRanges = s.getRanges(); // getting ranges
+    if (selectedRanges.length > 0) {
+      let node = selectedRanges[0].startContainer; // selecting the starting node
+      const parents = node.getParents(true);
+      node = (parents[
+        parents.length - 2
+      ] as CKEDITOR.dom.element).getFirst() as CKEDITOR.dom.element;
+      for (;;) {
+        const x: CKEDITOR.dom.element = node.getNext() as CKEDITOR.dom.element;
+        if (x == null) {
           break;
         }
         node = x;
       }
 
       s.selectElement(node);
-      selected_ranges = s.getRanges();
-      selected_ranges[0].collapse(false);  //  false collapses the range to the end of the selected node, true before the node.
-      s.selectRanges(selected_ranges);  // putting the current selection there
+      selectedRanges = s.getRanges();
+      selectedRanges[0].collapse(false); //  false collapses the range to the end of the selected node, true before the node.
+      s.selectRanges(selectedRanges); // putting the current selection there
     }
-  }
-
+  };
 
   /**
    * Public
    */
-  public editorType: EditorType = 'WYSYWIG';  // CKEditor should be WYSIWYG Editor Type
-//  public editorType: EditorType = 'Markup';  // for testing Markup Editor Type
+  public editorType: EditorType = 'WYSYWIG'; // CKEditor should be WYSIWYG Editor Type
+  //  public editorType: EditorType = 'Markup';  // for testing Markup Editor Type
 
   public hasCodeMode = true;
 
   public isOpened = false;
 
-  loadUI = (_cardCssStyle: CardCssStyle) => {
+  loadUI = (_cardCssStyle: CardCssStyle): Promise<void> => {
     this.cardCssStyle = _cardCssStyle;
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>(resolve => {
       CKEDITOR.replace('editor');
       CKEDITOR.on('instanceReady', () => {
         const checkTimer = setInterval(() => {
-          // Checking existence of 'cke_editor' 
+          // Checking existence of 'cke_editor'
           // because 'instanceReady' event is incredible.
-          if(document.getElementById('cke_editor')) {
+          if (document.getElementById('cke_editor')) {
             clearInterval(checkTimer);
             resolve();
           }
         }, 200);
       });
     });
-  }
+  };
 
-  setCard = (prop: CardProp) => {
+  setCard = (prop: CardProp): void => {
     this.cardProp = prop;
-  }
+  };
 
   waitUntilActivationComplete = (): Promise<void> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const editor = CKEDITOR.instances['editor'];
       const timer = setInterval(() => {
         const s = editor.getSelection();
-        if(s) {
+        if (s) {
           clearInterval(timer);
           resolve();
         }
       }, 100);
     });
-  }
-  
-  private imeWorkaround = async () => {
+  };
+
+  private imeWorkaround = async (): Promise<void> => {
     /**
      * This is workaround for Japanese IME & CKEditor on Windows.
      * IME window is unintentionally opened only at the first time of inputing Japanese.
@@ -109,134 +108,169 @@ export class CardEditor implements ICardEditor {
      * A silly workaround is to blur and focus this browser window.
      */
     // workaround start
-    if(this.editorType == 'WYSYWIG') {
+    if (this.editorType == 'WYSYWIG') {
       // card is blured when showEditor is called.
       await ipcRenderer.invoke('focusAndBlur', this.cardProp.id);
     }
-    else if(this.editorType == 'Markup') {
+    else if (this.editorType == 'Markup') {
       // card is focused when showEditor is called.
       await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);
     }
     // workaround end
-  }
+  };
 
-  private setData = () => {
+  private setData = (): Promise<void> => {
     return new Promise((resolve, reject) => {
-      try{
+      try {
         CKEDITOR.instances['editor'].setData(this.cardProp.data, {
-          callback: () => { resolve(); }
+          callback: () => {
+            resolve();
+          },
         });
-      } catch(e) {
+      } catch (e) {
         reject();
       }
     });
-  }
+  };
 
-  showEditor = async () => {
-    if(this.startEditorFirstTime) {
+  showEditor = async (): Promise<void> => {
+    if (this.startEditorFirstTime) {
       this.startEditorFirstTime = false;
-          
-      console.log('ime start');    
+
+      console.log('ime start');
       await this.imeWorkaround();
-      console.log('ime end');          
+      console.log('ime end');
     }
 
-    if(this.isOpened){
+    if (this.isOpened) {
       return;
     }
 
-    this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
+    this.setColor(
+      this.cardProp.style.backgroundColor,
+      this.cardProp.style.titleColor
+    );
     this.setSize();
-    document.getElementById('contents')!.style.visibility = 'hidden';
-    document.getElementById('cke_editor')!.style.visibility = 'visible';
+    const contents = document.getElementById('contents');
+    if (contents) {
+      contents.style.visibility = 'hidden';
+    }
+    const ckeEditor = document.getElementById('cke_editor');
+    if (ckeEditor) {
+      ckeEditor.style.visibility = 'visible';
+    }
+    else {
+      throw 'cke_editor does not exist.';
+    }
 
     await this.setData();
 
     this.isOpened = true;
-  }
+  };
 
   hideEditor = () => {
-    this.isOpened = false;    
+    this.isOpened = false;
     document.getElementById('contents')!.style.visibility = 'visible';
     document.getElementById('cke_editor')!.style.visibility = 'hidden';
-  }
+  };
 
   startEdit = async () => {
     // Expand card to add toolbar.
     const expandedHeight = this.cardProp.rect.height + this.toolbarHeight;
-    main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, expandedHeight);
+    main.setWindowSize(
+      this.cardProp.id,
+      this.cardProp.rect.width,
+      expandedHeight
+    );
     setRenderOffsetHeight(-this.toolbarHeight);
     this.setSize();
 
     await this.waitUntilActivationComplete();
     CKEDITOR.instances['editor'].focus();
-    if(this.editorType == 'Markup') {
+    if (this.editorType == 'Markup') {
       this.moveCursorToBottom();
     }
-  }
+  };
 
   endEdit = (): [boolean, string] => {
     let dataChanged = false;
     // Save data to CardProp
     const data = CKEDITOR.instances['editor'].getData();
-    if(this.cardProp.data != data) {
+    if (this.cardProp.data != data) {
       dataChanged = true;
     }
 
-    main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, this.cardProp.rect.height);
+    main.setWindowSize(
+      this.cardProp.id,
+      this.cardProp.rect.width,
+      this.cardProp.rect.height
+    );
     setRenderOffsetHeight(0);
 
-    
     CKEDITOR.instances['editor'].getSelection()?.removeAllRanges();
 
-    if(this.codeMode){
+    if (this.codeMode) {
       this.endCodeMode();
     }
 
     return [dataChanged, data];
-  }
-
+  };
 
   toggleCodeMode = () => {
-    if(!this.codeMode) {
+    if (!this.codeMode) {
       this.startCodeMode();
     }
     else {
       this.endCodeMode();
     }
-  }
+  };
 
   startCodeMode = () => {
     this.codeMode = true;
     this.startEdit();
     document.getElementById('codeBtn')!.style.color = '#a0a0a0';
-    CKEDITOR.instances['editor'].setMode('source', () => { });
+    CKEDITOR.instances['editor'].setMode('source', () => {});
     CKEDITOR.instances['editor'].focus();
-  }
+  };
 
   endCodeMode = async () => {
     this.codeMode = false;
     document.getElementById('codeBtn')!.style.color = '#000000';
-    CKEDITOR.instances['editor'].setMode('wysiwyg', () => { });
+    CKEDITOR.instances['editor'].setMode('wysiwyg', () => {});
     await this.waitUntilActivationComplete();
-    this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
+    this.setColor(
+      this.cardProp.style.backgroundColor,
+      this.cardProp.style.titleColor
+    );
     CKEDITOR.instances['editor'].focus();
-  }
+  };
 
-  setSize = (width: number = this.cardProp.rect.width - this.cardCssStyle.border.left - this.cardCssStyle.border.right,
-    height: number = this.cardProp.rect.height + this.toolbarHeight - this.cardCssStyle.border.top - this.cardCssStyle.border.bottom - document.getElementById('titleBar')!.offsetHeight): void => {
+  setSize = (
+    width: number = this.cardProp.rect.width -
+      this.cardCssStyle.border.left -
+      this.cardCssStyle.border.right,
+    height: number = this.cardProp.rect.height +
+      this.toolbarHeight -
+      this.cardCssStyle.border.top -
+      this.cardCssStyle.border.bottom -
+      document.getElementById('titleBar')!.offsetHeight
+  ): void => {
     // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
     CKEDITOR.instances['editor'].resize(width, height);
-  }
+  };
 
   setColor = (backgroundColor: string, titleColor: string): void => {
-    document.getElementById('cke_editor')!.style.borderTopColor
-      = document.getElementById('cke_1_bottom')!.style.backgroundColor
-      = document.getElementById('cke_1_bottom')!.style.borderBottomColor
-      = document.getElementById('cke_1_bottom')!.style.borderTopColor
-      = titleColor;
-    (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = backgroundColor;
-  }
-
+    document.getElementById(
+      'cke_editor'
+    )!.style.borderTopColor = document.getElementById(
+      'cke_1_bottom'
+    )!.style.backgroundColor = document.getElementById(
+      'cke_1_bottom'
+    )!.style.borderBottomColor = document.getElementById(
+      'cke_1_bottom'
+    )!.style.borderTopColor = titleColor;
+    (document.querySelector(
+      '#cke_1_contents .cke_wysiwyg_frame'
+    ) as HTMLElement).style.backgroundColor = backgroundColor;
+  };
 }
-

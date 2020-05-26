@@ -1,4 +1,4 @@
-/** 
+/**
  * @license MediaSticky
  * Copyright (c) Hidekazu Kubota
  *
@@ -39,17 +39,17 @@ export interface ICardEditor {
 
 export type CardCssStyle = {
   padding: {
-    left: number,
-    right: number,
-    top: number,
-    bottom: number
-  },
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+  };
   border: {
-    left: number,
-    right: number,
-    top: number,
-    bottom: number
-  }
-}
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+  };
+};
 
 export type EditorType = 'WYSYWIG' | 'Markup';

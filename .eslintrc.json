@@ -4,12 +4,38 @@
     "es6": true,
     "node": true
   },
-    "extends": [
-      "eslint:recommended",
-      "plugin:@typescript-eslint/eslint-recommended",
-      "plugin:@typescript-eslint/recommended",
-      "plugin:import/errors",
-      "plugin:import/warnings"
-    ],
-    "parser": "@typescript-eslint/parser"
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:prettierx/standardx",
+    "plugin:prettierx/@typescript-eslint"
+  ],
+  "plugins": ["@typescript-eslint", "prettierx"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".json",
+          ".ts",
+          ".tsx"
+        ]
+      }
+    }
+  },
+
+  "rules": {
+    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/interface-name-prefix": [0],
+    "prettierx/options": ["error", {
+       "breakBeforeElse": true,
+       "semi": true,
+       "trailingComma": "es5"
+    }]
+  }
 }

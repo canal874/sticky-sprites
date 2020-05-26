@@ -1,4 +1,4 @@
-/** 
+/**
  * @license MediaSticky
  * Copyright (c) Hidekazu Kubota
  *
@@ -10,14 +10,15 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { selectPreferredLanguage } from 'typed-intl';
 import { logger } from './modules_common/utils';
 import url from 'url';
-import path from 'path'
+import path from 'path';
 import translations from './modules_common/base.msg';
 import { CardProp, CardPropSerializable } from './modules_common/card';
 import { CardIO } from './modules_ext/io';
-import { sleep } from './modules_common/utils';
+//import { sleep } from './modules_common/utils';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if(require('electron-squirrel-startup')) { // eslint-disable-line global-require
+if (require('electron-squirrel-startup')) {
+  // eslint-disable-line global-require
   app.quit();
 }
 
@@ -25,15 +26,14 @@ if(require('electron-squirrel-startup')) { // eslint-disable-line global-require
 ipcMain.setMaxListeners(1000);
 
 /**
-* i18n
-*/
-export let MESSAGE: Object = {}
+ * i18n
+ */
+export let MESSAGE: Object = {};
 
 /**
  * Const
  */
 const minimumWindowWidth = 30;
-
 
 /**
  * Card
@@ -49,16 +49,16 @@ class Card {
   public surpressFocusEventOnce = false;
   public surpressBlurEventOnce = false;
 
-  constructor(public id: string = '') {
+  constructor (public id: string = '') {
     let loadOrCreateCardData = this.loadCardData;
-    if(this.id == '') {
+    if (this.id == '') {
       this.id = CardIO.generateNewCardId();
       loadOrCreateCardData = this.createCardData;
     }
 
     this.window = new BrowserWindow({
       webPreferences: {
-        nodeIntegration: true
+        nodeIntegration: true,
       },
       minWidth: minimumWindowWidth,
       transparent: true,
@@ -70,10 +70,9 @@ class Card {
 
       // Set window title to card id.
       // This enables some tricks that can access the card window from other apps.
-      title: id
+      title: id,
     });
     this.window.setMaxListeners(20);
-
 
     // Open hyperlink on external browser window
     // by preventing to open it on new electron window
@@ -102,19 +101,20 @@ class Card {
       cards.delete(this.id);
     });
 
-    this.window.on('focus', this.focusListener );
-    this.window.on('blur', this.blurListener );
-  
-    Promise.all([this.readyToShow(), this.loadHTML(), loadOrCreateCardData()]).then(([res1, res2, _prop]) => {
-      this.prop = _prop;
-      this.renderCard();
-    }).catch(() => {
-      throw 'Cannot load card';
-    });
+    this.window.on('focus', this.focusListener);
+    this.window.on('blur', this.blurListener);
 
+    Promise.all([this.readyToShow(), this.loadHTML(), loadOrCreateCardData()])
+      .then(([, , _prop]) => {
+        this.prop = _prop;
+        this.renderCard();
+      })
+      .catch(() => {
+        throw 'Cannot load card';
+      });
   }
 
-  private renderCard(): void {
+  private renderCard (): void {
     this.window.setSize(this.prop.rect.width, this.prop.rect.height);
     this.window.setPosition(this.prop.rect.x, this.prop.rect.y);
     logger.debug('load:' + JSON.stringify(this.prop.toObject()));
@@ -123,12 +123,12 @@ class Card {
   }
 
   private readyToShow: () => Promise<void> = () => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.window.once('ready-to-show', () => {
         resolve();
-      })
+      });
     });
-  }
+  };
 
   private loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
@@ -141,17 +141,19 @@ class Card {
       this.window.webContents.on('did-fail-load', () => {
         reject();
       });
-      this.window.loadURL(url.format({
-        pathname: path.join(__dirname, 'index.html'),
-        protocol: 'file:',
-        slashes: true
-      }))
+      this.window.loadURL(
+        url.format({
+          pathname: path.join(__dirname, 'index.html'),
+          protocol: 'file:',
+          slashes: true,
+        })
+      );
     });
-  }
+  };
 
   private createCardData: () => Promise<CardProp> = () => {
     return Promise.resolve(new CardProp(this.id));
-  }
+  };
 
   private loadCardData: () => Promise<CardProp> = () => {
     return new Promise((resolve, reject) => {
@@ -162,28 +164,27 @@ class Card {
         .catch((err: string) => {
           logger.error('Load card error: ' + this.id + ', ' + err);
           reject();
-        })
+        });
     });
-  }
+  };
 
   private focusListener = () => {
-    if(this.surpressFocusEventOnce){
+    if (this.surpressFocusEventOnce) {
       this.surpressFocusEventOnce = false;
     }
-    else{
+    else {
       this.window.webContents.send('card-focused');
     }
-  }
+  };
 
   private blurListener = () => {
-    if(this.surpressBlurEventOnce){
+    if (this.surpressBlurEventOnce) {
       this.surpressBlurEventOnce = false;
     }
-    else{
+    else {
       this.window.webContents.send('card-blured');
     }
-  }
-  
+  };
 }
 
 app.on('window-all-closed', () => {
@@ -197,13 +198,13 @@ app.on('window-all-closed', () => {
 ipcMain.handle('save', async (event, cardPropObj: CardPropSerializable) => {
   const prop = CardProp.fromObject(cardPropObj);
 
-  // for debug  
+  // for debug
   // await sleep(10000);
 
   await CardIO.writeOrCreateCardData(prop)
     .then(() => {
       const card = cards.get(prop.id);
-      if(card) {
+      if (card) {
         card.prop = prop;
       }
       else {
@@ -223,15 +224,13 @@ export const deleteCard = (prop: CardProp) => {
     .then(() => {
       logger.debug('deleted :' + prop.id);
       cards.get(prop.id)?.window.webContents.send('card-close');
-    })
-
-}
+    });
+};
 
 export const createCard = () => {
   const card = new Card();
   cards.set(card.id, card);
-}
-
+};
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -245,17 +244,16 @@ app.on('ready', () => {
   // load cards
   CardIO.getCardIdList()
     .then((arr: Array<string>) => {
-      if(arr.length == 0) {
+      if (arr.length == 0) {
         // Create a new card
         const card = new Card();
         cards.set(card.id, card);
       }
       else {
-        for(let id of arr) {
+        for (let id of arr) {
           try {
             cards.set(id, new Card(id));
-          }
-          catch(e) {
+          } catch (e) {
             throw `Cannot create a Card instance of ${id}: ${e}`;
             logger.error(e);
           }
@@ -273,25 +271,24 @@ app.on('ready', () => {
 export const setWindowSize = (id: string, width: number, height: number) => {
   const card = cards.get(id);
   card?.window.setSize(width, height);
-}
-
+};
 
 ipcMain.handle('blurAndFocus', async (event, id: string) => {
-  const card = cards.get(id); 
-  if(card){
+  const card = cards.get(id);
+  if (card) {
     card.surpressBlurEventOnce = true;
     card.window.blur();
-    card.surpressFocusEventOnce = true;  
+    card.surpressFocusEventOnce = true;
     card.window.focus();
   }
 });
 
 ipcMain.handle('focusAndBlur', async (event, id: string) => {
   const card = cards.get(id);
-  if(card){
-    card.surpressFocusEventOnce = true;      
+  if (card) {
+    card.surpressFocusEventOnce = true;
     card.window.focus();
-    card.surpressBlurEventOnce = true;    
+    card.surpressBlurEventOnce = true;
     card.window.blur();
   }
 });

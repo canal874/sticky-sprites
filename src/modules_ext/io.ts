@@ -1,4 +1,4 @@
-/** 
+/**
  * @license MediaSticky
  * Copyright (c) Hidekazu Kubota
  *
@@ -16,20 +16,18 @@ import uniqid from 'uniqid';
 import { logger } from '../modules_common/utils';
 
 let cardDir = './cards';
-if(process.env.NODE_CARDDIR) {
+if (process.env.NODE_CARDDIR) {
   cardDir = process.env.NODE_CARDDIR;
 }
 
-/** 
- * Module specific part 
+/**
+ * Module specific part
  */
 
 import pouchDB from 'pouchdb';
 var cardsDB: PouchDB.Database<{}>;
 
-
 class CardIOClass implements ICardIO {
-
   public generateNewCardId = (): string => {
     // returns 18 byte unique characters
     return uniqid();
@@ -39,11 +37,12 @@ class CardIOClass implements ICardIO {
     // returns all card ids.
     cardsDB = new pouchDB(cardDir);
     return new Promise((resolve, reject) => {
-      cardsDB.allDocs()
-        .then((res) => {
-          resolve(res.rows.map((row) => row.id));
+      cardsDB
+        .allDocs()
+        .then(res => {
+          resolve(res.rows.map(row => row.id));
         })
-        .catch((err) => {
+        .catch(err => {
           reject(err);
         });
     });
@@ -51,12 +50,13 @@ class CardIOClass implements ICardIO {
 
   public deleteCardData = (id: string): Promise<string> => {
     return new Promise((resolve, reject) => {
-      cardsDB.get(id)
-        .then((res) => {
+      cardsDB
+        .get(id)
+        .then(res => {
           cardsDB.remove(res);
           resolve(id);
         })
-        .catch((err) => {
+        .catch(err => {
           reject(err);
         });
     });
@@ -64,36 +64,57 @@ class CardIOClass implements ICardIO {
 
   public readCardData = (id: string): Promise<CardProp> => {
     return new Promise((resolve, reject) => {
-      cardsDB.get(id)
-        .then((doc) => {
-          const propsRequired: CardPropSerializable = (new CardProp('')).toObject();
+      cardsDB
+        .get(id)
+        .then(doc => {
+          const propsRequired: CardPropSerializable = new CardProp(
+            ''
+          ).toObject();
           // Checking properties retrieved from database
-          for(let key in propsRequired) {
-            if(key == 'id') {
+          for (let key in propsRequired) {
+            if (key == 'id') {
               // skip
               // pouchDB does not have id but has _id.
             }
-            else if(!doc.hasOwnProperty(key)) {
+            // Don't use doc.hasOwnProperty(key)
+            // See eslint no-prototype-builtins
+            else if (!Object.prototype.hasOwnProperty.call(doc, key)) {
               logger.warn(`db entry id "${id}" lacks "${key}"`);
             }
             else {
               // Type of doc cannot be resolved by @types/pouchdb-core
-              // @ts-ignore          
+              // @ts-ignore
               propsRequired[key] = doc[key];
             }
           }
 
-          resolve(new CardProp(id, propsRequired.data,
-            { x: propsRequired.x, y: propsRequired.y, width: propsRequired.width, height: propsRequired.height },
-            { titleColor: propsRequired.titleColor, backgroundColor: propsRequired.backgroundColor, backgroundOpacity: propsRequired.backgroundOpacity },
-            { created_date: propsRequired.created_date, modified_date: propsRequired.modified_date }));
-
+          resolve(
+            new CardProp(
+              id,
+              propsRequired.data,
+              {
+                x: propsRequired.x,
+                y: propsRequired.y,
+                width: propsRequired.width,
+                height: propsRequired.height,
+              },
+              {
+                titleColor: propsRequired.titleColor,
+                backgroundColor: propsRequired.backgroundColor,
+                backgroundOpacity: propsRequired.backgroundOpacity,
+              },
+              {
+                createdDate: propsRequired.createdDate,
+                modifiedDate: propsRequired.modifiedDate,
+              }
+            )
+          );
         })
-        .catch((err) => {
+        .catch(err => {
           reject(err);
-        })
+        });
     });
-  }
+  };
 
   public writeOrCreateCardData = (prop: CardProp): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -105,20 +126,20 @@ class CardIOClass implements ICardIO {
 
       delete propObj.id;
 
-      cardsDB.get(prop.id)
-        .then((oldCard) => {
+      cardsDB
+        .get(prop.id)
+        .then(oldCard => {
           // Update existing card
           propObj._rev = oldCard._rev;
         })
-        .catch((err) => {
-          // Create new card
-        })
+        .catch(/* Create new card */)
         .then(() => {
-          cardsDB.put(propObj)
-            .then((res) => {
+          cardsDB
+            .put(propObj)
+            .then(res => {
               resolve(res.id);
             })
-            .catch((err) => {
+            .catch(err => {
               reject('Card save error: ' + err);
             });
         });
