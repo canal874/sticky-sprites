@@ -27,7 +27,7 @@ ipcMain.setMaxListeners(1000);
 /**
 * i18n
 */
-export let MESSAGE: Object = {};
+export let MESSAGE: Object = {}
 
 /**
  * Const
@@ -45,6 +45,9 @@ const cards: Map<string, Card> = new Map<string, Card>();
 class Card {
   public prop!: CardProp; // ! is Definite assignment assertion
   public window: BrowserWindow;
+
+  public surpressFocusEventOnce = false;
+  public surpressBlurEventOnce = false;
 
   constructor(public id: string = '') {
     let loadOrCreateCardData = this.loadCardData;
@@ -99,13 +102,9 @@ class Card {
       cards.delete(this.id);
     });
 
-    this.window.on('focus', () => {
-      this.window.webContents.send('card-focused');
-    });
-    this.window.on('blur', () => {
-      this.window.webContents.send('card-blured');
-    });
-
+    this.window.on('focus', this.focusListener );
+    this.window.on('blur', this.blurListener );
+  
     Promise.all([this.readyToShow(), this.loadHTML(), loadOrCreateCardData()]).then(([res1, res2, _prop]) => {
       this.prop = _prop;
       this.renderCard();
@@ -129,7 +128,7 @@ class Card {
         resolve();
       })
     });
-  };
+  }
 
   private loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
@@ -166,6 +165,25 @@ class Card {
         })
     });
   }
+
+  private focusListener = () => {
+    if(this.surpressFocusEventOnce){
+      this.surpressFocusEventOnce = false;
+    }
+    else{
+      this.window.webContents.send('card-focused');
+    }
+  }
+
+  private blurListener = () => {
+    if(this.surpressBlurEventOnce){
+      this.surpressBlurEventOnce = false;
+    }
+    else{
+      this.window.webContents.send('card-blured');
+    }
+  }
+  
 }
 
 app.on('window-all-closed', () => {
@@ -207,12 +225,12 @@ export const deleteCard = (prop: CardProp) => {
       cards.get(prop.id)?.window.webContents.send('card-close');
     })
 
-};
+}
 
 export const createCard = () => {
   const card = new Card();
   cards.set(card.id, card);
-};
+}
 
 
 // This method will be called when Electron has finished
@@ -259,13 +277,21 @@ export const setWindowSize = (id: string, width: number, height: number) => {
 
 
 ipcMain.handle('blurAndFocus', async (event, id: string) => {
-  const card = cards.get(id);
-  card?.window.blur();
-  card?.window.focus();
+  const card = cards.get(id); 
+  if(card){
+    card.surpressBlurEventOnce = true;
+    card.window.blur();
+    card.surpressFocusEventOnce = true;  
+    card.window.focus();
+  }
 });
 
 ipcMain.handle('focusAndBlur', async (event, id: string) => {
   const card = cards.get(id);
-  card?.window.focus();
-  card?.window.blur();
+  if(card){
+    card.surpressFocusEventOnce = true;      
+    card.window.focus();
+    card.surpressBlurEventOnce = true;    
+    card.window.blur();
+  }
 });

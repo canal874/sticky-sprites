@@ -5,7 +5,8 @@
   "description": "Small sticky browser windows",
   "main": "dist/main.js",
   "scripts": {
-    "cleanstart": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && tsc && electron-forge start",
+    "compile-clean": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && tsc",
+    "compile": "tsc",
     "start": "tsc && electron-forge start",
     "package": "electron-forge package",
     "make": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && tsc && electron-forge make",

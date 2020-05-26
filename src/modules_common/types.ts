@@ -14,14 +14,15 @@ export interface ICardIO {
   readCardData(id: string): Promise<CardProp>;
   writeOrCreateCardData(prop: CardProp): Promise<string>;
   deleteCardData(id: string): Promise<string>;
-};
+}
 
 export interface ICardEditor {
   readonly editorType: EditorType;
   readonly hasCodeMode: boolean;
   isOpened: boolean;
+
   loadUI(cardCssStyle: CardCssStyle): Promise<void>; // A Promise resolves when required initialiation is finished.
-  loadCard(prop: CardProp): void; // Loading a card after loadUI().
+  setCard(prop: CardProp): void; // Loading a card after loadUI().
 
   showEditor(): Promise<void>;
   hideEditor(): void;

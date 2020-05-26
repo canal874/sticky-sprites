@@ -64,7 +64,7 @@ const waitUnfinishedSaveTasks = () => {
 const close = async () => {
   await waitUnfinishedSaveTasks();
   window.close();  
-};
+}
 
 const setTitleMessage = (msg: string) => {
   if(document.getElementById('titleMessage')){
@@ -93,7 +93,7 @@ const execSaveTask = async () => {
       execSaveTask();
     }
   }
-};
+}
 
 const saveData = () => {
   cardProp.date.modified_date = getCurrentDate();
@@ -117,7 +117,7 @@ const setAndSaveCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
   cardEditor.setColor(cardProp.style.backgroundColor, cardProp.style.titleColor);
 
   saveData();
-};
+}
 
 /**
  * queueSaveCommand 
@@ -126,7 +126,7 @@ const setAndSaveCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
 let execSaveCommandTimeout: NodeJS.Timeout;
 const execSaveCommand = () => {
   saveData();
-};
+}
 
 const queueSaveCommand = () => {
   clearTimeout(execSaveCommandTimeout);
@@ -161,7 +161,7 @@ const initializeUIEvents = () => {
   document.ondragover = (e) => {
     e.preventDefault();
     return false;
-  };
+  }
 
   document.ondrop = (e) => {
     e.preventDefault();
@@ -181,11 +181,11 @@ const initializeUIEvents = () => {
 
         cardProp.data = '<img src="' + file!.path + '" width="' + width + '" height="' + height + '">';
         render([CardRenderOptions.ContentsData]);
-      };
+      }
       dropImg.src = file.path;
     }
     return false;
-  };
+  }
 
 
   document.getElementById('newBtn')?.addEventListener('click', () => {
@@ -267,7 +267,7 @@ const onloaded = async () => {
       top: parseInt(window.getComputedStyle(document.getElementById('card')!).borderTop),
       bottom: parseInt(window.getComputedStyle(document.getElementById('card')!).borderBottom)
     }
-  };
+  }
 
   initializeUIEvents();
 
@@ -285,7 +285,7 @@ const initializeIPCEvents = () => {
     initCardRenderer(cardProp, cardCssStyle, cardEditor);
     render();
 
-    cardEditor.loadCard(cardProp);
+    cardEditor.setCard(cardProp);
 
     if(cardProp.style.backgroundOpacity == 0) {
       document.getElementById('title')!.style.visibility = 'hidden';
@@ -302,7 +302,8 @@ const initializeIPCEvents = () => {
   });
 
   ipcRenderer.on('card-focused', (event: Electron.IpcRendererEvent) => {
-    logger.debug('card-focused');
+    console.debug('card-focused');
+
     document.getElementById('card')!.style.border = '3px solid red';
     document.getElementById('title')!.style.visibility = 'visible';
     
@@ -312,7 +313,8 @@ const initializeIPCEvents = () => {
   });
 
   ipcRenderer.on('card-blured', (event: Electron.IpcRendererEvent) => {
-    logger.debug('card-blured');
+    console.debug('card-blured');
+    
     if(cardEditor.isOpened) {
       if(cardEditor.editorType == 'Markup'){    
         cardEditor.hideEditor(); 
@@ -345,7 +347,7 @@ const initializeIPCEvents = () => {
 
     queueSaveCommand();
   });
-};
+}
 
 initializeIPCEvents();
 window.addEventListener('load', onloaded, false);

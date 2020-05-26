@@ -6,9 +6,9 @@ This looks like sticky notes but accepts any HTML and can have a transparent bac
 
 # Run
 
-Just type 'npm run cleanstart' on the project root directory.
+Type 'npm run compile-clean' on the project root directory.
 
-'cleanstart' copies required files from html/ to dist/ and starts app. 
+'compile-clean' copies required files from html/ to dist/ and starts app. 
 After that you can type 'npm start' to start app.
 
 

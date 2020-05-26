@@ -54,14 +54,14 @@ export class CardEditor implements ICardEditor {
       selected_ranges[0].collapse(false);  //  false collapses the range to the end of the selected node, true before the node.
       s.selectRanges(selected_ranges);  // putting the current selection there
     }
-  };
+  }
 
 
   /**
    * Public
    */
-  public editorType: EditorType = 'WYSYWIG';
-//  public editorType: EditorType = 'Markup';
+  public editorType: EditorType = 'WYSYWIG';  // CKEditor should be WYSIWYG Editor Type
+//  public editorType: EditorType = 'Markup';  // for testing Markup Editor Type
 
   public hasCodeMode = true;
 
@@ -82,9 +82,9 @@ export class CardEditor implements ICardEditor {
         }, 200);
       });
     });
-  };
+  }
 
-  loadCard = (prop: CardProp) => {
+  setCard = (prop: CardProp) => {
     this.cardProp = prop;
   }
 
@@ -99,74 +99,81 @@ export class CardEditor implements ICardEditor {
         }
       }, 100);
     });
-  };
+  }
   
+  private imeWorkaround = async () => {
+    /**
+     * This is workaround for Japanese IME & CKEditor on Windows.
+     * IME window is unintentionally opened only at the first time of inputing Japanese.
+     * Expected behavior is that IME aloways work inline on CKEditor.
+     * A silly workaround is to blur and focus this browser window.
+     */
+    // workaround start
+    if(this.editorType == 'WYSYWIG') {
+      // card is blured when showEditor is called.
+      await ipcRenderer.invoke('focusAndBlur', this.cardProp.id);
+    }
+    else if(this.editorType == 'Markup') {
+      // card is focused when showEditor is called.
+      await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);
+    }
+    // workaround end
+  }
+
+  private setData = () => {
+    return new Promise((resolve, reject) => {
+      try{
+        CKEDITOR.instances['editor'].setData(this.cardProp.data, {
+          callback: () => { resolve(); }
+        });
+      } catch(e) {
+        reject();
+      }
+    });
+  }
+
   showEditor = async () => {
-    if(this.startEditorFirstTime){
-      /**
-       * This is workaround for Japanese IME & CKEditor on Windows.
-       * IME window is unintentionally opened only at the first time of inputing Japanese.
-       * Expected behavior is that IME aloways work inline on CKEditor.
-       * A silly workaround is to blur and focus this browser window.
-       */
-      // workaround start
+    if(this.startEditorFirstTime) {
       this.startEditorFirstTime = false;
-      if(this.editorType == 'WYSYWIG'){
-        // card is blured when showEditor is called.
-        await ipcRenderer.invoke('focusAndBlur', this.cardProp.id);
-      }
-      else if(this.editorType == 'Markup'){
-        // card is focused when showEditor is called.
-        await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);
-      }
-      // workaround end
+          
+      console.log('ime start');    
+      await this.imeWorkaround();
+      console.log('ime end');          
     }
 
-    if(!this.isOpened) {
-      this.isOpened = true;
-
-      this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
-      this.setSize();
-
-      document.getElementById('contents')!.style.visibility = 'hidden';
-      document.getElementById('cke_editor')!.style.visibility = 'visible';
-
-      return new Promise<void>((resolve, reject) => {
-        try{
-          CKEDITOR.instances['editor'].setData(this.cardProp.data, {
-            callback: () => { resolve(); }
-          });
-        } catch(e){
-          reject();
-        }
-      });
+    if(this.isOpened){
+      return;
     }
-    else{
-      return Promise.resolve();
-    }
-  };
+
+    this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
+    this.setSize();
+    document.getElementById('contents')!.style.visibility = 'hidden';
+    document.getElementById('cke_editor')!.style.visibility = 'visible';
+
+    await this.setData();
+
+    this.isOpened = true;
+  }
 
   hideEditor = () => {
     this.isOpened = false;    
     document.getElementById('contents')!.style.visibility = 'visible';
     document.getElementById('cke_editor')!.style.visibility = 'hidden';
-  };
+  }
 
   startEdit = async () => {
-    if(this.isOpened) {
-      // Expand card to add toolbar.
-      const expandedHeight = this.cardProp.rect.height + this.toolbarHeight;
-      main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, expandedHeight);
-      setRenderOffsetHeight(-this.toolbarHeight);
-      this.setSize();
+    // Expand card to add toolbar.
+    const expandedHeight = this.cardProp.rect.height + this.toolbarHeight;
+    main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, expandedHeight);
+    setRenderOffsetHeight(-this.toolbarHeight);
+    this.setSize();
 
-      await this.waitUntilActivationComplete();
-      CKEDITOR.instances['editor'].focus();
-      if(this.editorType == 'Markup'){        
-        this.moveCursorToBottom();
-      }
+    await this.waitUntilActivationComplete();
+    CKEDITOR.instances['editor'].focus();
+    if(this.editorType == 'Markup') {
+      this.moveCursorToBottom();
     }
-  };
+  }
 
   endEdit = (): [boolean, string] => {
     let dataChanged = false;
@@ -179,13 +186,15 @@ export class CardEditor implements ICardEditor {
     main.setWindowSize(this.cardProp.id, this.cardProp.rect.width, this.cardProp.rect.height);
     setRenderOffsetHeight(0);
 
-    this.codeMode = false;
-    document.getElementById('codeBtn')!.style.color = '#000000';
-    CKEDITOR.instances['editor'].getSelection().removeAllRanges();
-    CKEDITOR.instances['editor'].setMode('wysiwyg', () => { });
+    
+    CKEDITOR.instances['editor'].getSelection()?.removeAllRanges();
+
+    if(this.codeMode){
+      this.endCodeMode();
+    }
 
     return [dataChanged, data];
-  };
+  }
 
 
   toggleCodeMode = () => {
@@ -203,7 +212,7 @@ export class CardEditor implements ICardEditor {
     document.getElementById('codeBtn')!.style.color = '#a0a0a0';
     CKEDITOR.instances['editor'].setMode('source', () => { });
     CKEDITOR.instances['editor'].focus();
-  };
+  }
 
   endCodeMode = async () => {
     this.codeMode = false;
@@ -212,14 +221,13 @@ export class CardEditor implements ICardEditor {
     await this.waitUntilActivationComplete();
     this.setColor(this.cardProp.style.backgroundColor, this.cardProp.style.titleColor);
     CKEDITOR.instances['editor'].focus();
-    this.moveCursorToBottom();
-  };
+  }
 
   setSize = (width: number = this.cardProp.rect.width - this.cardCssStyle.border.left - this.cardCssStyle.border.right,
     height: number = this.cardProp.rect.height + this.toolbarHeight - this.cardCssStyle.border.top - this.cardCssStyle.border.bottom - document.getElementById('titleBar')!.offsetHeight): void => {
     // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
     CKEDITOR.instances['editor'].resize(width, height);
-  };
+  }
 
   setColor = (backgroundColor: string, titleColor: string): void => {
     document.getElementById('cke_editor')!.style.borderTopColor
@@ -228,7 +236,7 @@ export class CardEditor implements ICardEditor {
       = document.getElementById('cke_1_bottom')!.style.borderTopColor
       = titleColor;
     (document.querySelector('#cke_1_contents .cke_wysiwyg_frame') as HTMLElement).style.backgroundColor = backgroundColor;
-  };
+  }
 
 }
 
