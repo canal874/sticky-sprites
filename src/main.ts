@@ -170,18 +170,26 @@ class Card {
 
   private focusListener = () => {
     if (this.surpressFocusEventOnce) {
+      logger.debug(`skip focus event listener ${this.id}`);
       this.surpressFocusEventOnce = false;
+      surpressGlobalFocusEvent = false;
+    }
+    else if (surpressGlobalFocusEvent) {
+      logger.debug(`focus event listener is surpressed ${this.id}`);
     }
     else {
+      logger.debug(`focus ${this.id}`);
       this.window.webContents.send('card-focused');
     }
   };
 
   private blurListener = () => {
     if (this.surpressBlurEventOnce) {
+      logger.debug(`skip blur event listener ${this.id}`);
       this.surpressBlurEventOnce = false;
     }
     else {
+      logger.debug(`blur ${this.id}`);
       this.window.webContents.send('card-blured');
     }
   };
@@ -273,22 +281,20 @@ export const setWindowSize = (id: string, width: number, height: number) => {
   card?.window.setSize(width, height);
 };
 
+let surpressGlobalFocusEvent = false;
+
 ipcMain.handle('blurAndFocus', async (event, id: string) => {
   const card = cards.get(id);
   if (card) {
+    console.debug(`blurAndFocus: ${id}`);
+    /**
+     * When a card is blurred, another card will be focused automatically by OS.
+     * Set surpressGlobalFocusEvent to surpress to focus another card.
+     */
+    surpressGlobalFocusEvent = true;
     card.surpressBlurEventOnce = true;
     card.window.blur();
     card.surpressFocusEventOnce = true;
     card.window.focus();
-  }
-});
-
-ipcMain.handle('focusAndBlur', async (event, id: string) => {
-  const card = cards.get(id);
-  if (card) {
-    card.surpressFocusEventOnce = true;
-    card.window.focus();
-    card.surpressBlurEventOnce = true;
-    card.window.blur();
   }
 });

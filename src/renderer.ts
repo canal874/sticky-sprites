@@ -390,7 +390,7 @@ const initializeIPCEvents = () => {
     close();
   });
 
-  ipcRenderer.on('card-focused', () => {
+  ipcRenderer.on('card-focused', async () => {
     console.debug('card-focused');
 
     document.getElementById('card')!.style.border = '3px solid red';

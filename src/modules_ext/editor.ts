@@ -110,7 +110,7 @@ export class CardEditor implements ICardEditor {
     // workaround start
     if (this.editorType == 'WYSYWIG') {
       // card is blured when showEditor is called.
-      await ipcRenderer.invoke('focusAndBlur', this.cardProp.id);
+      await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);
     }
     else if (this.editorType == 'Markup') {
       // card is focused when showEditor is called.
@@ -134,14 +134,6 @@ export class CardEditor implements ICardEditor {
   };
 
   showEditor = async (): Promise<void> => {
-    if (this.startEditorFirstTime) {
-      this.startEditorFirstTime = false;
-
-      console.log('ime start');
-      await this.imeWorkaround();
-      console.log('ime end');
-    }
-
     if (this.isOpened) {
       return;
     }
@@ -175,6 +167,10 @@ export class CardEditor implements ICardEditor {
   };
 
   startEdit = async () => {
+    if (this.startEditorFirstTime) {
+      this.startEditorFirstTime = false;
+      await this.imeWorkaround();
+    }
     // Expand card to add toolbar.
     const expandedHeight = this.cardProp.rect.height + this.toolbarHeight;
     main.setWindowSize(
