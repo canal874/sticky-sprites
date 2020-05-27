@@ -167,12 +167,6 @@ contextMenu({
   showInspectElement: false,
   append: () => [
     {
-      label: main.MESSAGE.white,
-      click: () => {
-        setAndSaveCardColor('#ffffff');
-      },
-    },
-    {
       label: main.MESSAGE.yellow,
       click: () => {
         setAndSaveCardColor('#ffffa0');
@@ -206,6 +200,12 @@ contextMenu({
       label: main.MESSAGE.purple,
       click: () => {
         setAndSaveCardColor('#ffd0ff');
+      },
+    },
+    {
+      label: main.MESSAGE.white,
+      click: () => {
+        setAndSaveCardColor('#ffffff');
       },
     },
     {
