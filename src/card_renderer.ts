@@ -89,7 +89,7 @@ const renderContentsSize = () => {
     'px';
 };
 
-const setCardColor = () => {
+const renderCardDecorator = () => {
   if (cardProp.status == CardStatus.Focused) {
     document.getElementById('card')!.style.border = '3px solid red';
   }
@@ -128,7 +128,7 @@ const setCardColor = () => {
   });
 };
 
-const setEditorColor = () => {
+const renderEditorColor = () => {
   let backgroundRgba = convertHexColorToRgba(
     cardProp.style.backgroundColor,
     cardProp.style.backgroundOpacity
@@ -149,16 +149,16 @@ export const render = (
   options: CardRenderOptions[] = [CardRenderOptions.All]
 ) => {
   for (let opt of options) {
-    if (opt == CardRenderOptions.Color || opt == CardRenderOptions.All)
-      setCardColor();
     if (opt == CardRenderOptions.TitleBar || opt == CardRenderOptions.All)
       renderTitleBar();
     if (opt == CardRenderOptions.ContentsData || opt == CardRenderOptions.All)
       renderContentsData();
     if (opt == CardRenderOptions.ContentsSize || opt == CardRenderOptions.All)
       renderContentsSize();
+    if (opt == CardRenderOptions.Color || opt == CardRenderOptions.All)
+      renderCardDecorator();
     if (opt == CardRenderOptions.EditorColor || opt == CardRenderOptions.All)
-      setEditorColor();
+      renderEditorColor();
     if (opt == CardRenderOptions.EditorSize || opt == CardRenderOptions.All)
       renderEditorSize();
   }
