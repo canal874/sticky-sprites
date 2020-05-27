@@ -6,8 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { remote } from 'electron';
-import { ipcRenderer } from 'electron';
+import { remote, ipcRenderer, webFrame } from 'electron';
 import { CardProp, CardPropSerializable } from './modules_common/card';
 
 import { ICardEditor, CardCssStyle } from './modules_common/types';
@@ -17,6 +16,7 @@ import {
   initCardRenderer,
   getRenderOffsetWidth,
   getRenderOffsetHeight,
+  setTitleMessage,
 } from './card_renderer';
 
 import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
@@ -76,12 +76,6 @@ const waitUnfinishedSaveTasks = () => {
 const close = async () => {
   await waitUnfinishedSaveTasks();
   window.close();
-};
-
-const setTitleMessage = (msg: string) => {
-  if (document.getElementById('titleMessage')) {
-    document.getElementById('titleMessage')!.innerHTML = msg;
-  }
 };
 
 /**

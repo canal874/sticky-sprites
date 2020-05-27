@@ -144,6 +144,12 @@ const renderEditorRect = () => {
   cardEditor.setSize();
 };
 
+export const setTitleMessage = (msg: string) => {
+  if (document.getElementById('titleMessage')) {
+    document.getElementById('titleMessage')!.innerHTML = msg;
+  }
+};
+
 export const render = (options: CardRenderOptions[] = ['All']) => {
   for (let opt of options) {
     if (opt == 'TitleBar' || opt == 'All') renderTitleBar();
