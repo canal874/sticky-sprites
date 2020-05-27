@@ -61,6 +61,11 @@ body > .card > .title > .title-btn{
   z-index: 30;
 }
 
+body > .card > .title > .title-btn > .title-btn-icon{
+  display: block;
+  margin-top: 1px;
+}
+
 body > .card > .title > .title-bar{
   text-align: right;
 }
