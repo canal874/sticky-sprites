@@ -8,11 +8,7 @@
 
 import { remote } from 'electron';
 import { ipcRenderer } from 'electron';
-import {
-  CardProp,
-  CardPropSerializable,
-  CardStatus,
-} from './modules_common/card';
+import { CardProp, CardPropSerializable } from './modules_common/card';
 
 import { ICardEditor, CardCssStyle } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
@@ -21,7 +17,6 @@ import {
   initCardRenderer,
   getRenderOffsetWidth,
   getRenderOffsetHeight,
-  CardRenderOptions,
 } from './card_renderer';
 
 import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
@@ -139,7 +134,7 @@ const setAndSaveCardColor = (
   cardProp.style.backgroundColor = bgColor;
   cardProp.style.titleColor = titleColor;
   cardProp.style.backgroundOpacity = backgroundOpacity;
-  render([CardRenderOptions.Color, CardRenderOptions.EditorColor]);
+  render(['Color', 'EditorColor']);
 
   saveData();
 };
@@ -256,7 +251,7 @@ const initializeUIEvents = () => {
           '" height="' +
           height +
           '">';
-        render([CardRenderOptions.ContentsData]);
+        render(['ContentsData']);
       };
       dropImg.src = file.path;
     }
@@ -289,7 +284,7 @@ const initializeUIEvents = () => {
       }
       const [dataChanged, data] = cardEditor.endEdit();
       cardProp.data = data;
-      render([CardRenderOptions.ContentsData, CardRenderOptions.ContentsSize]);
+      render(['ContentsData', 'ContentsSize']);
       if (dataChanged && cardProp.data != '') {
         saveData();
       }
@@ -398,8 +393,8 @@ const initializeIPCEvents = () => {
   ipcRenderer.on('card-focused', async () => {
     console.debug('card-focused');
 
-    cardProp.status = CardStatus.Focused;
-    render([CardRenderOptions.Color]);
+    cardProp.status = 'Focused';
+    render(['Color']);
 
     if (cardEditor.editorType == 'WYSYWIG') {
       cardEditor.startEdit();
@@ -409,8 +404,8 @@ const initializeIPCEvents = () => {
   ipcRenderer.on('card-blured', () => {
     console.debug('card-blured');
 
-    cardProp.status = CardStatus.Blured;
-    render([CardRenderOptions.Color]);
+    cardProp.status = 'Blured';
+    render(['Color']);
 
     if (cardEditor.isOpened) {
       if (cardEditor.editorType == 'Markup') {
@@ -419,10 +414,7 @@ const initializeIPCEvents = () => {
       const [dataChanged, data] = cardEditor.endEdit();
       if (dataChanged) {
         cardProp.data = data;
-        render([
-          CardRenderOptions.ContentsData,
-          CardRenderOptions.ContentsSize,
-        ]);
+        render(['ContentsData', 'ContentsSize']);
         saveData();
       }
     }
@@ -434,11 +426,7 @@ const initializeIPCEvents = () => {
       cardProp.rect.width = newBounds.width + getRenderOffsetWidth();
       cardProp.rect.height = newBounds.height + getRenderOffsetHeight();
 
-      render([
-        CardRenderOptions.TitleBar,
-        CardRenderOptions.ContentsSize,
-        CardRenderOptions.EditorSize,
-      ]);
+      render(['TitleBar', 'ContentsSize', 'EditorSize']);
 
       queueSaveCommand();
     }

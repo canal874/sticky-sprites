@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardProp, CardStatus } from './modules_common/card';
+import { CardProp } from './modules_common/card';
 import { CardCssStyle, ICardEditor } from './modules_common/types';
 import { convertHexColorToRgba } from './modules_common/utils';
 
@@ -40,15 +40,14 @@ export const initCardRenderer = (
   cardEditor = editor;
 };
 
-export enum CardRenderOptions {
-  All,
-  Color,
-  TitleBar,
-  ContentsData,
-  ContentsSize,
-  EditorColor,
-  EditorSize,
-}
+export type CardRenderOptions =
+  | 'All'
+  | 'Color'
+  | 'TitleBar'
+  | 'ContentsData'
+  | 'ContentsSize'
+  | 'EditorColor'
+  | 'EditorSize';
 
 const renderTitleBar = () => {
   const closeBtnLeft =
@@ -90,10 +89,10 @@ const renderContentsSize = () => {
 };
 
 const renderCardDecorator = () => {
-  if (cardProp.status == CardStatus.Focused) {
+  if (cardProp.status == 'Focused') {
     document.getElementById('card')!.style.border = '3px solid red';
   }
-  else if (cardProp.status == CardStatus.Blured) {
+  else if (cardProp.status == 'Blured') {
     document.getElementById('card')!.style.border = '3px solid transparent';
   }
 
@@ -101,10 +100,10 @@ const renderCardDecorator = () => {
 
   document.getElementById('title')!.style.visibility = 'visible';
   if (cardProp.style.backgroundOpacity == 0) {
-    if (cardProp.status == CardStatus.Focused) {
+    if (cardProp.status == 'Focused') {
       titleOpacity = 1.0;
     }
-    else if (cardProp.status == CardStatus.Blured) {
+    else if (cardProp.status == 'Blured') {
       document.getElementById('title')!.style.visibility = 'hidden';
       titleOpacity = 1.0;
     }
@@ -145,21 +144,13 @@ const renderEditorSize = () => {
   cardEditor.setSize();
 };
 
-export const render = (
-  options: CardRenderOptions[] = [CardRenderOptions.All]
-) => {
+export const render = (options: CardRenderOptions[] = ['All']) => {
   for (let opt of options) {
-    if (opt == CardRenderOptions.TitleBar || opt == CardRenderOptions.All)
-      renderTitleBar();
-    if (opt == CardRenderOptions.ContentsData || opt == CardRenderOptions.All)
-      renderContentsData();
-    if (opt == CardRenderOptions.ContentsSize || opt == CardRenderOptions.All)
-      renderContentsSize();
-    if (opt == CardRenderOptions.Color || opt == CardRenderOptions.All)
-      renderCardDecorator();
-    if (opt == CardRenderOptions.EditorColor || opt == CardRenderOptions.All)
-      renderEditorColor();
-    if (opt == CardRenderOptions.EditorSize || opt == CardRenderOptions.All)
-      renderEditorSize();
+    if (opt == 'TitleBar' || opt == 'All') renderTitleBar();
+    if (opt == 'ContentsData' || opt == 'All') renderContentsData();
+    if (opt == 'ContentsSize' || opt == 'All') renderContentsSize();
+    if (opt == 'Color' || opt == 'All') renderCardDecorator();
+    if (opt == 'EditorColor' || opt == 'All') renderEditorColor();
+    if (opt == 'EditorSize' || opt == 'All') renderEditorSize();
   }
 };

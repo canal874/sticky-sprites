@@ -14,7 +14,6 @@ import { CardProp } from '../modules_common/card';
 import { ICardEditor, CardCssStyle, EditorType } from '../modules_common/types';
 import {
   render,
-  CardRenderOptions,
   setRenderOffsetHeight,
 } from '../card_renderer';
 
@@ -137,7 +136,7 @@ export class CardEditor implements ICardEditor {
       return;
     }
 
-    render([CardRenderOptions.EditorSize]);
+    render(['EditorSize']);
 
     const contents = document.getElementById('contents');
     if (contents) {
@@ -164,7 +163,7 @@ export class CardEditor implements ICardEditor {
 
   startEdit = async () => {
     this.isEditing = true;
-    render([CardRenderOptions.EditorColor]);
+    render(['EditorColor']);
 
     if (this.startEditorFirstTime) {
       this.startEditorFirstTime = false;
@@ -204,7 +203,7 @@ export class CardEditor implements ICardEditor {
     setRenderOffsetHeight(0);
 
     // Reset editor color to card color
-    render([CardRenderOptions.EditorColor]);
+    render(['EditorColor']);
 
     CKEDITOR.instances['editor'].getSelection()?.removeAllRanges();
 
@@ -241,7 +240,7 @@ export class CardEditor implements ICardEditor {
     await this.waitUntilActivationComplete();
 
     // Reset editor color to card color
-    render([CardRenderOptions.EditorColor]);
+    render(['EditorColor']);
 
     CKEDITOR.instances['editor'].focus();
   };
