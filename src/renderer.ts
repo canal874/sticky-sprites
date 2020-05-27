@@ -8,7 +8,12 @@
 
 import { remote } from 'electron';
 import { ipcRenderer } from 'electron';
-import { CardProp, CardPropSerializable } from './modules_common/card';
+import {
+  CardProp,
+  CardPropSerializable,
+  CardStatus,
+} from './modules_common/card';
+
 import { ICardEditor, CardCssStyle } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
 import {
@@ -18,6 +23,7 @@ import {
   getRenderOffsetHeight,
   CardRenderOptions,
 } from './card_renderer';
+
 import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
 import { logger, getCurrentDate } from './modules_common/utils';
 
@@ -374,14 +380,10 @@ const initializeIPCEvents = () => {
       cardProp = CardProp.fromObject(_prop);
 
       initCardRenderer(cardProp, cardCssStyle, cardEditor);
-      render();
 
       cardEditor.setCard(cardProp);
 
-      if (cardProp.style.backgroundOpacity == 0) {
-        document.getElementById('title')!.style.visibility = 'hidden';
-      }
-      document.getElementById('card')!.style.visibility = 'visible';
+      render();
 
       if (cardEditor.editorType == 'WYSYWIG') {
         cardEditor.showEditor();
@@ -396,8 +398,8 @@ const initializeIPCEvents = () => {
   ipcRenderer.on('card-focused', async () => {
     console.debug('card-focused');
 
-    document.getElementById('card')!.style.border = '3px solid red';
-    document.getElementById('title')!.style.visibility = 'visible';
+    cardProp.status = CardStatus.Focused;
+    render([CardRenderOptions.Color]);
 
     if (cardEditor.editorType == 'WYSYWIG') {
       cardEditor.startEdit();
@@ -406,6 +408,9 @@ const initializeIPCEvents = () => {
 
   ipcRenderer.on('card-blured', () => {
     console.debug('card-blured');
+
+    cardProp.status = CardStatus.Blured;
+    render([CardRenderOptions.Color]);
 
     if (cardEditor.isOpened) {
       if (cardEditor.editorType == 'Markup') {
@@ -420,10 +425,6 @@ const initializeIPCEvents = () => {
         ]);
         saveData();
       }
-    }
-    document.getElementById('card')!.style.border = '3px solid transparent';
-    if (cardProp.style.backgroundOpacity == 0) {
-      document.getElementById('title')!.style.visibility = 'hidden';
     }
   });
 

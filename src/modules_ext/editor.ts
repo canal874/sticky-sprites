@@ -174,6 +174,10 @@ export class CardEditor implements ICardEditor {
     );
     setRenderOffsetHeight(-this.toolbarHeight);
 
+    if (this.cardProp.style.backgroundOpacity == 0) {
+      this.setColor('rgba(255, 255, 255, 1.0)', 'rgba(204, 204, 204, 1.0)');
+    }
+
     await this.waitUntilActivationComplete();
     CKEDITOR.instances['editor'].focus();
     if (this.editorType == 'Markup') {
@@ -195,6 +199,9 @@ export class CardEditor implements ICardEditor {
       this.cardProp.rect.height
     );
     setRenderOffsetHeight(0);
+
+    // Reset editor color to card color
+    render([CardRenderOptions.EditorColor]);
 
     CKEDITOR.instances['editor'].getSelection()?.removeAllRanges();
 
@@ -220,6 +227,8 @@ export class CardEditor implements ICardEditor {
     document.getElementById('codeBtn')!.style.color = '#a0a0a0';
     CKEDITOR.instances['editor'].setMode('source', () => {});
     CKEDITOR.instances['editor'].focus();
+
+    // In code mode, editor background color is changed to white.
   };
 
   endCodeMode = async () => {
@@ -228,6 +237,7 @@ export class CardEditor implements ICardEditor {
     CKEDITOR.instances['editor'].setMode('wysiwyg', () => {});
     await this.waitUntilActivationComplete();
 
+    // Reset editor color to card color
     render([CardRenderOptions.EditorColor]);
 
     CKEDITOR.instances['editor'].focus();

@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardProp } from './modules_common/card';
+import { CardProp, CardStatus } from './modules_common/card';
 import { CardCssStyle, ICardEditor } from './modules_common/types';
 import { convertHexColorToRgba } from './modules_common/utils';
 
@@ -90,6 +90,25 @@ const renderContentsSize = () => {
 };
 
 const setCardColor = () => {
+  if (cardProp.status == CardStatus.Focused) {
+    document.getElementById('card')!.style.border = '3px solid red';
+  }
+  else if (cardProp.status == CardStatus.Blured) {
+    document.getElementById('card')!.style.border = '3px solid transparent';
+  }
+
+  let titleOpacity = cardProp.style.backgroundOpacity;
+  if (cardProp.style.backgroundOpacity == 0) {
+    if (cardProp.status == CardStatus.Focused) {
+      document.getElementById('title')!.style.visibility = 'visible';
+      titleOpacity = 1.0;
+    }
+    else if (cardProp.status == CardStatus.Blured) {
+      document.getElementById('title')!.style.visibility = 'hidden';
+      titleOpacity = 1.0;
+    }
+  }
+
   // Set card properties
   let backgroundRgba = convertHexColorToRgba(
     cardProp.style.backgroundColor,
@@ -99,9 +118,10 @@ const setCardColor = () => {
 
   let titleRgba = convertHexColorToRgba(
     cardProp.style.titleColor,
-    cardProp.style.backgroundOpacity,
+    titleOpacity,
     0.8
   );
+
   Array.from(document.getElementsByClassName('title-color')).forEach(node => {
     (node as HTMLElement).style.backgroundColor = titleRgba;
   });
