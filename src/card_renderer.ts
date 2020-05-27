@@ -42,12 +42,12 @@ export const initCardRenderer = (
 
 export type CardRenderOptions =
   | 'All'
-  | 'Color'
+  | 'Decoration'
   | 'TitleBar'
   | 'ContentsData'
-  | 'ContentsSize'
+  | 'ContentsRect'
   | 'EditorColor'
-  | 'EditorSize';
+  | 'EditorRect';
 
 const renderTitleBar = () => {
   const closeBtnLeft =
@@ -68,7 +68,7 @@ const renderContentsData = () => {
   document.getElementById('contents')!.innerHTML = cardProp.data;
 };
 
-const renderContentsSize = () => {
+const renderContentsRect = () => {
   // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
   document.getElementById('contents')!.style.width =
     cardProp.rect.width -
@@ -88,7 +88,7 @@ const renderContentsSize = () => {
     'px';
 };
 
-const renderCardDecorator = () => {
+const renderCardDecoration = () => {
   if (cardProp.status == 'Focused') {
     document.getElementById('card')!.style.border = '3px solid red';
   }
@@ -140,7 +140,7 @@ const renderEditorColor = () => {
   cardEditor.setColor(backgroundRgba, darkerRgba);
 };
 
-const renderEditorSize = () => {
+const renderEditorRect = () => {
   cardEditor.setSize();
 };
 
@@ -148,9 +148,9 @@ export const render = (options: CardRenderOptions[] = ['All']) => {
   for (let opt of options) {
     if (opt == 'TitleBar' || opt == 'All') renderTitleBar();
     if (opt == 'ContentsData' || opt == 'All') renderContentsData();
-    if (opt == 'ContentsSize' || opt == 'All') renderContentsSize();
-    if (opt == 'Color' || opt == 'All') renderCardDecorator();
+    if (opt == 'ContentsRect' || opt == 'All') renderContentsRect();
+    if (opt == 'Decoration' || opt == 'All') renderCardDecoration();
     if (opt == 'EditorColor' || opt == 'All') renderEditorColor();
-    if (opt == 'EditorSize' || opt == 'All') renderEditorSize();
+    if (opt == 'EditorRect' || opt == 'All') renderEditorRect();
   }
 };

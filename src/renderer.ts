@@ -134,7 +134,7 @@ const setAndSaveCardColor = (
   cardProp.style.backgroundColor = bgColor;
   cardProp.style.titleColor = titleColor;
   cardProp.style.backgroundOpacity = backgroundOpacity;
-  render(['Color', 'EditorColor']);
+  render(['Decoration', 'EditorColor']);
 
   saveData();
 };
@@ -284,7 +284,7 @@ const initializeUIEvents = () => {
       }
       const [dataChanged, data] = cardEditor.endEdit();
       cardProp.data = data;
-      render(['ContentsData', 'ContentsSize']);
+      render(['ContentsData', 'ContentsRect']);
       if (dataChanged && cardProp.data != '') {
         saveData();
       }
@@ -394,7 +394,7 @@ const initializeIPCEvents = () => {
     console.debug('card-focused');
 
     cardProp.status = 'Focused';
-    render(['Color']);
+    render(['Decoration']);
 
     if (cardEditor.editorType == 'WYSYWIG') {
       cardEditor.startEdit();
@@ -405,7 +405,7 @@ const initializeIPCEvents = () => {
     console.debug('card-blured');
 
     cardProp.status = 'Blured';
-    render(['Color']);
+    render(['Decoration']);
 
     if (cardEditor.isOpened) {
       if (cardEditor.editorType == 'Markup') {
@@ -414,7 +414,7 @@ const initializeIPCEvents = () => {
       const [dataChanged, data] = cardEditor.endEdit();
       if (dataChanged) {
         cardProp.data = data;
-        render(['ContentsData', 'ContentsSize']);
+        render(['ContentsData', 'ContentsRect']);
         saveData();
       }
     }
@@ -426,7 +426,7 @@ const initializeIPCEvents = () => {
       cardProp.rect.width = newBounds.width + getRenderOffsetWidth();
       cardProp.rect.height = newBounds.height + getRenderOffsetHeight();
 
-      render(['TitleBar', 'ContentsSize', 'EditorSize']);
+      render(['TitleBar', 'ContentsRect', 'EditorRect']);
 
       queueSaveCommand();
     }
