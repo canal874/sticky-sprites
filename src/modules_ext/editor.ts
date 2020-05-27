@@ -142,6 +142,10 @@ export class CardEditor implements ICardEditor {
     const ckeEditor = document.getElementById('cke_editor');
     if (ckeEditor) {
       ckeEditor.style.visibility = 'visible';
+      const toolbar = document.getElementById('cke_1_bottom');
+      if (toolbar) {
+        toolbar.style.visibility = 'hidden';
+      }
     }
     else {
       throw 'cke_editor does not exist.';
@@ -175,6 +179,11 @@ export class CardEditor implements ICardEditor {
     );
     setRenderOffsetHeight(-this.toolbarHeight);
 
+    const toolbar = document.getElementById('cke_1_bottom');
+    if (toolbar) {
+      toolbar.style.visibility = 'visible';
+    }
+
     await this.waitUntilActivationComplete();
     CKEDITOR.instances['editor'].focus();
     if (this.editorType == 'Markup') {
@@ -201,6 +210,11 @@ export class CardEditor implements ICardEditor {
 
     // Reset editor color to card color
     render(['EditorColor']);
+
+    const toolbar = document.getElementById('cke_1_bottom');
+    if (toolbar) {
+      toolbar.style.visibility = 'hidden';
+    }
 
     CKEDITOR.instances['editor'].getSelection()?.removeAllRanges();
 
@@ -262,15 +276,15 @@ export class CardEditor implements ICardEditor {
       darkerRgba = 'rgba(204, 204, 204, 1.0)';
     }
 
-    document.getElementById(
-      'cke_editor'
-    )!.style.borderTopColor = document.getElementById(
-      'cke_1_bottom'
-    )!.style.backgroundColor = document.getElementById(
-      'cke_1_bottom'
-    )!.style.borderBottomColor = document.getElementById(
-      'cke_1_bottom'
-    )!.style.borderTopColor = darkerRgba;
+    const editor = document.getElementById('cke_editor');
+    if (editor) {
+      editor.style.borderTopColor = darkerRgba;
+    }
+    const toolbar = document.getElementById('cke_1_bottom');
+    if (toolbar) {
+      toolbar.style.backgroundColor = toolbar.style.borderBottomColor = toolbar.style.borderTopColor = darkerRgba;
+    }
+
     (document.querySelector(
       '#cke_1_contents .cke_wysiwyg_frame'
     ) as HTMLElement).style.backgroundColor = backgroundRgba;
