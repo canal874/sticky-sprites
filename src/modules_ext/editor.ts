@@ -12,7 +12,10 @@
 
 import { CardProp } from '../modules_common/card';
 import { ICardEditor, CardCssStyle, EditorType } from '../modules_common/types';
-import { render, setRenderOffsetHeight } from '../card_renderer';
+import {
+  render,
+  setRenderOffsetHeight,
+} from '../modules_renderer/card_renderer';
 
 import { remote, ipcRenderer } from 'electron';
 

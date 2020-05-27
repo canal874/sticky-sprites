@@ -6,9 +6,9 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardProp } from './modules_common/card';
-import { CardCssStyle, ICardEditor } from './modules_common/types';
-import { convertHexColorToRgba } from './modules_common/utils';
+import { CardProp } from '../modules_common/card';
+import { CardCssStyle, ICardEditor } from '../modules_common/types';
+import { convertHexColorToRgba } from '../modules_common/utils';
 
 let cardProp: CardProp;
 let cardCssStyle: CardCssStyle;
