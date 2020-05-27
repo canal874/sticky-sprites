@@ -72,6 +72,8 @@ export class CardEditor implements ICardEditor {
 
   public isOpened = false;
 
+  private isEditing = false;
+
   loadUI = (_cardCssStyle: CardCssStyle): Promise<void> => {
     this.cardCssStyle = _cardCssStyle;
     return new Promise<void>(resolve => {
@@ -161,6 +163,9 @@ export class CardEditor implements ICardEditor {
   };
 
   startEdit = async () => {
+    this.isEditing = true;
+    render([CardRenderOptions.EditorColor]);
+
     if (this.startEditorFirstTime) {
       this.startEditorFirstTime = false;
       await this.imeWorkaround();
@@ -174,10 +179,6 @@ export class CardEditor implements ICardEditor {
     );
     setRenderOffsetHeight(-this.toolbarHeight);
 
-    if (this.cardProp.style.backgroundOpacity == 0) {
-      this.setColor('rgba(255, 255, 255, 1.0)', 'rgba(204, 204, 204, 1.0)');
-    }
-
     await this.waitUntilActivationComplete();
     CKEDITOR.instances['editor'].focus();
     if (this.editorType == 'Markup') {
@@ -186,6 +187,8 @@ export class CardEditor implements ICardEditor {
   };
 
   endEdit = (): [boolean, string] => {
+    this.isEditing = false;
+
     let dataChanged = false;
     // Save data to CardProp
     const data = CKEDITOR.instances['editor'].getData();
@@ -258,6 +261,11 @@ export class CardEditor implements ICardEditor {
   };
 
   setColor = (backgroundRgba: string, darkerRgba: string): void => {
+    if (this.cardProp.style.backgroundOpacity == 0 && this.isEditing) {
+      backgroundRgba = 'rgba(255, 255, 255, 1.0)';
+      darkerRgba = 'rgba(204, 204, 204, 1.0)';
+    }
+
     document.getElementById(
       'cke_editor'
     )!.style.borderTopColor = document.getElementById(
