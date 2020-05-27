@@ -34,7 +34,7 @@ export interface ICardEditor {
   endCodeMode(): void;
 
   setSize(width?: number, height?: number): void;
-  setColor(backgroundColor: string, titleColor: string): void;
+  setColor(backgroundRgba: string, darkerRgba: string): void;
 }
 
 export type CardCssStyle = {

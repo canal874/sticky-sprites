@@ -12,8 +12,14 @@
 
 import { CardProp } from '../modules_common/card';
 import { ICardEditor, CardCssStyle, EditorType } from '../modules_common/types';
-import { setRenderOffsetHeight } from '../card_renderer';
+import {
+  render,
+  CardRenderOptions,
+  setRenderOffsetHeight,
+} from '../card_renderer';
+
 import { remote, ipcRenderer } from 'electron';
+
 // import { sleep, logger } from '../modules_common/utils';
 
 const main = remote.require('./main');
@@ -129,11 +135,8 @@ export class CardEditor implements ICardEditor {
       return;
     }
 
-    this.setColor(
-      this.cardProp.style.backgroundColor,
-      this.cardProp.style.titleColor
-    );
-    this.setSize();
+    render([CardRenderOptions.EditorSize]);
+
     const contents = document.getElementById('contents');
     if (contents) {
       contents.style.visibility = 'hidden';
@@ -170,7 +173,8 @@ export class CardEditor implements ICardEditor {
       expandedHeight
     );
     setRenderOffsetHeight(-this.toolbarHeight);
-    this.setSize();
+
+    render([CardRenderOptions.EditorSize]);
 
     await this.waitUntilActivationComplete();
     CKEDITOR.instances['editor'].focus();
@@ -225,10 +229,9 @@ export class CardEditor implements ICardEditor {
     document.getElementById('codeBtn')!.style.color = '#000000';
     CKEDITOR.instances['editor'].setMode('wysiwyg', () => {});
     await this.waitUntilActivationComplete();
-    this.setColor(
-      this.cardProp.style.backgroundColor,
-      this.cardProp.style.titleColor
-    );
+
+    render([CardRenderOptions.EditorColor]);
+
     CKEDITOR.instances['editor'].focus();
   };
 
@@ -246,7 +249,7 @@ export class CardEditor implements ICardEditor {
     CKEDITOR.instances['editor'].resize(width, height);
   };
 
-  setColor = (backgroundColor: string, titleColor: string): void => {
+  setColor = (backgroundRgba: string, darkerRgba: string): void => {
     document.getElementById(
       'cke_editor'
     )!.style.borderTopColor = document.getElementById(
@@ -255,9 +258,9 @@ export class CardEditor implements ICardEditor {
       'cke_1_bottom'
     )!.style.borderBottomColor = document.getElementById(
       'cke_1_bottom'
-    )!.style.borderTopColor = titleColor;
+    )!.style.borderTopColor = darkerRgba;
     (document.querySelector(
       '#cke_1_contents .cke_wysiwyg_frame'
-    ) as HTMLElement).style.backgroundColor = backgroundColor;
+    ) as HTMLElement).style.backgroundColor = backgroundRgba;
   };
 }

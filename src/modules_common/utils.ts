@@ -9,9 +9,6 @@
 import log4js from 'log4js';
 import moment from 'moment';
 
-/**
- * logger
- */
 export const logger = log4js.getLogger();
 logger.level = 'all';
 //logger.level = 'error';
@@ -21,3 +18,18 @@ export const sleep: (msec: number) => Promise<void> = (msec: number) =>
 
 export const getCurrentDate: () => string = () =>
   moment.utc().format('YYYY-MM-DD HH:mm:ss');
+
+export const convertHexColorToRgba = (
+  colorHEX: string,
+  opacity: number = 1.0,
+  darkRate: number = 1.0
+): string => {
+  colorHEX.match(/#(\w\w)(\w\w)(\w\w)/);
+  const red = Math.floor(parseInt(RegExp.$1, 16) * darkRate);
+  const green = Math.floor(parseInt(RegExp.$2, 16) * darkRate);
+  const blue = Math.floor(parseInt(RegExp.$3, 16) * darkRate);
+
+  const rgba = 'rgba(' + red + ',' + green + ',' + blue + ',' + opacity + ')';
+
+  return rgba;
+};

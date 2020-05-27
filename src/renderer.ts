@@ -122,15 +122,18 @@ const saveData = () => {
   execSaveTask();
 };
 
-const setAndSaveCardColor = (bgColor: string, bgOpacity: number = 1.0) => {
+const setAndSaveCardColor = (
+  bgColor: string,
+  titleColor?: string,
+  backgroundOpacity: number = 1.0
+) => {
+  if (titleColor === undefined) {
+    titleColor = bgColor;
+  }
   cardProp.style.backgroundColor = bgColor;
-  cardProp.style.backgroundOpacity = bgOpacity;
-  render([CardRenderOptions.Color]);
-
-  cardEditor.setColor(
-    cardProp.style.backgroundColor,
-    cardProp.style.titleColor
-  );
+  cardProp.style.titleColor = titleColor;
+  cardProp.style.backgroundOpacity = backgroundOpacity;
+  render([CardRenderOptions.Color, CardRenderOptions.EditorColor]);
 
   saveData();
 };
@@ -208,7 +211,7 @@ contextMenu({
     {
       label: main.MESSAGE.transparent,
       click: () => {
-        setAndSaveCardColor('#ffffff', 0.0);
+        setAndSaveCardColor('#ffffff', '#ffffff', 0.0);
       },
     },
   ],

@@ -8,6 +8,7 @@
 
 import { CardProp } from './modules_common/card';
 import { CardCssStyle, ICardEditor } from './modules_common/types';
+import { convertHexColorToRgba } from './modules_common/utils';
 
 let cardProp: CardProp;
 let cardCssStyle: CardCssStyle;
@@ -45,6 +46,7 @@ export enum CardRenderOptions {
   TitleBar,
   ContentsData,
   ContentsSize,
+  EditorColor,
   EditorSize,
 }
 
@@ -89,42 +91,33 @@ const renderContentsSize = () => {
 
 const setCardColor = () => {
   // Set card properties
-  // cardColor : #HEX (e.g. #ff00ff)
-  // cardColor : 0.0-1.0
+  let backgroundRgba = convertHexColorToRgba(
+    cardProp.style.backgroundColor,
+    cardProp.style.backgroundOpacity
+  );
+  document.getElementById('contents')!.style.backgroundColor = backgroundRgba;
 
-  let scale = 0.8;
-  cardProp.style.backgroundColor.match(/#(\w\w)(\w\w)(\w\w)/);
-  let red = parseInt(RegExp.$1, 16);
-  let green = parseInt(RegExp.$2, 16);
-  let blue = parseInt(RegExp.$3, 16);
-  document.getElementById('contents')!.style.backgroundColor =
-    'rgba(' +
-    red +
-    ',' +
-    green +
-    ',' +
-    blue +
-    ',' +
-    cardProp.style.backgroundOpacity +
-    ')';
-
-  let r = Math.floor(red * scale).toString(16);
-  if (r.length == 1) {
-    r = '0' + r;
-  }
-  let g = Math.floor(green * scale).toString(16);
-  if (g.length == 1) {
-    g = '0' + g;
-  }
-  let b = Math.floor(blue * scale).toString(16);
-  if (b.length == 1) {
-    b = '0' + b;
-  }
-  cardProp.style.titleColor = '#' + r + g + b;
-
+  let titleRgba = convertHexColorToRgba(
+    cardProp.style.titleColor,
+    cardProp.style.backgroundOpacity,
+    0.8
+  );
   Array.from(document.getElementsByClassName('title-color')).forEach(node => {
-    (node as HTMLElement).style.backgroundColor = cardProp.style.titleColor;
+    (node as HTMLElement).style.backgroundColor = titleRgba;
   });
+};
+
+const setEditorColor = () => {
+  let backgroundRgba = convertHexColorToRgba(
+    cardProp.style.backgroundColor,
+    cardProp.style.backgroundOpacity
+  );
+  let darkerRgba = convertHexColorToRgba(
+    cardProp.style.titleColor,
+    cardProp.style.backgroundOpacity,
+    0.8
+  );
+  cardEditor.setColor(backgroundRgba, darkerRgba);
 };
 
 const renderEditorSize = () => {
@@ -143,6 +136,8 @@ export const render = (
       renderContentsData();
     if (opt == CardRenderOptions.ContentsSize || opt == CardRenderOptions.All)
       renderContentsSize();
+    if (opt == CardRenderOptions.EditorColor || opt == CardRenderOptions.All)
+      setEditorColor();
     if (opt == CardRenderOptions.EditorSize || opt == CardRenderOptions.All)
       renderEditorSize();
   }
