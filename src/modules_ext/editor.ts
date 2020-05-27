@@ -174,8 +174,6 @@ export class CardEditor implements ICardEditor {
     );
     setRenderOffsetHeight(-this.toolbarHeight);
 
-    render([CardRenderOptions.EditorSize]);
-
     await this.waitUntilActivationComplete();
     CKEDITOR.instances['editor'].focus();
     if (this.editorType == 'Markup') {
