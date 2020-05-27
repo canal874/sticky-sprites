@@ -1,8 +1,8 @@
 # Media Stickies
 A desktop gadget platform written by Electron.
-You can write or paste any HTML on you desktop as a gadget.
+You can write or paste any HTML on your desktop as a multimedia card.
 
-This looks like sticky notes but accepts any HTML and can have a transparent background.
+It looks like a sticky note but accepts any HTML and can have a transparent background.
 
 # Run
 
@@ -21,24 +21,24 @@ Type 'npm run make' and you can find a installer which name is media-stickies-x.
 
 2 editor types are available.
 
-## WYSIWYG
+## WYSIWYG Editor
 
 WYSIWYG editor has only one common mode for viewing and editing.
-You can edit rich text directly on a sticky.
+You can edit rich text directly on a card.
 
-* HTML is rendered on a WYSIWYG editor.
+* HTML contents is rendered in a WYSIWYG editor.
 * Text can be selected when a card is focused.
 * An editor is always shown.
 * An editor toobar is shown only when a card is focused.
 
-## Markup
+## Markup Editor
 
-Markup editor has two mode for viewing or editing.
-You can edit markuped text on a built-in editor and view rendered HTML on a sticky.
+Markup editor has two modes for viewing or editing.
+You can edit markuped text on a built-in editor and view rendered HTML on a card.
 
-* HTML is rendered on &lt;div id='contents'&gt;
+* HTML contents is rendered in &lt;div id='contents'&gt;
 * Text can be selected when a card is focused.
-* An editor and its toolbar are shown only when #contents is clicked.
+* An editor and its toolbar are shown only when &lt;div id='contents'&gt; is clicked.
 
 ## Event Trigger
 
