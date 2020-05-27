@@ -8,34 +8,14 @@ This looks like sticky notes but accepts any HTML and can have a transparent bac
 
 Type 'npm run compile-clean' on the project root directory.
 
-'compile-clean' copies required files from html/ to dist/ and starts app. 
+'compile-clean' copies required files from html/ and 3rdParty/ to dist/ and compile .ts. 
+
 After that you can type 'npm start' to start app.
 
 
 # Build installer
 
 Type 'npm run make' and you can find a installer which name is media-stickies-x.x.x.Setup.exe under out\make\squirrels.windows\x64\ (if you use Windows).
-
-# Options
-
-Set environment variables to change runtime options.
-
-(Linux shell) VARIABLE_NAME=VALUE npm start
-
-(Windows command prompt) set VARIABLE_NAME=VALUE & npm start
-
-(Windows PowerShell）$env:VARIABLE_NAME="VALUE"; npm start
-
-## Variables
-
-### NODE_CARDDIR
-
-PATH to the place where cards are saved.
-
-Default value is ./cards
-
-Welcome to the media-stickies wiki!
-
 
 # Editor Type
 
