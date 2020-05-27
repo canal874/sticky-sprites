@@ -110,7 +110,7 @@ body > .card > .contents{
  * for CKEditor
  */ 
 
- body > #card > .cke_screen_reader_only{
+body > #card > .cke_screen_reader_only{
   display: none;
 }
 
