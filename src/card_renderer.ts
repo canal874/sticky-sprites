@@ -98,9 +98,10 @@ const setCardColor = () => {
   }
 
   let titleOpacity = cardProp.style.backgroundOpacity;
+
+  document.getElementById('title')!.style.visibility = 'visible';
   if (cardProp.style.backgroundOpacity == 0) {
     if (cardProp.status == CardStatus.Focused) {
-      document.getElementById('title')!.style.visibility = 'visible';
       titleOpacity = 1.0;
     }
     else if (cardProp.status == CardStatus.Blured) {
