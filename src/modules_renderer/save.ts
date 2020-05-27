@@ -90,4 +90,3 @@ export const saveData = (cardProp: CardProp) => {
   // Here, current length of unfinishedSaveTasks is 1 or 2.
   execSaveTask();
 };
-
