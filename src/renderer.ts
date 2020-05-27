@@ -17,7 +17,7 @@ import {
   getRenderOffsetWidth,
   getRenderOffsetHeight,
   setTitleMessage,
-} from './card_renderer';
+} from './renderer_render_card';
 
 import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
 import { logger, getCurrentDate } from './modules_common/utils';
