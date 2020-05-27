@@ -285,8 +285,11 @@ export class CardEditor implements ICardEditor {
       toolbar.style.backgroundColor = toolbar.style.borderBottomColor = toolbar.style.borderTopColor = darkerRgba;
     }
 
-    (document.querySelector(
+    const contents = document.querySelector(
       '#cke_1_contents .cke_wysiwyg_frame'
-    ) as HTMLElement).style.backgroundColor = backgroundRgba;
+    ) as HTMLElement;
+    if (contents) {
+      contents.style.backgroundColor = backgroundRgba;
+    }
   };
 }
