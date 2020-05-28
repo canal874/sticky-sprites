@@ -17,6 +17,12 @@ After that you can type 'npm start' to start app.
 
 Type 'npm run make' and you can find a installer which name is media-stickies-x.x.x.Setup.exe under out\make\squirrels.windows\x64\ (if you use Windows).
 
+Note for version 1.0.10 or less: Existing card data is overwritten when install.
+
+Card data is saved under 
+
+C:\Users\%USERNAME%\AppData\Local\media_stickies\app-1.0.9\cards\
+
 # Editor Type
 
 2 editor types are available.
