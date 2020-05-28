@@ -21,7 +21,7 @@ export interface ICardEditor {
   readonly hasCodeMode: boolean;
   isOpened: boolean;
 
-  loadUI(cardCssStyle: CardCssStyle): Promise<void>; // A Promise resolves when required initialiation is finished.
+  loadUI(cardCssStyle: CardCssStyle): Promise<void>; // A Promise resolves when required initialization is finished.
   setCard(prop: CardProp): void; // Loading a card after loadUI().
 
   showEditor(): Promise<void>;
@@ -52,4 +52,4 @@ export type CardCssStyle = {
   };
 };
 
-export type EditorType = 'WYSYWIG' | 'Markup';
+export type EditorType = 'WYSIWYG' | 'Markup';

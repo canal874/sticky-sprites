@@ -64,7 +64,7 @@ export class CardEditor implements ICardEditor {
   /**
    * Public
    */
-  public editorType: EditorType = 'WYSYWIG'; // CKEditor should be WYSIWYG Editor Type
+  public editorType: EditorType = 'WYSIWYG'; // CKEditor should be WYSIWYG Editor Type
   // public editorType: EditorType = 'Markup'; // for testing Markup Editor Type
 
   public hasCodeMode = true;
@@ -110,8 +110,8 @@ export class CardEditor implements ICardEditor {
   private imeWorkaround = async (): Promise<void> => {
     /**
      * This is workaround for Japanese IME & CKEditor on Windows.
-     * IME window is unintentionally opened only at the first time of inputing Japanese.
-     * Expected behavior is that IME aloways work inline on CKEditor.
+     * IME window is unintentionally opened only at the first time of inputting Japanese.
+     * Expected behavior is that IME always work inline on CKEditor.
      * A silly workaround is to blur and focus this browser window.
      */
     await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);

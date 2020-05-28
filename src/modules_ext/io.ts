@@ -120,7 +120,7 @@ class CardIOClass implements ICardIO {
     return new Promise((resolve, reject) => {
       logger.debug('Saving card...: ' + JSON.stringify(prop.toObject()));
 
-      // In PouchDB, _id must be used insted of id in document.
+      // In PouchDB, _id must be used instead of id in document.
       // Convert class to Object to serialize.
       let propObj = Object.assign({ _id: prop.id, _rev: '' }, prop.toObject());
 
@@ -154,5 +154,5 @@ class CardIOClass implements ICardIO {
 
 // Singleton.
 // Must export const CardIO.
-// CardIO is an instance of a class that implements ICardIO intercface.
+// CardIO is an instance of a class that implements ICardIO interface.
 export const CardIO = new CardIOClass();

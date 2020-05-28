@@ -46,8 +46,8 @@ class Card {
   public prop!: CardProp; // ! is Definite assignment assertion
   public window: BrowserWindow;
 
-  public surpressFocusEventOnce = false;
-  public surpressBlurEventOnce = false;
+  public suppressFocusEventOnce = false;
+  public suppressBlurEventOnce = false;
 
   constructor (public id: string = '') {
     let loadOrCreateCardData = this.loadCardData;
@@ -86,12 +86,12 @@ class Card {
     // will-resize is only emitted when the window is being resized manually.
     // Resizing the window with setBounds/setSize will not emit this event.
     this.window.on('will-resize', (event, newBounds) => {
-      this.window.webContents.send('resize-byhand', newBounds);
+      this.window.webContents.send('resize-by-hand', newBounds);
     });
 
     // Moved by hand
     this.window.on('will-move', (event, newBounds) => {
-      this.window.webContents.send('move-byhand', newBounds);
+      this.window.webContents.send('move-by-hand', newBounds);
     });
 
     this.window.on('closed', () => {
@@ -169,13 +169,13 @@ class Card {
   };
 
   private focusListener = () => {
-    if (this.surpressFocusEventOnce) {
+    if (this.suppressFocusEventOnce) {
       logger.debug(`skip focus event listener ${this.id}`);
-      this.surpressFocusEventOnce = false;
-      surpressGlobalFocusEvent = false;
+      this.suppressFocusEventOnce = false;
+      suppressGlobalFocusEvent = false;
     }
-    else if (surpressGlobalFocusEvent) {
-      logger.debug(`focus event listener is surpressed ${this.id}`);
+    else if (suppressGlobalFocusEvent) {
+      logger.debug(`focus event listener is suppressed ${this.id}`);
     }
     else {
       logger.debug(`focus ${this.id}`);
@@ -184,13 +184,13 @@ class Card {
   };
 
   private blurListener = () => {
-    if (this.surpressBlurEventOnce) {
+    if (this.suppressBlurEventOnce) {
       logger.debug(`skip blur event listener ${this.id}`);
-      this.surpressBlurEventOnce = false;
+      this.suppressBlurEventOnce = false;
     }
     else {
       logger.debug(`blur ${this.id}`);
-      this.window.webContents.send('card-blured');
+      this.window.webContents.send('card-blurred');
     }
   };
 }
@@ -281,7 +281,7 @@ export const setWindowSize = (id: string, width: number, height: number) => {
   card?.window.setSize(width, height);
 };
 
-let surpressGlobalFocusEvent = false;
+let suppressGlobalFocusEvent = false;
 
 ipcMain.handle('blurAndFocus', async (event, id: string) => {
   const card = cards.get(id);
@@ -289,12 +289,12 @@ ipcMain.handle('blurAndFocus', async (event, id: string) => {
     console.debug(`blurAndFocus: ${id}`);
     /**
      * When a card is blurred, another card will be focused automatically by OS.
-     * Set surpressGlobalFocusEvent to surpress to focus another card.
+     * Set suppressGlobalFocusEvent to suppress to focus another card.
      */
-    surpressGlobalFocusEvent = true;
-    card.surpressBlurEventOnce = true;
+    suppressGlobalFocusEvent = true;
+    card.suppressBlurEventOnce = true;
     card.window.blur();
-    card.surpressFocusEventOnce = true;
+    card.suppressFocusEventOnce = true;
     card.window.focus();
   }
 });

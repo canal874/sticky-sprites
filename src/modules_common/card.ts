@@ -31,7 +31,7 @@ export type CardDate = {
 // Each of them must have unique name to be able to use as a key when serialize.
 export type CardPropSerializable = CardBase & Rectangle & CardStyle & CardDate;
 
-export type CardStatus = 'Focused' | 'Blured';
+export type CardStatus = 'Focused' | 'Blurred';
 
 export class CardProp implements CardBase {
   constructor (
@@ -47,7 +47,7 @@ export class CardProp implements CardBase {
       createdDate: getCurrentDate(),
       modifiedDate: getCurrentDate(),
     },
-    public status: CardStatus = 'Blured'
+    public status: CardStatus = 'Blurred'
   ) {}
 
   public toObject = (): CardPropSerializable => {

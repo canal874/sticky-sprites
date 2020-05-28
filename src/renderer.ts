@@ -237,8 +237,8 @@ const initializeUIEvents = () => {
   });
 };
 
-const onloaded = async () => {
-  window.removeEventListener('load', onloaded, false);
+const onload = async () => {
+  window.removeEventListener('load', onload, false);
 
   cardCssStyle = {
     padding: {
@@ -295,7 +295,7 @@ const initializeIPCEvents = () => {
 
       render();
 
-      if (cardEditor.editorType == 'WYSYWIG') {
+      if (cardEditor.editorType == 'WYSIWYG') {
         cardEditor.showEditor();
       }
     }
@@ -311,15 +311,15 @@ const initializeIPCEvents = () => {
     cardProp.status = 'Focused';
     render(['Decoration']);
 
-    if (cardEditor.editorType == 'WYSYWIG') {
+    if (cardEditor.editorType == 'WYSIWYG') {
       cardEditor.startEdit();
     }
   });
 
-  ipcRenderer.on('card-blured', () => {
-    console.debug('card-blured');
+  ipcRenderer.on('card-blurred', () => {
+    console.debug('card-blurred');
 
-    cardProp.status = 'Blured';
+    cardProp.status = 'Blurred';
     render(['Decoration']);
 
     if (cardEditor.isOpened) {
@@ -336,7 +336,7 @@ const initializeIPCEvents = () => {
   });
 
   ipcRenderer.on(
-    'resize-byhand',
+    'resize-by-hand',
     (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
       cardProp.rect.width = newBounds.width + getRenderOffsetWidth();
       cardProp.rect.height = newBounds.height + getRenderOffsetHeight();
@@ -348,7 +348,7 @@ const initializeIPCEvents = () => {
   );
 
   ipcRenderer.on(
-    'move-byhand',
+    'move-by-hand',
     (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
       cardProp.rect.x = newBounds.x;
       cardProp.rect.y = newBounds.y;
@@ -359,4 +359,4 @@ const initializeIPCEvents = () => {
 };
 
 initializeIPCEvents();
-window.addEventListener('load', onloaded, false);
+window.addEventListener('load', onload, false);
