@@ -183,7 +183,9 @@ const initializeUIEvents = () => {
       return;
     }
     else {
-      await cardEditor.showEditor();
+      await cardEditor.showEditor().catch(e => {
+        logger.error(`Error in clicking contents: ${e}`);
+      });
       cardEditor.startEdit();
     }
   });
@@ -296,7 +298,9 @@ const initializeIPCEvents = () => {
       render();
 
       if (cardEditor.editorType == 'WYSIWYG') {
-        cardEditor.showEditor();
+        cardEditor.showEditor().catch(e => {
+          logger.error(`Error in render-card: ${e}`);
+        });
       }
     }
   );
