@@ -10,7 +10,7 @@
  * Common part
  */
 
-import { CardProp, CardPropSerializable } from '../modules_common/card';
+import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
 import uniqid from 'uniqid';
 import { logger } from '../modules_common/utils';

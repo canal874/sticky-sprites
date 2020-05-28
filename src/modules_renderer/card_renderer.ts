@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardProp } from '../modules_common/card';
+import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, ICardEditor } from '../modules_common/types';
 import { convertHexColorToRgba } from '../modules_common/utils';
 
@@ -92,7 +92,7 @@ const renderCardDecoration = () => {
   if (cardProp.status == 'Focused') {
     document.getElementById('card')!.style.border = '3px solid red';
   }
-  else if (cardProp.status == 'Blured') {
+  else if (cardProp.status == 'Blurred') {
     document.getElementById('card')!.style.border = '3px solid transparent';
   }
 
@@ -103,7 +103,7 @@ const renderCardDecoration = () => {
     if (cardProp.status == 'Focused') {
       titleOpacity = 1.0;
     }
-    else if (cardProp.status == 'Blured') {
+    else if (cardProp.status == 'Blurred') {
       document.getElementById('title')!.style.visibility = 'hidden';
       titleOpacity = 1.0;
     }

@@ -10,7 +10,7 @@
  * Common part
  */
 
-import { CardProp } from '../modules_common/card';
+import { CardProp } from '../modules_common/cardprop';
 import { ICardEditor, CardCssStyle, EditorType } from '../modules_common/types';
 import {
   render,

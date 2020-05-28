@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardPropSerializable, CardProp } from '../modules_common/card';
+import { CardPropSerializable, CardProp } from '../modules_common/cardprop';
 import { remote, ipcRenderer } from 'electron';
 import { setTitleMessage } from './card_renderer';
 import { logger } from '../modules_common/utils';

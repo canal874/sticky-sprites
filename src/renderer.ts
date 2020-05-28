@@ -7,7 +7,7 @@
  */
 
 import { remote, ipcRenderer } from 'electron';
-import { CardProp, CardPropSerializable } from './modules_common/card';
+import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 
 import { ICardEditor, CardCssStyle } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
