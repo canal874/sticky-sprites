@@ -18,12 +18,12 @@ import {
 } from '../modules_renderer/card_renderer';
 
 import { remote, ipcRenderer } from 'electron';
-
-// import { sleep, logger } from '../modules_common/utils';
+import { logger, sleep } from '../modules_common/utils';
 
 const main = remote.require('./main');
 
 export class CardEditor implements ICardEditor {
+  private ERROR_FAILED_TO_SET_DATA = 'Failed to set data.';
   /**
    * Private
    */
@@ -80,8 +80,12 @@ export class CardEditor implements ICardEditor {
       CKEDITOR.on('instanceReady', () => {
         const checkTimer = setInterval(() => {
           // Checking existence of 'cke_editor'
+          // and container
           // because 'instanceReady' event is incredible.
-          if (document.getElementById('cke_editor')) {
+          if (
+            document.getElementById('cke_editor') &&
+            CKEDITOR.instances['editor'].container
+          ) {
             clearInterval(checkTimer);
             resolve();
           }
@@ -122,16 +126,24 @@ export class CardEditor implements ICardEditor {
       try {
         CKEDITOR.instances['editor'].setData(this.cardProp.data, {
           callback: () => {
-            resolve();
+            const currentData = CKEDITOR.instances['editor'].getData();
+            // setData is easy to fail.
+            if (this.cardProp.data != currentData) {
+              reject(this.ERROR_FAILED_TO_SET_DATA);
+            }
+            else {
+              resolve();
+            }
           },
         });
       } catch (e) {
-        reject();
+        reject('Unexpected error');
       }
     });
   };
 
   showEditor = async (): Promise<void> => {
+    console.debug(`showEditor: ${this.cardProp.id}`);
     if (this.isOpened) {
       return;
     }
@@ -154,7 +166,35 @@ export class CardEditor implements ICardEditor {
       throw 'cke_editor does not exist.';
     }
 
-    await this.setData();
+    let contCounter = 0;
+    for (;;) {
+      let cont = false;
+      await this.setData().catch(e => {
+        if (e == this.ERROR_FAILED_TO_SET_DATA){
+          sleep(500);
+          contCounter++;
+          cont = true;
+        }
+        else {
+          // logger.error does not work in ipcRenderer event.
+          console.error(`Error in showEditor ${this.cardProp.id}: ${e}`);
+          cont = false;
+        }
+      });
+      if (contCounter >= 10) {
+        // logger.error does not work in ipcRenderer event.
+        console.error(
+          `Error in showEditor ${this.cardProp.id}: too many setData errors`
+        );
+        cont = false;
+      }
+      if (!cont) {
+        break;
+      }
+      else {
+        console.debug(`re-trying setData for ${this.cardProp.id}`);
+      }
+    }
 
     this.isOpened = true;
   };
@@ -270,7 +310,13 @@ export class CardEditor implements ICardEditor {
       document.getElementById('titleBar')!.offsetHeight
   ): void => {
     // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
-    CKEDITOR.instances['editor'].resize(width, height);
+    const editor = CKEDITOR.instances['editor'];
+    if (editor) {
+      CKEDITOR.instances['editor'].resize(width, height);
+    }
+    else {
+      logger.error(`Error in setSize: editor is undefined.`);
+    }
   };
 
   setColor = (backgroundRgba: string, darkerRgba: string): void => {

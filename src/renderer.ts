@@ -299,7 +299,8 @@ const initializeIPCEvents = () => {
 
       if (cardEditor.editorType == 'WYSIWYG') {
         cardEditor.showEditor().catch(e => {
-          logger.error(`Error in render-card: ${e}`);
+          // logger.error does not work in ipcRenderer event.
+          console.error(`Error in render-card: ${e}`);
         });
       }
     }

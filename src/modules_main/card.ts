@@ -110,7 +110,7 @@ export class Card {
   private renderCard (): void {
     this.window.setSize(this.prop.rect.width, this.prop.rect.height);
     this.window.setPosition(this.prop.rect.x, this.prop.rect.y);
-    logger.debug('load:' + JSON.stringify(this.prop.toObject()));
+    logger.debug('renderCard in main:' + JSON.stringify(this.prop.toObject()));
     this.window.webContents.send('render-card', this.prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
     this.window.showInactive();
   }
