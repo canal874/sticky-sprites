@@ -170,8 +170,8 @@ export class CardEditor implements ICardEditor {
     for (;;) {
       let cont = false;
       await this.setData().catch(e => {
-        if (e == this.ERROR_FAILED_TO_SET_DATA){
-          sleep(500);
+        if (e == this.ERROR_FAILED_TO_SET_DATA) {
+          sleep(1000);
           contCounter++;
           cont = true;
         }
@@ -186,6 +186,7 @@ export class CardEditor implements ICardEditor {
         console.error(
           `Error in showEditor ${this.cardProp.id}: too many setData errors`
         );
+        alert(main.MESSAGE.pleaseRestartErrorInOpeningCard);
         cont = false;
       }
       if (!cont) {
