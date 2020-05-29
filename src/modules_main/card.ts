@@ -118,6 +118,7 @@ export class Card {
   private readyToShow: () => Promise<void> = () => {
     return new Promise(resolve => {
       this.window.once('ready-to-show', () => {
+        // logger.debug('readyToShow ' + this.id);
         resolve();
       });
     });
@@ -125,12 +126,21 @@ export class Card {
 
   private loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
-      ipcMain.once('finish-load', () => {
-        // Don't use 'did-finish-load' event.
-        // loadHTML resolves after loading HTML and processing required script are finished.
-        //     this.window.webContents.on('did-finish-load', () => {
-        resolve();
-      });
+      const finishLoadListener = (
+        event: Electron.IpcMainEvent,
+        fromId: string
+      ) => {
+        if (fromId == this.id) {
+          // logger.debug('loadHTML  ' + fromId);
+
+          // Don't use 'did-finish-load' event.
+          // loadHTML resolves after loading HTML and processing required script are finished.
+          //     this.window.webContents.on('did-finish-load', () => {
+          ipcMain.off('finish-load', finishLoadListener);
+          resolve();
+        }
+      };
+      ipcMain.on('finish-load', finishLoadListener);
       this.window.webContents.on(
         'did-fail-load',
         (event, errorCode, errorDescription, validatedURL) => {
@@ -142,6 +152,9 @@ export class Card {
           pathname: path.join(__dirname, '../index.html'),
           protocol: 'file:',
           slashes: true,
+          query: {
+            id: this.id,
+          },
         })
       );
     });
@@ -155,6 +168,7 @@ export class Card {
     return new Promise((resolve, reject) => {
       CardIO.readCardData(this.id)
         .then((_prop: CardProp) => {
+          // logger.debug('loadCardData  ' + this.id);
           resolve(_prop);
         })
         .catch((err: string) => {

@@ -79,18 +79,22 @@ export class CardEditor implements ICardEditor {
     return new Promise<void>(resolve => {
       CKEDITOR.replace('editor');
       CKEDITOR.on('instanceReady', () => {
+        resolve();
+        /*
+         * Use timer for checking if instanceReady event is incredible
         const checkTimer = setInterval(() => {
-          // Checking existence of 'cke_editor'
-          // and container
-          // because 'instanceReady' event is incredible.
+          // Checking existence of 'cke_editor',
+          // container, and .cke_inner
           if (
             document.getElementById('cke_editor') &&
-            CKEDITOR.instances['editor'].container
+            CKEDITOR.instances['editor'].container &&
+            document.querySelector('.cke_inner')
           ) {
             clearInterval(checkTimer);
             resolve();
           }
         }, 200);
+        */
       });
     });
   };

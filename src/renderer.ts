@@ -252,6 +252,20 @@ const initializeUIEvents = () => {
 const onload = async () => {
   window.removeEventListener('load', onload, false);
 
+  const url = window.location.search;
+  const arr = url.slice(1).split('&');
+  const params: { [key: string]: string } = {};
+  for (var i = 0; i < arr.length; i++) {
+    const pair = arr[i].split('=');
+    params[pair[0]] = pair[1];
+  }
+  const id = params['id'];
+  if (!id) {
+    alert(main.MESSAGE.pleaseRestartErrorInOpeningCard);
+    console.error('id parameter is not given in URL');
+    return;
+  }
+
   cardCssStyle = {
     padding: {
       left: parseInt(
@@ -289,7 +303,8 @@ const onload = async () => {
   initializeUIEvents();
 
   await cardEditor.loadUI(cardCssStyle);
-  ipcRenderer.send('finish-load');
+  // console.debug('(2) loadUI is completed');
+  ipcRenderer.send('finish-load', id);
 };
 
 const initializeIPCEvents = () => {
