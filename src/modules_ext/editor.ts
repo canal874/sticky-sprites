@@ -16,9 +16,10 @@ import {
   render,
   setRenderOffsetHeight,
 } from '../modules_renderer/card_renderer';
-
+import uniqid from 'uniqid';
 import { remote, ipcRenderer } from 'electron';
-import { logger, sleep } from '../modules_common/utils';
+import { logger, sleep, getImageTag } from '../modules_common/utils';
+import { saveData, saveCardColor } from '../modules_renderer/save';
 
 const main = remote.require('./main');
 
@@ -142,6 +143,63 @@ export class CardEditor implements ICardEditor {
     });
   };
 
+  private addDragAndDropEvent = () => {
+    //    CKEDITOR.instances['editor'].on('drop', async evt => {});
+    // paste event is automatically occurred after drop.
+    CKEDITOR.instances['editor'].on('paste', evt => {
+      const id = uniqid();
+      const dataTransfer = evt.data.dataTransfer;
+      if (dataTransfer.$.files) {
+        const file = dataTransfer.$.files[0];
+        if (file) {
+          const dropImg = new Image();
+          dropImg.onload = () => {
+            let width = dropImg.naturalWidth;
+            let height = dropImg.naturalHeight;
+
+            let newWidth = this.cardProp.rect.width - 15;
+            let newHeight = height;
+            if (newWidth < width) {
+              newHeight = (height * newWidth) / width;
+            }
+            else {
+              newWidth = width;
+            }
+
+            newWidth = Math.floor(newWidth);
+            newHeight = Math.floor(newHeight);
+
+            const doc = CKEDITOR.instances['editor'].document.$;
+            const img = doc.getElementById(id);
+            if (img) {
+              img.setAttribute('width', `${newWidth}`);
+              img.setAttribute('height', `${newHeight}`);
+            }
+            this.cardProp.data = CKEDITOR.instances['editor'].getData();
+
+            this.cardProp.rect.height += newHeight;
+            main.setWindowSize(
+              this.cardProp.id,
+              this.cardProp.rect.width,
+              this.cardProp.rect.height
+            );
+            render(['Decoration', 'EditorRect']);
+            saveData(this.cardProp);
+          };
+          const imgTag = getImageTag(id, file!.path, 1, 1);
+          evt.data.dataValue = imgTag;
+          if (this.cardProp.data == '') {
+            this.cardProp.rect.height = this.toolbarHeight + 15;
+            saveCardColor(this.cardProp, '#ffffff', '#ffffff', 0.0);
+            render();
+          }
+
+          dropImg.src = file.path;
+        }
+      }
+    });
+  };
+
   showEditor = async (): Promise<void> => {
     console.debug(`showEditor: ${this.cardProp.id}`);
     if (this.isOpened) {
@@ -196,6 +254,8 @@ export class CardEditor implements ICardEditor {
         console.debug(`re-trying setData for ${this.cardProp.id}`);
       }
     }
+
+    this.addDragAndDropEvent();
 
     this.isOpened = true;
   };
@@ -281,7 +341,7 @@ export class CardEditor implements ICardEditor {
   startCodeMode = () => {
     this.codeMode = true;
     this.startEdit();
-    document.getElementById('codeBtn')!.style.color = '#a0a0a0';
+    document.getElementById('codeBtn')!.style.color = '#ff0000';
     CKEDITOR.instances['editor'].setMode('source', () => {});
     CKEDITOR.instances['editor'].focus();
 

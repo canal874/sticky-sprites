@@ -77,6 +77,22 @@ const execSaveTask = async () => {
   }
 };
 
+export const saveCardColor = (
+  cardProp: CardProp,
+  bgColor: string,
+  titleColor?: string,
+  backgroundOpacity: number = 1.0
+) => {
+  if (titleColor === undefined) {
+    titleColor = bgColor;
+  }
+  cardProp.style.backgroundColor = bgColor;
+  cardProp.style.titleColor = titleColor;
+  cardProp.style.backgroundOpacity = backgroundOpacity;
+
+  saveData(cardProp);
+};
+
 export const saveData = (cardProp: CardProp) => {
   cardProp.date.modifiedDate = getCurrentDate();
   const propObject = cardProp.toObject();

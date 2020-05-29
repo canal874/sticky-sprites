@@ -17,10 +17,14 @@ import {
   getRenderOffsetWidth,
   getRenderOffsetHeight,
 } from './modules_renderer/card_renderer';
-
+import uniqid from 'uniqid';
 import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
-import { logger } from './modules_common/utils';
-import { waitUnfinishedSaveTasks, saveData } from './modules_renderer/save';
+import { logger, getImageTag } from './modules_common/utils';
+import {
+  waitUnfinishedSaveTasks,
+  saveData,
+  saveCardColor,
+} from './modules_renderer/save';
 
 const main = remote.require('./main');
 
@@ -55,21 +59,6 @@ const queueSaveCommand = () => {
 /**
  * Context Menu
  */
-const setAndSaveCardColor = (
-  bgColor: string,
-  titleColor?: string,
-  backgroundOpacity: number = 1.0
-) => {
-  if (titleColor === undefined) {
-    titleColor = bgColor;
-  }
-  cardProp.style.backgroundColor = bgColor;
-  cardProp.style.titleColor = titleColor;
-  cardProp.style.backgroundOpacity = backgroundOpacity;
-  render(['Decoration', 'EditorColor']);
-
-  saveData(cardProp);
-};
 
 contextMenu({
   window: remote.getCurrentWindow(),
@@ -79,55 +68,64 @@ contextMenu({
     {
       label: main.MESSAGE.yellow,
       click: () => {
-        setAndSaveCardColor('#ffffa0');
+        saveCardColor(cardProp, '#ffffa0');
+        render(['Decoration', 'EditorColor']);
       },
     },
     {
       label: main.MESSAGE.red,
       click: () => {
-        setAndSaveCardColor('#ffb0b0');
+        saveCardColor(cardProp, '#ffb0b0');
+        render(['Decoration', 'EditorColor']);
       },
     },
     {
       label: main.MESSAGE.green,
       click: () => {
-        setAndSaveCardColor('#d0ffd0');
+        saveCardColor(cardProp, '#d0ffd0');
+        render(['Decoration', 'EditorColor']);
       },
     },
     {
       label: main.MESSAGE.blue,
       click: () => {
-        setAndSaveCardColor('#d0d0ff');
+        saveCardColor(cardProp, '#d0d0ff');
+        render(['Decoration', 'EditorColor']);
       },
     },
     {
       label: main.MESSAGE.orange,
       click: () => {
-        setAndSaveCardColor('#ffb000');
+        saveCardColor(cardProp, '#ffb000');
+        render(['Decoration', 'EditorColor']);
       },
     },
     {
       label: main.MESSAGE.purple,
       click: () => {
-        setAndSaveCardColor('#ffd0ff');
+        saveCardColor(cardProp, '#ffd0ff');
+        render(['Decoration', 'EditorColor']);
       },
     },
     {
       label: main.MESSAGE.white,
       click: () => {
-        setAndSaveCardColor('#ffffff');
+        saveCardColor(cardProp, '#ffffff');
+        render(['Decoration', 'EditorColor']);
       },
     },
     {
       label: main.MESSAGE.gray,
       click: () => {
-        setAndSaveCardColor('#d0d0d0');
+        saveCardColor(cardProp, '#d0d0d0');
+        render(['Decoration', 'EditorColor']);
       },
     },
     {
       label: main.MESSAGE.transparent,
       click: () => {
-        setAndSaveCardColor('#ffffff', '#ffffff', 0.0);
+        saveCardColor(cardProp, '#ffffff', '#ffffff', 0.0);
+        render(['Decoration', 'EditorColor']);
       },
     },
   ],
@@ -145,28 +143,40 @@ const initializeUIEvents = () => {
   document.ondrop = e => {
     e.preventDefault();
 
-    var file = e.dataTransfer?.files[0];
+    const file = e.dataTransfer?.files[0];
 
-    var dropImg = new Image();
+    const dropImg = new Image();
     if (file) {
       dropImg.onload = () => {
-        var width = dropImg.naturalWidth;
-        var height = dropImg.naturalHeight;
+        let width = dropImg.naturalWidth;
+        let height = dropImg.naturalHeight;
 
-        // TODO:
-        // Adjust img to card size
-        // ...
-        // ...
+        let newWidth = cardProp.rect.width - 15;
+        let newHeight = height;
+        if (newWidth < width) {
+          newHeight = (height * newWidth) / width;
+        }
+        else {
+          newWidth = width;
+        }
 
-        cardProp.data =
-          '<img src="' +
-          file!.path +
-          '" width="' +
-          width +
-          '" height="' +
-          height +
-          '">';
-        render(['ContentsData']);
+        const imgTag = getImageTag(uniqid(), file!.path, newWidth, newHeight);
+        if (cardProp.data == '') {
+          cardProp.data = imgTag;
+          cardProp.rect.height = newHeight + 15;
+        }
+        else {
+          cardProp.data = cardProp.data + '<br />' + imgTag;
+          cardProp.rect.height += newHeight + 15;
+        }
+
+        main.setWindowSize(
+          cardProp.id,
+          cardProp.rect.width,
+          cardProp.rect.height
+        );
+        render(['Decoration', 'ContentsData']);
+        saveData(cardProp);
       };
       dropImg.src = file.path;
     }

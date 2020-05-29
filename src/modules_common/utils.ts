@@ -13,11 +13,31 @@ export const logger = log4js.getLogger();
 logger.level = 'all';
 //logger.level = 'error';
 
-export const sleep: (msec: number) => Promise<void> = (msec: number) =>
+export const sleep = (msec: number) =>
   new Promise<void>(resolve => setTimeout(resolve, msec));
 
-export const getCurrentDate: () => string = () =>
-  moment.utc().format('YYYY-MM-DD HH:mm:ss');
+export const getCurrentDate = (): string => {
+  return moment.utc().format('YYYY-MM-DD HH:mm:ss');
+};
+
+export const getImageTag = (
+  id: string,
+  src: string,
+  width: number,
+  height: number
+): string => {
+  return (
+    '<img id="' +
+    id +
+    '" src="' +
+    src +
+    '" width="' +
+    width +
+    '" height="' +
+    height +
+    '">'
+  );
+};
 
 export const convertHexColorToRgba = (
   colorHEX: string,
