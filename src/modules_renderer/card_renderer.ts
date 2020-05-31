@@ -10,8 +10,8 @@ import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, ICardEditor } from '../modules_common/types';
 import { convertHexColorToRgba } from '../modules_common/utils';
 
+export let cardCssStyle: CardCssStyle;
 let cardProp: CardProp;
-let cardCssStyle: CardCssStyle;
 let cardEditor: ICardEditor;
 
 let renderOffsetHeight: number = 0; // Offset of card height from actual window height;

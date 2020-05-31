@@ -15,6 +15,7 @@ import { ICardEditor, CardCssStyle, EditorType } from '../modules_common/types';
 import {
   render,
   setRenderOffsetHeight,
+  cardCssStyle,
 } from '../modules_renderer/card_renderer';
 import uniqid from 'uniqid';
 import { remote, ipcRenderer } from 'electron';
@@ -24,12 +25,16 @@ import { saveData, saveCardColor } from '../modules_renderer/save';
 const main = remote.require('./main');
 
 export class CardEditor implements ICardEditor {
-  private ERROR_FAILED_TO_SET_DATA = 'Failed to set data.';
   /**
    * Private
    */
+  private ERROR_FAILED_TO_SET_DATA = 'Failed to set data.';
+
   private codeMode = false;
-  private toolbarHeight = 30;
+
+  private TOOLBAR_HEIGHT = 30;
+
+  private DRAG_IMAGE_MARGIN = 20;
 
   private startEditorFirstTime = true;
 
@@ -65,8 +70,8 @@ export class CardEditor implements ICardEditor {
   /**
    * Public
    */
-  public editorType: EditorType = 'WYSIWYG'; // CKEditor should be WYSIWYG Editor Type
-  // public editorType: EditorType = 'Markup'; // for testing Markup Editor Type
+//  public editorType: EditorType = 'WYSIWYG'; // CKEditor should be WYSIWYG Editor Type
+ public editorType: EditorType = 'Markup'; // for testing Markup Editor Type
 
   public hasCodeMode = true;
 
@@ -74,11 +79,56 @@ export class CardEditor implements ICardEditor {
 
   private isEditing = false;
 
+  adjustEditorSizeFromImage2Plugin = (width: number, height: number) => {
+    const body = CKEDITOR.instances['editor'].document.getBody();
+    if (body.$.childNodes.length > 2) {
+      // Cancel the resizing when the card contains anything other than an image.
+      return;
+    }
+    const toolbar = document.getElementById('cke_1_bottom');
+    if (toolbar) {
+      toolbar.style.visibility = 'hidden';
+    }
+    width =
+      width +
+      this.DRAG_IMAGE_MARGIN +
+      cardCssStyle.border.left +
+      cardCssStyle.border.right +
+      cardCssStyle.padding.left +
+      cardCssStyle.padding.right;
+    height =
+      height +
+      this.DRAG_IMAGE_MARGIN +
+      cardCssStyle.border.top +
+      cardCssStyle.border.bottom +
+      cardCssStyle.padding.top +
+      cardCssStyle.padding.bottom +
+      //      (this.isEditing ? this.TOOLBAR_HEIGHT : 0) +
+      document.getElementById('titleBar')!.offsetHeight;
+
+    if (width < 200) {
+      /**
+       * Toolbar has 2 lines when width is less than 200px.
+       * Cancel the resizing because the bottom of the image will be obscured by the line.
+       */
+      return;
+    }
+
+    main.setWindowSize(this.cardProp.id, width, height);
+
+    this.cardProp.rect.width = width;
+    this.cardProp.rect.height = height;
+
+    render(['TitleBar', 'EditorRect']);
+  };
+
   loadUI = (_cardCssStyle: CardCssStyle): Promise<void> => {
     this.cardCssStyle = _cardCssStyle;
     return new Promise<void>(resolve => {
       CKEDITOR.replace('editor');
       CKEDITOR.on('instanceReady', () => {
+        // @ts-ignore
+        CKEDITOR.plugins.image2.adjustEditorSize = this.adjustEditorSizeFromImage2Plugin;
         resolve();
         /*
          * Use timer for checking if instanceReady event is incredible
@@ -161,39 +211,56 @@ export class CardEditor implements ICardEditor {
             let width = dropImg.naturalWidth;
             let height = dropImg.naturalHeight;
 
-            let newWidth = this.cardProp.rect.width - 15;
-            let newHeight = height;
-            if (newWidth < width) {
-              newHeight = (height * newWidth) / width;
+            let newImageWidth =
+              this.cardProp.rect.width -
+              this.DRAG_IMAGE_MARGIN -
+              cardCssStyle.border.left -
+              cardCssStyle.border.right -
+              cardCssStyle.padding.left -
+              cardCssStyle.padding.right;
+
+            let newImageHeight = height;
+            if (newImageWidth < width) {
+              newImageHeight = (height * newImageWidth) / width;
             }
             else {
-              newWidth = width;
+              newImageWidth = width;
             }
 
-            newWidth = Math.floor(newWidth);
-            newHeight = Math.floor(newHeight);
+            newImageWidth = Math.floor(newImageWidth);
+            newImageHeight = Math.floor(newImageHeight);
 
             const doc = CKEDITOR.instances['editor'].document.$;
             const img = doc.getElementById(id);
             if (img) {
-              img.setAttribute('width', `${newWidth}`);
-              img.setAttribute('height', `${newHeight}`);
+              img.setAttribute('width', `${newImageWidth}`);
+              img.setAttribute('height', `${newImageHeight}`);
             }
-            this.cardProp.data = CKEDITOR.instances['editor'].getData();
 
-            this.cardProp.rect.height += newHeight;
+            this.cardProp.rect.height =
+              (this.cardProp.data == '' ? 0 : this.cardProp.rect.height) +
+              newImageHeight +
+              this.DRAG_IMAGE_MARGIN +
+              this.TOOLBAR_HEIGHT +
+              cardCssStyle.border.top +
+              cardCssStyle.border.bottom +
+              cardCssStyle.padding.top +
+              cardCssStyle.padding.bottom +
+              document.getElementById('titleBar')!.offsetHeight;
+
             main.setWindowSize(
               this.cardProp.id,
               this.cardProp.rect.width,
               this.cardProp.rect.height
             );
+
+            this.cardProp.data = CKEDITOR.instances['editor'].getData();
             render(['Decoration', 'EditorRect']);
             saveData(this.cardProp);
           };
           const imgTag = getImageTag(id, file!.path, 1, 1);
           evt.data.dataValue = imgTag;
           if (this.cardProp.data == '') {
-            this.cardProp.rect.height = this.toolbarHeight + 15;
             saveCardColor(this.cardProp, '#ffffff', '#ffffff', 0.0);
             render();
           }
@@ -279,13 +346,13 @@ export class CardEditor implements ICardEditor {
       await this.imeWorkaround();
     }
     // Expand card to add toolbar.
-    const expandedHeight = this.cardProp.rect.height + this.toolbarHeight;
+    const expandedHeight = this.cardProp.rect.height + this.TOOLBAR_HEIGHT;
     main.setWindowSize(
       this.cardProp.id,
       this.cardProp.rect.width,
       expandedHeight
     );
-    setRenderOffsetHeight(-this.toolbarHeight);
+    setRenderOffsetHeight(-this.TOOLBAR_HEIGHT);
 
     const toolbar = document.getElementById('cke_1_bottom');
     if (toolbar) {
@@ -369,7 +436,7 @@ export class CardEditor implements ICardEditor {
       this.cardCssStyle.border.left -
       this.cardCssStyle.border.right,
     height: number = this.cardProp.rect.height +
-      this.toolbarHeight -
+      this.TOOLBAR_HEIGHT -
       this.cardCssStyle.border.top -
       this.cardCssStyle.border.bottom -
       document.getElementById('titleBar')!.offsetHeight
