@@ -71,7 +71,7 @@ export class CardEditor implements ICardEditor {
    * Public
    */
   public editorType: EditorType = 'WYSIWYG'; // CKEditor should be WYSIWYG Editor Type
-// public editorType: EditorType = 'Markup'; // for testing Markup Editor Type
+  // public editorType: EditorType = 'Markup'; // for testing Markup Editor Type
 
   public hasCodeMode = true;
 

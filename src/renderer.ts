@@ -320,6 +320,8 @@ const initializeIPCEvents = () => {
 
       cardEditor.setCard(cardProp);
 
+      document.getElementById('card')!.style.visibility = 'visible';
+
       render();
 
       if (cardEditor.editorType == 'WYSIWYG') {
