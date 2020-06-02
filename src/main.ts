@@ -14,9 +14,9 @@ import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 import { CardIO } from './modules_ext/io';
 import { Card, cards } from './modules_main/card';
 import { setGlobalFocusEventListenerPermission } from './modules_main/global';
-//import { sleep } from './modules_common/utils';
+// import { sleep } from './modules_common/utils';
 
-//process.on('unhandledRejection', console.dir);
+// process.on('unhandledRejection', console.dir);
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -30,12 +30,14 @@ ipcMain.setMaxListeners(1000);
 /**
  * i18n
  */
-export let MESSAGE: Object = {};
-
+export const i18n = translations;
+ipcMain.handle('get-messages', () => {
+  return i18n.messages();
+});
 /**
  * Card I/O
  */
-ipcMain.handle('save', async (event, cardPropObj: CardPropSerializable) => {
+ipcMain.handle('save', (event, cardPropObj: CardPropSerializable) => {
   const prop = CardProp.fromObject(cardPropObj);
 
   // for debug
@@ -48,80 +50,83 @@ ipcMain.handle('save', async (event, cardPropObj: CardPropSerializable) => {
         card.prop = prop;
       }
       else {
-        throw 'The card is not registered in cards.';
+        throw new Error('The card is not registered in cards.');
       }
     })
-    .catch((err: string) => {
-      logger.debug(err);
+    .catch((e: Error) => {
+      logger.debug(e.message);
     });
 });
 
-export const deleteCard = (prop: CardProp) => {
-  CardIO.deleteCardData(prop.id)
-    .catch((err: string) => {
-      logger.error(err);
+ipcMain.handle('delete-card', (event, id: string) => {
+  CardIO.deleteCardData(id)
+    .catch((e: Error) => {
+      logger.error(e.message);
     })
     .then(() => {
-      logger.debug('deleted :' + prop.id);
-      cards.get(prop.id)?.window.webContents.send('card-close');
+      logger.debug('deleted :' + id);
+      // eslint-disable-next-line no-unused-expressions
+      cards.get(id)?.window.webContents.send('card-close');
+    })
+    .catch((e: Error) => {
+      logger.error(e.message);
     });
-};
+});
 
-export const createCard = () => {
+ipcMain.handle('create-card', () => {
   const card = new Card();
   card
     .render()
     .then(() => {
       cards.set(card.id, card);
     })
-    .catch(e => {
-      logger.error(`Error in createCard(): ${e}`);
+    .catch((e: Error) => {
+      logger.error(`Error in createCard(): ${e.message}`);
     });
-};
+});
 
 /**
  * This method will be called when Electron has finished
  * initialization and is ready to create browser windows.
  * Some APIs can only be used after this event occurs.
  */
-app.on('ready', () => {
+app.on('ready', async () => {
   // locale can be got after 'ready'
   logger.debug('locale: ' + app.getLocale());
   selectPreferredLanguage(['en', 'ja'], [app.getLocale(), 'en']);
-  MESSAGE = translations.messages();
 
   // load cards
-  CardIO.getCardIdList()
-    .then((arr: Array<string>) => {
-      if (arr.length == 0) {
+  const cardArray: Card[] = await CardIO.getCardIdList()
+    .then((arr: string[]) => {
+      const cardArr = [];
+      if (arr.length === 0) {
         // Create a new card
         const card = new Card();
-        card
-          .render()
-          .then(() => {
-            cards.set(card.id, card);
-          })
-          .catch(e => {
-            logger.error(`Error while creating card in ready event: ${e}`);
-          });
+        cardArr.push(card);
       }
       else {
-        for (let id of arr) {
+        for (const id of arr) {
           const card = new Card(id);
-          card
-            .render()
-            .then(() => {
-              cards.set(id, card);
-            })
-            .catch(e => {
-              logger.error(`Error while loading card in ready event: ${e}`);
-            });
+          cardArr.push(card);
         }
       }
+      return cardArr;
     })
-    .catch((err: string) => {
-      logger.error(`Cannot load a list of cards: ${err}`);
+    .catch((e: Error) => {
+      logger.error(`Cannot load a list of cards: ${e.message}`);
+      return [];
     });
+
+  for (const card of cardArray) {
+    card
+      .render()
+      .then(() => {
+        cards.set(card.id, card);
+      })
+      .catch((e: Error) => {
+        logger.error(`Error while loading card in ready event: ${e.message}`);
+      });
+  }
 });
 
 /**
@@ -136,10 +141,11 @@ app.on('window-all-closed', () => {
  */
 export const setWindowSize = (id: string, width: number, height: number) => {
   const card = cards.get(id);
+  // eslint-disable-next-line no-unused-expressions
   card?.window.setSize(width, height);
 };
 
-ipcMain.handle('blurAndFocus', async (event, id: string) => {
+ipcMain.handle('blurAndFocus', (event, id: string) => {
   const card = cards.get(id);
   if (card) {
     console.debug(`blurAndFocus: ${id}`);

@@ -10,7 +10,7 @@ import { CardProp } from './cardprop';
 
 export interface ICardIO {
   generateNewCardId(): string;
-  getCardIdList(): Promise<Array<string>>;
+  getCardIdList(): Promise<string[]>;
   readCardData(id: string): Promise<CardProp>;
   writeOrCreateCardData(prop: CardProp): Promise<string>;
   deleteCardData(id: string): Promise<string>;

@@ -10,12 +10,12 @@ import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, ICardEditor } from '../modules_common/types';
 import { convertHexColorToRgba } from '../modules_common/utils';
 
-export let cardCssStyle: CardCssStyle;
+let cardCssStyle: CardCssStyle;
 let cardProp: CardProp;
 let cardEditor: ICardEditor;
 
-let renderOffsetHeight: number = 0; // Offset of card height from actual window height;
-let renderOffsetWidth: number = 0; // Offset of card height from actual window width;
+let renderOffsetHeight = 0; // Offset of card height from actual window height;
+let renderOffsetWidth = 0; // Offset of card height from actual window width;
 
 export const getRenderOffsetWidth = () => {
   return renderOffsetWidth;
@@ -41,7 +41,6 @@ export const initCardRenderer = (
 };
 
 export type CardRenderOptions =
-  | 'All'
   | 'Decoration'
   | 'TitleBar'
   | 'ContentsData'
@@ -89,50 +88,46 @@ const renderContentsRect = () => {
 };
 
 const renderCardDecoration = () => {
-  if (cardProp.status == 'Focused') {
+  if (cardProp.status === 'Focused') {
     document.getElementById('card')!.style.border = '3px solid red';
   }
-  else if (cardProp.status == 'Blurred') {
+  else if (cardProp.status === 'Blurred') {
     document.getElementById('card')!.style.border = '3px solid transparent';
   }
 
   let titleOpacity = cardProp.style.backgroundOpacity;
 
   document.getElementById('title')!.style.visibility = 'visible';
-  if (cardProp.style.backgroundOpacity == 0) {
-    if (cardProp.status == 'Focused') {
+  if (cardProp.style.backgroundOpacity === 0) {
+    if (cardProp.status === 'Focused') {
       titleOpacity = 1.0;
     }
-    else if (cardProp.status == 'Blurred') {
+    else if (cardProp.status === 'Blurred') {
       document.getElementById('title')!.style.visibility = 'hidden';
       titleOpacity = 1.0;
     }
   }
 
   // Set card properties
-  let backgroundRgba = convertHexColorToRgba(
+  const backgroundRgba = convertHexColorToRgba(
     cardProp.style.backgroundColor,
     cardProp.style.backgroundOpacity
   );
   document.getElementById('contents')!.style.backgroundColor = backgroundRgba;
 
-  let titleRgba = convertHexColorToRgba(
-    cardProp.style.titleColor,
-    titleOpacity,
-    0.8
-  );
+  const titleRgba = convertHexColorToRgba(cardProp.style.titleColor, titleOpacity, 0.8);
 
-  Array.from(document.getElementsByClassName('title-color')).forEach(node => {
+  [...document.getElementsByClassName('title-color')].forEach(node => {
     (node as HTMLElement).style.backgroundColor = titleRgba;
   });
 };
 
 const renderEditorColor = () => {
-  let backgroundRgba = convertHexColorToRgba(
+  const backgroundRgba = convertHexColorToRgba(
     cardProp.style.backgroundColor,
     cardProp.style.backgroundOpacity
   );
-  let darkerRgba = convertHexColorToRgba(
+  const darkerRgba = convertHexColorToRgba(
     cardProp.style.titleColor,
     cardProp.style.backgroundOpacity,
     0.8
@@ -150,13 +145,22 @@ export const setTitleMessage = (msg: string) => {
   }
 };
 
-export const render = (options: CardRenderOptions[] = ['All']) => {
-  for (let opt of options) {
-    if (opt == 'TitleBar' || opt == 'All') renderTitleBar();
-    if (opt == 'ContentsData' || opt == 'All') renderContentsData();
-    if (opt == 'ContentsRect' || opt == 'All') renderContentsRect();
-    if (opt == 'Decoration' || opt == 'All') renderCardDecoration();
-    if (opt == 'EditorColor' || opt == 'All') renderEditorColor();
-    if (opt == 'EditorRect' || opt == 'All') renderEditorRect();
+export const render = (
+  options: CardRenderOptions[] = [
+    'TitleBar',
+    'ContentsData',
+    'ContentsRect',
+    'Decoration',
+    'EditorColor',
+    'EditorRect',
+  ]
+) => {
+  for (const opt of options) {
+    if (opt === 'TitleBar') renderTitleBar();
+    else if (opt === 'ContentsData') renderContentsData();
+    else if (opt === 'ContentsRect') renderContentsRect();
+    else if (opt === 'Decoration') renderCardDecoration();
+    else if (opt === 'EditorColor') renderEditorColor();
+    else if (opt === 'EditorRect') renderEditorRect();
   }
 };

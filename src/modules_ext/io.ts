@@ -9,10 +9,9 @@
 /**
  * Common part
  */
-
+import uniqid from 'uniqid';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
-import uniqid from 'uniqid';
 import { logger } from '../modules_common/utils';
 
 let cardDir = './cards';
@@ -142,7 +141,7 @@ class CardIOClass implements ICardIO {
               resolve(res.id);
             })
             .catch(err => {
-              throw 'Card save error: ' + err;
+              throw err;
             });
         })
         .catch(err => {

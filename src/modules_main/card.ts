@@ -6,15 +6,15 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardProp } from '../modules_common/cardprop';
-import { BrowserWindow, shell, ipcMain } from 'electron';
-import { CardIO } from '../modules_ext/io';
-import { logger } from '../modules_common/utils';
 import url from 'url';
 import path from 'path';
+import { BrowserWindow, ipcMain, shell } from 'electron';
+import { CardProp } from '../modules_common/cardprop';
+import { CardIO } from '../modules_ext/io';
+import { logger } from '../modules_common/utils';
 import {
-  setGlobalFocusEventListenerPermission,
   getGlobalFocusEventListenerPermission,
+  setGlobalFocusEventListenerPermission,
 } from './global';
 
 /**
@@ -37,10 +37,10 @@ export class Card {
 
   public loadOrCreateCardData: () => Promise<CardProp>;
   constructor (public id: string = '') {
-    this.loadOrCreateCardData = this.loadCardData;
-    if (this.id == '') {
+    this.loadOrCreateCardData = this._loadCardData;
+    if (this.id === '') {
       this.id = CardIO.generateNewCardId();
-      this.loadOrCreateCardData = this.createCardData;
+      this.loadOrCreateCardData = this._createCardData;
     }
 
     this.window = new BrowserWindow({
@@ -64,9 +64,9 @@ export class Card {
     // Open hyperlink on external browser window
     // by preventing to open it on new electron window
     // when target='_blank' is set.
-    this.window.webContents.on('new-window', (event, url) => {
+    this.window.webContents.on('new-window', (event, _url) => {
       event.preventDefault();
-      shell.openExternal(url);
+      shell.openExternal(_url);
     });
 
     // Resized by hand
@@ -88,26 +88,22 @@ export class Card {
       cards.delete(this.id);
     });
 
-    this.window.on('focus', this.focusListener);
-    this.window.on('blur', this.blurListener);
+    this.window.on('focus', this._focusListener);
+    this.window.on('blur', this._blurListener);
   }
 
   public render = () => {
-    return Promise.all([
-      this.readyToShow(),
-      this.loadHTML(),
-      this.loadOrCreateCardData(),
-    ])
+    return Promise.all([this._readyToShow(), this._loadHTML(), this.loadOrCreateCardData()])
       .then(([, , _prop]) => {
         this.prop = _prop;
-        this.renderCard();
+        this._renderCard();
       })
-      .catch(error => {
-        throw `Cannot load card: ${this.id}: ${error}`;
+      .catch((e: Error) => {
+        throw new Error(`Cannot load card: ${this.id}: ${e.message}`);
       });
   };
 
-  private renderCard (): void {
+  private _renderCard (): void {
     this.window.setSize(this.prop.rect.width, this.prop.rect.height);
     this.window.setPosition(this.prop.rect.x, this.prop.rect.y);
     logger.debug('renderCard in main:' + JSON.stringify(this.prop.toObject()));
@@ -115,7 +111,7 @@ export class Card {
     this.window.showInactive();
   }
 
-  private readyToShow: () => Promise<void> = () => {
+  private _readyToShow: () => Promise<void> = () => {
     return new Promise(resolve => {
       this.window.once('ready-to-show', () => {
         // logger.debug('readyToShow ' + this.id);
@@ -124,13 +120,10 @@ export class Card {
     });
   };
 
-  private loadHTML: () => Promise<void> = () => {
+  private _loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
-      const finishLoadListener = (
-        event: Electron.IpcMainEvent,
-        fromId: string
-      ) => {
-        if (fromId == this.id) {
+      const finishLoadListener = (event: Electron.IpcMainEvent, fromId: string) => {
+        if (fromId === this.id) {
           // logger.debug('loadHTML  ' + fromId);
 
           // Don't use 'did-finish-load' event.
@@ -144,7 +137,7 @@ export class Card {
       this.window.webContents.on(
         'did-fail-load',
         (event, errorCode, errorDescription, validatedURL) => {
-          reject(`Error in loadHTML: ${validatedURL} ${errorDescription}`);
+          reject(new Error(`Error in loadHTML: ${validatedURL} ${errorDescription}`));
         }
       );
       this.window.loadURL(
@@ -160,24 +153,24 @@ export class Card {
     });
   };
 
-  private createCardData: () => Promise<CardProp> = () => {
+  private _createCardData: () => Promise<CardProp> = () => {
     return Promise.resolve(new CardProp(this.id));
   };
 
-  private loadCardData: () => Promise<CardProp> = () => {
+  private _loadCardData: () => Promise<CardProp> = () => {
     return new Promise((resolve, reject) => {
       CardIO.readCardData(this.id)
         .then((_prop: CardProp) => {
           // logger.debug('loadCardData  ' + this.id);
           resolve(_prop);
         })
-        .catch((err: string) => {
-          reject(`Error in loadCardData: ${err}`);
+        .catch((e: Error) => {
+          reject(new Error(`Error in loadCardData: ${e.message}`));
         });
     });
   };
 
-  private focusListener = () => {
+  private _focusListener = () => {
     if (this.suppressFocusEventOnce) {
       logger.debug(`skip focus event listener ${this.id}`);
       this.suppressFocusEventOnce = false;
@@ -192,7 +185,7 @@ export class Card {
     }
   };
 
-  private blurListener = () => {
+  private _blurListener = () => {
     if (this.suppressBlurEventOnce) {
       logger.debug(`skip blur event listener ${this.id}`);
       this.suppressBlurEventOnce = false;

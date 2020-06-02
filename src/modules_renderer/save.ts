@@ -6,44 +6,40 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardPropSerializable, CardProp } from '../modules_common/cardprop';
-import { remote, ipcRenderer } from 'electron';
+import { ipcRenderer, remote } from 'electron';
+import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { setTitleMessage } from './card_renderer';
-import { logger } from '../modules_common/utils';
-import { getCurrentDate } from '../modules_common/utils';
+import { getCurrentDate, logger } from '../modules_common/utils';
 
 const main = remote.require('./main');
 
-let unfinishedSaveTasks: Array<CardPropSerializable> = new Array();
+const unfinishedSaveTasks: CardPropSerializable[] = [];
 
 export const waitUnfinishedSaveTasks = () => {
   return new Promise((resolve, reject) => {
     if (unfinishedSaveTasks.length > 0) {
       let timeoutCounter = 0;
       const timer = setInterval(() => {
-        if (unfinishedSaveTasks.length == 0) {
+        if (unfinishedSaveTasks.length === 0) {
           clearInterval(timer);
           resolve();
         }
         else if (timeoutCounter >= 10) {
-          const res = remote.dialog.showMessageBoxSync(
-            remote.getCurrentWindow(),
-            {
-              type: 'question',
-              buttons: ['Ok', 'Cancel'],
-              defaultId: 0,
-              cancelId: 1,
-              message: main.MESSAGE.confirmWaitMore,
-            }
-          );
-          if (res == 0) {
+          const res = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+            type: 'question',
+            buttons: ['Ok', 'Cancel'],
+            defaultId: 0,
+            cancelId: 1,
+            message: main.MESSAGE.confirmWaitMore,
+          });
+          if (res === 0) {
             // OK
             timeoutCounter = 0;
           }
-          else if (res == 1) {
+          else if (res === 1) {
             // Cancel
             clearInterval(timer);
-            reject();
+            reject(new Error('Canceled by user'));
           }
         }
         timeoutCounter++;
@@ -56,7 +52,7 @@ export const waitUnfinishedSaveTasks = () => {
 };
 
 const execSaveTask = async () => {
-  if (unfinishedSaveTasks.length == 1) {
+  if (unfinishedSaveTasks.length === 1) {
     const timeout = setTimeout(() => {
       setTitleMessage('[saving...]');
     }, 1000);
@@ -66,9 +62,7 @@ const execSaveTask = async () => {
       // TODO: Handle save error.
     });
     const finishedPropObject = unfinishedSaveTasks.shift();
-    logger.debug(
-      `Dequeue unfinishedSaveTask: ${finishedPropObject?.modifiedDate}`
-    );
+    logger.debug(`Dequeue unfinishedSaveTask: ${finishedPropObject?.modifiedDate}`);
     clearTimeout(timeout);
     setTitleMessage('');
     if (unfinishedSaveTasks.length > 0) {
@@ -81,7 +75,7 @@ export const saveCardColor = (
   cardProp: CardProp,
   bgColor: string,
   titleColor?: string,
-  backgroundOpacity: number = 1.0
+  backgroundOpacity = 1.0
 ) => {
   if (titleColor === undefined) {
     titleColor = bgColor;

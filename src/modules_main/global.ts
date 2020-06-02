@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-let globalFocusListenerPermission: boolean = true;
+let globalFocusListenerPermission = true;
 /**
  * Set permission to call focus event listener in all renderer processes.
  */

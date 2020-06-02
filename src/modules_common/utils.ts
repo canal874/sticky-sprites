@@ -8,12 +8,12 @@
 
 import log4js from 'log4js';
 import dayjs from 'dayjs';
-const utc = require('dayjs/plugin/utc');
+import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
 
 export const logger = log4js.getLogger();
 logger.level = 'all';
-//logger.level = 'error';
+// logger.level = 'error';
 
 export const sleep = (msec: number) =>
   new Promise<void>(resolve => setTimeout(resolve, msec));
@@ -30,22 +30,14 @@ export const getImageTag = (
   height: number
 ): string => {
   return (
-    '<img id="' +
-    id +
-    '" src="' +
-    src +
-    '" width="' +
-    width +
-    '" height="' +
-    height +
-    '">'
+    '<img id="' + id + '" src="' + src + '" width="' + width + '" height="' + height + '">'
   );
 };
 
 export const convertHexColorToRgba = (
   colorHEX: string,
-  opacity: number = 1.0,
-  darkRate: number = 1.0
+  opacity = 1.0,
+  darkRate = 1.0
 ): string => {
   colorHEX.match(/#(\w\w)(\w\w)(\w\w)/);
   const red = Math.floor(parseInt(RegExp.$1, 16) * darkRate);
