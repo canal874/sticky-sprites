@@ -10,40 +10,43 @@
  * Common part
  */
 
-import { CardProp } from '../modules_common/cardprop';
-import { ICardEditor, CardCssStyle, EditorType } from '../modules_common/types';
-import {
-  render,
-  setRenderOffsetHeight,
-  cardCssStyle,
-} from '../modules_renderer/card_renderer';
 import uniqid from 'uniqid';
-import { remote, ipcRenderer } from 'electron';
-import { logger, sleep, getImageTag } from '../modules_common/utils';
-import { saveData, saveCardColor } from '../modules_renderer/save';
+import { ipcRenderer, remote } from 'electron';
+import { CardProp } from '../modules_common/cardprop';
+import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
+import { render, setRenderOffsetHeight } from '../modules_renderer/card_renderer';
+import { getImageTag, logger, sleep } from '../modules_common/utils';
+import { saveCardColor, saveData } from '../modules_renderer/save';
 
 const main = remote.require('./main');
+let MESSAGE: Record<string, string> = {};
+ipcRenderer
+  .invoke('get-messages')
+  .then(res => {
+    MESSAGE = res;
+  })
+  .catch(e => {});
 
 export class CardEditor implements ICardEditor {
   /**
    * Private
    */
-  private ERROR_FAILED_TO_SET_DATA = 'Failed to set data.';
+  private _ERROR_FAILED_TO_SET_DATA = 'Failed to set data.';
 
-  private codeMode = false;
+  private _codeMode = false;
 
-  private TOOLBAR_HEIGHT = 30;
+  private _TOOLBAR_HEIGHT = 30;
 
-  private DRAG_IMAGE_MARGIN = 20;
+  private _DRAG_IMAGE_MARGIN = 20;
 
-  private startEditorFirstTime = true;
+  private _startEditorFirstTime = true;
 
-  private cardProp: CardProp = new CardProp('');
+  private _cardProp: CardProp = new CardProp('');
 
-  private cardCssStyle!: CardCssStyle; // cardCssStyle is set by loadUI()
+  private _cardCssStyle!: CardCssStyle; // cardCssStyle is set by loadUI()
 
-  private moveCursorToBottom = (): void => {
-    const editor = CKEDITOR.instances['editor'];
+  private _moveCursorToBottom = (): void => {
+    const editor = CKEDITOR.instances.editor;
     const s = editor.getSelection(); // getting selection
     let selectedRanges = s.getRanges(); // getting ranges
     if (selectedRanges.length > 0) {
@@ -77,10 +80,10 @@ export class CardEditor implements ICardEditor {
 
   public isOpened = false;
 
-  private isEditing = false;
+  private _isEditing = false;
 
   adjustEditorSizeFromImage2Plugin = (width: number, height: number) => {
-    const body = CKEDITOR.instances['editor'].document.getBody();
+    const body = CKEDITOR.instances.editor.document.getBody();
     if (body.$.childNodes.length > 2) {
       // Cancel the resizing when the card contains anything other than an image.
       return;
@@ -91,18 +94,18 @@ export class CardEditor implements ICardEditor {
     }
     width =
       width +
-      this.DRAG_IMAGE_MARGIN +
-      cardCssStyle.border.left +
-      cardCssStyle.border.right +
-      cardCssStyle.padding.left +
-      cardCssStyle.padding.right;
+      this._DRAG_IMAGE_MARGIN +
+      this._cardCssStyle.border.left +
+      this._cardCssStyle.border.right +
+      this._cardCssStyle.padding.left +
+      this._cardCssStyle.padding.right;
     height =
       height +
-      this.DRAG_IMAGE_MARGIN +
-      cardCssStyle.border.top +
-      cardCssStyle.border.bottom +
-      cardCssStyle.padding.top +
-      cardCssStyle.padding.bottom +
+      this._DRAG_IMAGE_MARGIN +
+      this._cardCssStyle.border.top +
+      this._cardCssStyle.border.bottom +
+      this._cardCssStyle.padding.top +
+      this._cardCssStyle.padding.bottom +
       //      (this.isEditing ? this.TOOLBAR_HEIGHT : 0) +
       document.getElementById('titleBar')!.offsetHeight;
 
@@ -114,16 +117,16 @@ export class CardEditor implements ICardEditor {
       return;
     }
 
-    main.setWindowSize(this.cardProp.id, width, height);
+    main.setWindowSize(this._cardProp.id, width, height);
 
-    this.cardProp.rect.width = width;
-    this.cardProp.rect.height = height;
+    this._cardProp.rect.width = width;
+    this._cardProp.rect.height = height;
 
     render(['TitleBar', 'EditorRect']);
   };
 
   loadUI = (_cardCssStyle: CardCssStyle): Promise<void> => {
-    this.cardCssStyle = _cardCssStyle;
+    this._cardCssStyle = _cardCssStyle;
     return new Promise<void>(resolve => {
       CKEDITOR.replace('editor');
       CKEDITOR.on('instanceReady', () => {
@@ -150,12 +153,12 @@ export class CardEditor implements ICardEditor {
   };
 
   setCard = (prop: CardProp): void => {
-    this.cardProp = prop;
+    this._cardProp = prop;
   };
 
   waitUntilActivationComplete = (): Promise<void> => {
     return new Promise(resolve => {
-      const editor = CKEDITOR.instances['editor'];
+      const editor = CKEDITOR.instances.editor;
       const timer = setInterval(() => {
         const s = editor.getSelection();
         if (s) {
@@ -166,58 +169,53 @@ export class CardEditor implements ICardEditor {
     });
   };
 
-  private imeWorkaround = async (): Promise<void> => {
+  private _imeWorkaround = async (): Promise<void> => {
     /**
      * This is workaround for Japanese IME & CKEditor on Windows.
      * IME window is unintentionally opened only at the first time of inputting Japanese.
      * Expected behavior is that IME always work inline on CKEditor.
      * A silly workaround is to blur and focus this browser window.
      */
-    await ipcRenderer.invoke('blurAndFocus', this.cardProp.id);
+    await ipcRenderer.invoke('blurAndFocus', this._cardProp.id);
   };
 
-  private setData = (): Promise<void> => {
+  private _setData = (): Promise<void> => {
     return new Promise((resolve, reject) => {
       try {
-        CKEDITOR.instances['editor'].setData(this.cardProp.data, {
+        CKEDITOR.instances.editor.setData(this._cardProp.data, {
           callback: () => {
-            const currentData = CKEDITOR.instances['editor'].getData();
-            // setData is easy to fail.
-            if (this.cardProp.data != currentData) {
-              reject(this.ERROR_FAILED_TO_SET_DATA);
-            }
-            else {
-              resolve();
-            }
+            // setData may be fail. Watch out.
+            resolve();
           },
         });
       } catch (e) {
-        reject('Unexpected error');
+        reject(new Error(this._ERROR_FAILED_TO_SET_DATA));
       }
     });
   };
 
-  private addDragAndDropEvent = () => {
+  private _addDragAndDropEvent = () => {
     //    CKEDITOR.instances['editor'].on('drop', async evt => {});
     // paste event is automatically occurred after drop.
-    CKEDITOR.instances['editor'].on('paste', evt => {
+    CKEDITOR.instances.editor.on('paste', evt => {
       const id = uniqid();
       const dataTransfer = evt.data.dataTransfer;
       if (dataTransfer.$.files) {
         const file = dataTransfer.$.files[0];
         if (file) {
           const dropImg = new Image();
+          // eslint-disable-next-line unicorn/prefer-add-event-listener
           dropImg.onload = () => {
-            let width = dropImg.naturalWidth;
-            let height = dropImg.naturalHeight;
+            const width = dropImg.naturalWidth;
+            const height = dropImg.naturalHeight;
 
             let newImageWidth =
-              this.cardProp.rect.width -
-              this.DRAG_IMAGE_MARGIN -
-              cardCssStyle.border.left -
-              cardCssStyle.border.right -
-              cardCssStyle.padding.left -
-              cardCssStyle.padding.right;
+              this._cardProp.rect.width -
+              this._DRAG_IMAGE_MARGIN -
+              this._cardCssStyle.border.left -
+              this._cardCssStyle.border.right -
+              this._cardCssStyle.padding.left -
+              this._cardCssStyle.padding.right;
 
             let newImageHeight = height;
             if (newImageWidth < width) {
@@ -230,38 +228,38 @@ export class CardEditor implements ICardEditor {
             newImageWidth = Math.floor(newImageWidth);
             newImageHeight = Math.floor(newImageHeight);
 
-            const doc = CKEDITOR.instances['editor'].document.$;
+            const doc = CKEDITOR.instances.editor.document.$;
             const img = doc.getElementById(id);
             if (img) {
               img.setAttribute('width', `${newImageWidth}`);
               img.setAttribute('height', `${newImageHeight}`);
             }
 
-            this.cardProp.rect.height =
-              (this.cardProp.data == '' ? 0 : this.cardProp.rect.height) +
+            this._cardProp.rect.height =
+              (this._cardProp.data === '' ? 0 : this._cardProp.rect.height) +
               newImageHeight +
-              this.DRAG_IMAGE_MARGIN +
-              this.TOOLBAR_HEIGHT +
-              cardCssStyle.border.top +
-              cardCssStyle.border.bottom +
-              cardCssStyle.padding.top +
-              cardCssStyle.padding.bottom +
+              this._DRAG_IMAGE_MARGIN +
+              this._TOOLBAR_HEIGHT +
+              this._cardCssStyle.border.top +
+              this._cardCssStyle.border.bottom +
+              this._cardCssStyle.padding.top +
+              this._cardCssStyle.padding.bottom +
               document.getElementById('titleBar')!.offsetHeight;
 
             main.setWindowSize(
-              this.cardProp.id,
-              this.cardProp.rect.width,
-              this.cardProp.rect.height
+              this._cardProp.id,
+              this._cardProp.rect.width,
+              this._cardProp.rect.height
             );
 
-            this.cardProp.data = CKEDITOR.instances['editor'].getData();
+            this._cardProp.data = CKEDITOR.instances.editor.getData();
             render(['Decoration', 'EditorRect']);
-            saveData(this.cardProp);
+            saveData(this._cardProp);
           };
           const imgTag = getImageTag(id, file!.path, 1, 1);
           evt.data.dataValue = imgTag;
-          if (this.cardProp.data == '') {
-            saveCardColor(this.cardProp, '#ffffff', '#ffffff', 0.0);
+          if (this._cardProp.data === '') {
+            saveCardColor(this._cardProp, '#ffffff', '#ffffff', 0.0);
             render();
           }
 
@@ -272,7 +270,7 @@ export class CardEditor implements ICardEditor {
   };
 
   showEditor = async (): Promise<void> => {
-    console.debug(`showEditor: ${this.cardProp.id}`);
+    console.debug(`showEditor: ${this._cardProp.id}`);
     if (this.isOpened) {
       return;
     }
@@ -292,41 +290,40 @@ export class CardEditor implements ICardEditor {
       }
     }
     else {
-      throw 'cke_editor does not exist.';
+      throw new Error('cke_editor does not exist.');
     }
 
     let contCounter = 0;
     for (;;) {
       let cont = false;
-      await this.setData().catch(e => {
-        if (e == this.ERROR_FAILED_TO_SET_DATA) {
-          sleep(1000);
+      // eslint-disable-next-line no-loop-func, no-await-in-loop
+      await this._setData().catch(async err => {
+        if (err.message === this._ERROR_FAILED_TO_SET_DATA) {
+          await sleep(1000);
           contCounter++;
           cont = true;
         }
         else {
           // logger.error does not work in ipcRenderer event.
-          console.error(`Error in showEditor ${this.cardProp.id}: ${e}`);
+          console.error(`Error in showEditor ${this._cardProp.id}: ${err.message}`);
           cont = false;
         }
       });
       if (contCounter >= 10) {
-        // logger.error does not work in ipcRenderer event.
-        console.error(
-          `Error in showEditor ${this.cardProp.id}: too many setData errors`
-        );
-        alert(main.MESSAGE.pleaseRestartErrorInOpeningCard);
         cont = false;
+        // logger.error does not work in ipcRenderer event.
+        console.error(`Error in showEditor ${this._cardProp.id}: too many setData errors`);
+        alert(MESSAGE.pleaseRestartErrorInOpeningCard);
       }
-      if (!cont) {
-        break;
+      if (cont) {
+        console.debug(`re-trying setData for ${this._cardProp.id}`);
       }
       else {
-        console.debug(`re-trying setData for ${this.cardProp.id}`);
+        break;
       }
     }
 
-    this.addDragAndDropEvent();
+    this._addDragAndDropEvent();
 
     this.isOpened = true;
   };
@@ -338,21 +335,17 @@ export class CardEditor implements ICardEditor {
   };
 
   startEdit = async () => {
-    this.isEditing = true;
+    this._isEditing = true;
     render(['EditorColor']);
 
-    if (this.startEditorFirstTime) {
-      this.startEditorFirstTime = false;
-      await this.imeWorkaround();
+    if (this._startEditorFirstTime) {
+      this._startEditorFirstTime = false;
+      await this._imeWorkaround();
     }
     // Expand card to add toolbar.
-    const expandedHeight = this.cardProp.rect.height + this.TOOLBAR_HEIGHT;
-    main.setWindowSize(
-      this.cardProp.id,
-      this.cardProp.rect.width,
-      expandedHeight
-    );
-    setRenderOffsetHeight(-this.TOOLBAR_HEIGHT);
+    const expandedHeight = this._cardProp.rect.height + this._TOOLBAR_HEIGHT;
+    main.setWindowSize(this._cardProp.id, this._cardProp.rect.width, expandedHeight);
+    setRenderOffsetHeight(-this._TOOLBAR_HEIGHT);
 
     const toolbar = document.getElementById('cke_1_bottom');
     if (toolbar) {
@@ -360,26 +353,26 @@ export class CardEditor implements ICardEditor {
     }
 
     await this.waitUntilActivationComplete();
-    CKEDITOR.instances['editor'].focus();
-    if (this.editorType == 'Markup') {
-      this.moveCursorToBottom();
+    CKEDITOR.instances.editor.focus();
+    if (this.editorType === 'Markup') {
+      this._moveCursorToBottom();
     }
   };
 
   endEdit = (): [boolean, string] => {
-    this.isEditing = false;
+    this._isEditing = false;
 
     let dataChanged = false;
     // Save data to CardProp
-    const data = CKEDITOR.instances['editor'].getData();
-    if (this.cardProp.data != data) {
+    const data = CKEDITOR.instances.editor.getData();
+    if (this._cardProp.data !== data) {
       dataChanged = true;
     }
 
     main.setWindowSize(
-      this.cardProp.id,
-      this.cardProp.rect.width,
-      this.cardProp.rect.height
+      this._cardProp.id,
+      this._cardProp.rect.width,
+      this._cardProp.rect.height
     );
     setRenderOffsetHeight(0);
 
@@ -391,9 +384,10 @@ export class CardEditor implements ICardEditor {
       toolbar.style.visibility = 'hidden';
     }
 
-    CKEDITOR.instances['editor'].getSelection()?.removeAllRanges();
+    // eslint-disable-next-line no-unused-expressions
+    CKEDITOR.instances.editor.getSelection()?.removeAllRanges();
 
-    if (this.codeMode) {
+    if (this._codeMode) {
       this.endCodeMode();
     }
 
@@ -401,7 +395,7 @@ export class CardEditor implements ICardEditor {
   };
 
   toggleCodeMode = () => {
-    if (!this.codeMode) {
+    if (!this._codeMode) {
       this.startCodeMode();
     }
     else {
@@ -410,41 +404,41 @@ export class CardEditor implements ICardEditor {
   };
 
   startCodeMode = () => {
-    this.codeMode = true;
+    this._codeMode = true;
     this.startEdit();
     document.getElementById('codeBtn')!.style.color = '#ff0000';
-    CKEDITOR.instances['editor'].setMode('source', () => {});
-    CKEDITOR.instances['editor'].focus();
+    CKEDITOR.instances.editor.setMode('source', () => {});
+    CKEDITOR.instances.editor.focus();
 
     // In code mode, editor background color is changed to white.
   };
 
   endCodeMode = async () => {
-    this.codeMode = false;
+    this._codeMode = false;
     document.getElementById('codeBtn')!.style.color = '#000000';
-    CKEDITOR.instances['editor'].setMode('wysiwyg', () => {});
+    CKEDITOR.instances.editor.setMode('wysiwyg', () => {});
     await this.waitUntilActivationComplete();
 
     // Reset editor color to card color
     render(['EditorColor']);
 
-    CKEDITOR.instances['editor'].focus();
+    CKEDITOR.instances.editor.focus();
   };
 
   setSize = (
-    width: number = this.cardProp.rect.width -
-      this.cardCssStyle.border.left -
-      this.cardCssStyle.border.right,
-    height: number = this.cardProp.rect.height +
-      this.TOOLBAR_HEIGHT -
-      this.cardCssStyle.border.top -
-      this.cardCssStyle.border.bottom -
+    width: number = this._cardProp.rect.width -
+      this._cardCssStyle.border.left -
+      this._cardCssStyle.border.right,
+    height: number = this._cardProp.rect.height +
+      this._TOOLBAR_HEIGHT -
+      this._cardCssStyle.border.top -
+      this._cardCssStyle.border.bottom -
       document.getElementById('titleBar')!.offsetHeight
   ): void => {
     // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
-    const editor = CKEDITOR.instances['editor'];
+    const editor = CKEDITOR.instances.editor;
     if (editor) {
-      CKEDITOR.instances['editor'].resize(width, height);
+      CKEDITOR.instances.editor.resize(width, height);
     }
     else {
       logger.error(`Error in setSize: editor is undefined.`);
@@ -452,7 +446,7 @@ export class CardEditor implements ICardEditor {
   };
 
   setColor = (backgroundRgba: string, darkerRgba: string): void => {
-    if (this.cardProp.style.backgroundOpacity == 0 && this.isEditing) {
+    if (this._cardProp.style.backgroundOpacity === 0 && this._isEditing) {
       backgroundRgba = 'rgba(255, 255, 255, 1.0)';
       darkerRgba = 'rgba(204, 204, 204, 1.0)';
     }
