@@ -6,27 +6,30 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { remote, ipcRenderer } from 'electron';
+import { ipcRenderer, remote } from 'electron';
+import uniqid from 'uniqid'; // electron-context-menu uses CommonJS compatible export
+import contextMenu from 'electron-context-menu';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 
-import { ICardEditor, CardCssStyle } from './modules_common/types';
+import { CardCssStyle, ICardEditor } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
 import {
-  render,
-  initCardRenderer,
-  getRenderOffsetWidth,
   getRenderOffsetHeight,
+  getRenderOffsetWidth,
+  initCardRenderer,
+  render,
 } from './modules_renderer/card_renderer';
-import uniqid from 'uniqid';
-import contextMenu = require('electron-context-menu'); // electron-context-menu uses CommonJS compatible export
-import { logger, getImageTag } from './modules_common/utils';
-import {
-  waitUnfinishedSaveTasks,
-  saveData,
-  saveCardColor,
-} from './modules_renderer/save';
+import { getImageTag, logger } from './modules_common/utils';
+import { saveCardColor, saveData, waitUnfinishedSaveTasks } from './modules_renderer/save';
 
 const main = remote.require('./main');
+let MESSAGE: Record<string, string> = {};
+ipcRenderer
+  .invoke('get-messages')
+  .then(res => {
+    MESSAGE = res;
+  })
+  .catch(e => {});
 
 let cardProp: CardProp = new CardProp('');
 
@@ -35,10 +38,12 @@ let cardCssStyle: CardCssStyle = {
   border: { left: 0, right: 0, top: 0, bottom: 0 },
 };
 
-let cardEditor: ICardEditor = new CardEditor();
+const cardEditor: ICardEditor = new CardEditor();
 
 const close = async () => {
-  await waitUnfinishedSaveTasks();
+  await waitUnfinishedSaveTasks().catch((e: Error) => {
+    logger.debug(e.message);
+  });
   window.close();
 };
 
@@ -66,63 +71,63 @@ contextMenu({
   showInspectElement: false,
   append: () => [
     {
-      label: main.MESSAGE.yellow,
+      label: MESSAGE.yellow,
       click: () => {
         saveCardColor(cardProp, '#ffffa0');
         render(['Decoration', 'EditorColor']);
       },
     },
     {
-      label: main.MESSAGE.red,
+      label: MESSAGE.red,
       click: () => {
         saveCardColor(cardProp, '#ffb0b0');
         render(['Decoration', 'EditorColor']);
       },
     },
     {
-      label: main.MESSAGE.green,
+      label: MESSAGE.green,
       click: () => {
         saveCardColor(cardProp, '#d0ffd0');
         render(['Decoration', 'EditorColor']);
       },
     },
     {
-      label: main.MESSAGE.blue,
+      label: MESSAGE.blue,
       click: () => {
         saveCardColor(cardProp, '#d0d0ff');
         render(['Decoration', 'EditorColor']);
       },
     },
     {
-      label: main.MESSAGE.orange,
+      label: MESSAGE.orange,
       click: () => {
         saveCardColor(cardProp, '#ffb000');
         render(['Decoration', 'EditorColor']);
       },
     },
     {
-      label: main.MESSAGE.purple,
+      label: MESSAGE.purple,
       click: () => {
         saveCardColor(cardProp, '#ffd0ff');
         render(['Decoration', 'EditorColor']);
       },
     },
     {
-      label: main.MESSAGE.white,
+      label: MESSAGE.white,
       click: () => {
         saveCardColor(cardProp, '#ffffff');
         render(['Decoration', 'EditorColor']);
       },
     },
     {
-      label: main.MESSAGE.gray,
+      label: MESSAGE.gray,
       click: () => {
         saveCardColor(cardProp, '#d0d0d0');
         render(['Decoration', 'EditorColor']);
       },
     },
     {
-      label: main.MESSAGE.transparent,
+      label: MESSAGE.transparent,
       click: () => {
         saveCardColor(cardProp, '#ffffff', '#ffffff', 0.0);
         render(['Decoration', 'EditorColor']);
@@ -135,21 +140,21 @@ contextMenu({
  * Initialize
  */
 const initializeUIEvents = () => {
-  document.ondragover = e => {
+  document.addEventListener('dragover', e => {
     e.preventDefault();
     return false;
-  };
+  });
 
-  document.ondrop = e => {
+  document.addEventListener('drop', e => {
     e.preventDefault();
 
     const file = e.dataTransfer?.files[0];
 
     const dropImg = new Image();
     if (file) {
-      dropImg.onload = () => {
-        let width = dropImg.naturalWidth;
-        let height = dropImg.naturalHeight;
+      dropImg.addEventListener('load', () => {
+        const width = dropImg.naturalWidth;
+        const height = dropImg.naturalHeight;
 
         let newWidth = cardProp.rect.width - 15;
         let newHeight = height;
@@ -161,7 +166,7 @@ const initializeUIEvents = () => {
         }
 
         const imgTag = getImageTag(uniqid(), file!.path, newWidth, newHeight);
-        if (cardProp.data == '') {
+        if (cardProp.data === '') {
           cardProp.data = imgTag;
           cardProp.rect.height = newHeight + 15;
         }
@@ -170,80 +175,77 @@ const initializeUIEvents = () => {
           cardProp.rect.height += newHeight + 15;
         }
 
-        main.setWindowSize(
-          cardProp.id,
-          cardProp.rect.width,
-          cardProp.rect.height
-        );
+        main.setWindowSize(cardProp.id, cardProp.rect.width, cardProp.rect.height);
         render(['Decoration', 'ContentsData']);
         saveData(cardProp);
-      };
+      });
       dropImg.src = file.path;
     }
     return false;
-  };
-
-  document.getElementById('newBtn')?.addEventListener('click', () => {
-    main.createCard();
   });
 
+  // eslint-disable-next-line no-unused-expressions
+  document.getElementById('newBtn')?.addEventListener('click', () => {
+    ipcRenderer.invoke('create-card');
+  });
+
+  // eslint-disable-next-line no-unused-expressions
   document.getElementById('contents')?.addEventListener('click', async () => {
     // 'contents' can be clicked when cardEditor.editorType is 'Markup'
-    if (window.getSelection()?.toString() != '') {
-      return;
-    }
-    else {
-      await cardEditor.showEditor().catch(e => {
-        logger.error(`Error in clicking contents: ${e}`);
+    if (window.getSelection()?.toString() === '') {
+      await cardEditor.showEditor().catch((e: Error) => {
+        logger.error(`Error in clicking contents: ${e.message}`);
       });
       cardEditor.startEdit();
     }
   });
 
+  // eslint-disable-next-line no-unused-expressions
   document.getElementById('codeBtn')?.addEventListener('click', () => {
     cardEditor.toggleCodeMode();
   });
 
+  // eslint-disable-next-line no-unused-expressions
   document.getElementById('closeBtn')?.addEventListener('click', () => {
     if (cardEditor.isOpened) {
-      if (cardEditor.editorType == 'Markup') {
+      if (cardEditor.editorType === 'Markup') {
         cardEditor.hideEditor();
       }
       const [dataChanged, data] = cardEditor.endEdit();
       cardProp.data = data;
       render(['ContentsData', 'ContentsRect']);
-      if (dataChanged && cardProp.data != '') {
+      if (dataChanged && cardProp.data !== '') {
         saveData(cardProp);
       }
     }
-    if (cardProp.data == '') {
-      main.deleteCard(cardProp);
+    if (cardProp.data === '') {
+      ipcRenderer.invoke('delete-card', cardProp.id);
     }
     else {
       /**
-       * Don't use window.confirm(main.MESSAGE.confirm_closing)
+       * Don't use window.confirm(MESSAGE.confirm_closing)
        * It disturbs correct behavior of CKEditor.
        * Caret of CKEditor is disappeared just after push Cancel button of window.confirm()
        */
       remote.dialog
         .showMessageBox(remote.getCurrentWindow(), {
           type: 'question',
-          buttons: [main.MESSAGE.btnCloseCard, 'Cancel'],
+          buttons: [MESSAGE.btnCloseCard, 'Cancel'],
           defaultId: 0,
           cancelId: 1,
-          message: main.MESSAGE.confirmClosing,
+          message: MESSAGE.confirmClosing,
         })
         .then(res => {
-          if (res.response == 0) {
+          if (res.response === 0) {
             // OK
             close();
           }
-          else if (res.response == 1) {
+          else if (res.response === 1) {
             // Cancel
           }
         })
-        .catch(e => {
-          logger.debug(e);
+        .catch((e: Error) => {
+          logger.debug(e.message);
         });
     }
   });
@@ -259,9 +261,9 @@ const onload = async () => {
     const pair = arr[i].split('=');
     params[pair[0]] = pair[1];
   }
-  const id = params['id'];
+  const id = params.id;
   if (!id) {
-    alert(main.MESSAGE.pleaseRestartErrorInOpeningCard);
+    alert(MESSAGE.pleaseRestartErrorInOpeningCard);
     console.error('id parameter is not given in URL');
     return;
   }
@@ -269,33 +271,38 @@ const onload = async () => {
   cardCssStyle = {
     padding: {
       left: parseInt(
-        window.getComputedStyle(document.getElementById('contents')!)
-          .paddingLeft
+        window.getComputedStyle(document.getElementById('contents')!).paddingLeft,
+        10
       ),
       right: parseInt(
-        window.getComputedStyle(document.getElementById('contents')!)
-          .paddingRight
+        window.getComputedStyle(document.getElementById('contents')!).paddingRight,
+        10
       ),
       top: parseInt(
-        window.getComputedStyle(document.getElementById('contents')!).paddingTop
+        window.getComputedStyle(document.getElementById('contents')!).paddingTop,
+        10
       ),
       bottom: parseInt(
-        window.getComputedStyle(document.getElementById('contents')!)
-          .paddingBottom
+        window.getComputedStyle(document.getElementById('contents')!).paddingBottom,
+        10
       ),
     },
     border: {
       left: parseInt(
-        window.getComputedStyle(document.getElementById('card')!).borderLeft
+        window.getComputedStyle(document.getElementById('card')!).borderLeft,
+        10
       ),
       right: parseInt(
-        window.getComputedStyle(document.getElementById('card')!).borderRight
+        window.getComputedStyle(document.getElementById('card')!).borderRight,
+        10
       ),
       top: parseInt(
-        window.getComputedStyle(document.getElementById('card')!).borderTop
+        window.getComputedStyle(document.getElementById('card')!).borderTop,
+        10
       ),
       bottom: parseInt(
-        window.getComputedStyle(document.getElementById('card')!).borderBottom
+        window.getComputedStyle(document.getElementById('card')!).borderBottom,
+        10
       ),
     },
   };
@@ -324,10 +331,10 @@ const initializeIPCEvents = () => {
 
       render();
 
-      if (cardEditor.editorType == 'WYSIWYG') {
-        cardEditor.showEditor().catch(e => {
+      if (cardEditor.editorType === 'WYSIWYG') {
+        cardEditor.showEditor().catch((e: Error) => {
           // logger.error does not work in ipcRenderer event.
-          console.error(`Error in render-card: ${e}`);
+          console.error(`Error in render-card: ${e.message}`);
         });
       }
     }
@@ -337,13 +344,13 @@ const initializeIPCEvents = () => {
     close();
   });
 
-  ipcRenderer.on('card-focused', async () => {
+  ipcRenderer.on('card-focused', () => {
     console.debug('card-focused');
 
     cardProp.status = 'Focused';
     render(['Decoration']);
 
-    if (cardEditor.editorType == 'WYSIWYG') {
+    if (cardEditor.editorType === 'WYSIWYG') {
       cardEditor.startEdit();
     }
   });
@@ -355,7 +362,7 @@ const initializeIPCEvents = () => {
     render(['Decoration']);
 
     if (cardEditor.isOpened) {
-      if (cardEditor.editorType == 'Markup') {
+      if (cardEditor.editorType === 'Markup') {
         cardEditor.hideEditor();
       }
       const [dataChanged, data] = cardEditor.endEdit();
