@@ -21,9 +21,11 @@ import {
 } from './modules_renderer/card_renderer';
 import { getImageTag, logger } from './modules_common/utils';
 import { saveCardColor, saveData, waitUnfinishedSaveTasks } from './modules_renderer/save';
+import { Messages } from './modules_common/base.msg';
 
 const main = remote.require('./main');
-let MESSAGE: Record<string, string> = {};
+
+let MESSAGE: Messages;
 ipcRenderer
   .invoke('get-messages')
   .then(res => {

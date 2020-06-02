@@ -17,9 +17,11 @@ import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
 import { render, setRenderOffsetHeight } from '../modules_renderer/card_renderer';
 import { getImageTag, logger, sleep } from '../modules_common/utils';
 import { saveCardColor, saveData } from '../modules_renderer/save';
+import { Messages } from '../modules_common/base.msg';
 
 const main = remote.require('./main');
-let MESSAGE: Record<string, string> = {};
+
+let MESSAGE: Messages;
 ipcRenderer
   .invoke('get-messages')
   .then(res => {

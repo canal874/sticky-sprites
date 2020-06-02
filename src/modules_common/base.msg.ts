@@ -1,6 +1,23 @@
 import { translate } from 'typed-intl';
 
-export default translate({
+export interface Messages {
+  confirmClosing: string;
+  confirmWaitMore: string;
+  pleaseRestartErrorInOpeningCard: string;
+  btnCloseCard: string;
+  btnCancel: string;
+  white: string;
+  yellow: string;
+  red: string;
+  green: string;
+  blue: string;
+  orange: string;
+  purple: string;
+  gray: string;
+  transparent: string;
+}
+
+const English: Messages = {
   confirmClosing:
     'Close OK?\n(If you want to delete the sticky, let it empty before closing it.)',
   confirmWaitMore:
@@ -18,7 +35,9 @@ export default translate({
   purple: 'purple',
   gray: 'gray',
   transparent: 'transparent',
-}).supporting('ja', {
+};
+
+const Japanese: Messages = {
   confirmClosing:
     '付箋を閉じても良いですか？\n（付箋は削除されません。削除したい場合、付箋の内容を消してから閉じてください）',
   confirmWaitMore:
@@ -36,4 +55,6 @@ export default translate({
   purple: '紫',
   gray: 'グレー',
   transparent: '透明',
-});
+};
+
+export default translate(English).supporting('ja', Japanese);
