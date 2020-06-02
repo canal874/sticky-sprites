@@ -85,10 +85,21 @@ export class CardEditor implements ICardEditor {
   private _isEditing = false;
 
   adjustEditorSizeFromImage2Plugin = (width: number, height: number) => {
+    // Cancel the resizing when the card contains anything other than an image.
     const body = CKEDITOR.instances.editor.document.getBody();
-    if (body.$.childNodes.length > 2) {
-      // Cancel the resizing when the card contains anything other than an image.
+    if (body.$.childNodes.length >= 4) {
       return;
+    }
+    let count = 0;
+    for (const elm of body.$.childNodes) {
+      if (elm.nodeType === Node.ELEMENT_NODE) {
+        if (!(elm as Element).getAttribute('data-cke-temp')) {
+          count++;
+        }
+        if (count >= 3) {
+          return;
+        }
+      }
     }
     const toolbar = document.getElementById('cke_1_bottom');
     if (toolbar) {

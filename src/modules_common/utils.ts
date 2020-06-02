@@ -30,7 +30,15 @@ export const getImageTag = (
   height: number
 ): string => {
   return (
-    '<img id="' + id + '" src="' + src + '" width="' + width + '" height="' + height + '">'
+    '<img id="' +
+    id +
+    '" src="' +
+    src +
+    '" width="' +
+    width +
+    '" height="' +
+    height +
+    '" />'
   );
 };
 
