@@ -5,9 +5,9 @@
     "node": true
   },
   "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:prettierx/standardx",
+    "standardize",
+    "standardize/typescript",
+    "plugin:prettierx/standardize-bundle",
     "plugin:prettierx/@typescript-eslint"
   ],
   "plugins": ["@typescript-eslint", "prettierx"],
@@ -30,6 +30,7 @@
   },
 
   "rules": {
+    "unicorn/no-unreadable-array-destructuring": "off",
     "no-restricted-syntax": [
       "error",
       {
@@ -37,7 +38,7 @@
         "message": "Don't declare enums"
       }
     ],
-    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/no-parameter-properties": "off",
     "@typescript-eslint/interface-name-prefix": [0],
     "prettierx/options": ["error", {
        "breakBeforeElse": true,
