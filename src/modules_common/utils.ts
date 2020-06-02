@@ -7,7 +7,9 @@
  */
 
 import log4js from 'log4js';
-import moment from 'moment';
+import dayjs from 'dayjs';
+const utc = require('dayjs/plugin/utc');
+dayjs.extend(utc);
 
 export const logger = log4js.getLogger();
 logger.level = 'all';
@@ -17,7 +19,8 @@ export const sleep = (msec: number) =>
   new Promise<void>(resolve => setTimeout(resolve, msec));
 
 export const getCurrentDate = (): string => {
-  return moment.utc().format('YYYY-MM-DD HH:mm:ss');
+  // @ts-ignore
+  return dayjs.utc().format('YYYY-MM-DD HH:mm:ss');
 };
 
 export const getImageTag = (
