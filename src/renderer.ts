@@ -7,7 +7,7 @@
  */
 
 import { ipcRenderer, remote } from 'electron';
-import uniqid from 'uniqid'; // electron-context-menu uses CommonJS compatible export
+import uniqid from 'uniqid';
 import contextMenu from 'electron-context-menu';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 import { CardCssStyle, DialogButton, ICardEditor } from './modules_common/types';
@@ -65,6 +65,18 @@ contextMenu({
   window: remote.getCurrentWindow(),
   showSaveImageAs: true,
   showInspectElement: false,
+  menu: actions => [
+    actions.searchWithGoogle({}),
+    actions.separator(),
+    actions.cut({}),
+    actions.copy({}),
+    actions.paste({}),
+    actions.separator(),
+    actions.saveImageAs({}),
+    actions.separator(),
+    actions.copyLink({}),
+    actions.separator(),
+  ],
   append: () => [
     {
       label: MESSAGE.yellow,
