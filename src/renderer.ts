@@ -19,7 +19,7 @@ import {
   initCardRenderer,
   render,
 } from './modules_renderer/card_renderer';
-import { getImageTag, logger } from './modules_common/utils';
+import { alertDialog, getImageTag, logger } from './modules_common/utils';
 import { saveCardColor, saveData, waitUnfinishedSaveTasks } from './modules_renderer/save';
 import { Messages } from './modules_common/base.msg';
 
@@ -265,9 +265,6 @@ const onload = async () => {
   }
   const id = params.id;
   if (!id) {
-    // TODO: remove alert
-    // eslint-disable-next-line no-alert
-    alert(MESSAGE.pleaseRestartErrorInOpeningCard);
     console.error('id parameter is not given in URL');
     return;
   }

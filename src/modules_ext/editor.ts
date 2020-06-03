@@ -15,7 +15,7 @@ import { ipcRenderer, remote } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
 import { render, setRenderOffsetHeight } from '../modules_renderer/card_renderer';
-import { getImageTag, logger, sleep } from '../modules_common/utils';
+import { alertDialog, getImageTag, logger, sleep } from '../modules_common/utils';
 import { saveCardColor, saveData } from '../modules_renderer/save';
 import { Messages } from '../modules_common/base.msg';
 
@@ -326,9 +326,7 @@ export class CardEditor implements ICardEditor {
         cont = false;
         // logger.error does not work in ipcRenderer event.
         console.error(`Error in showEditor ${this._cardProp.id}: too many setData errors`);
-        // TODO: remove alert
-        // eslint-disable-next-line no-alert
-        alert(MESSAGE.pleaseRestartErrorInOpeningCard);
+        alertDialog(this._cardProp.id, MESSAGE.pleaseRestartErrorInOpeningCard);
       }
       if (cont) {
         console.debug(`re-trying setData for ${this._cardProp.id}`);

@@ -9,6 +9,7 @@
 import log4js from 'log4js';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import { ipcRenderer } from 'electron';
 dayjs.extend(utc);
 
 export const logger = log4js.getLogger();
@@ -55,4 +56,13 @@ export const convertHexColorToRgba = (
   const rgba = 'rgba(' + red + ',' + green + ',' + blue + ',' + opacity + ')';
 
   return rgba;
+};
+
+/**
+ * Show modal dialog for alert
+ * @param id
+ * @param msg
+ */
+export const alertDialog = async (id: string, msg: string) => {
+  await ipcRenderer.invoke('alert-dialog', id, msg);
 };

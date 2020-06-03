@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { app, ipcMain } from 'electron';
+import { app, dialog, ipcMain } from 'electron';
 import { selectPreferredLanguage } from 'typed-intl';
 import { logger } from './modules_common/utils';
 import translations from './modules_common/base.msg';
@@ -159,4 +159,20 @@ ipcMain.handle('blurAndFocus', (event, id: string) => {
     card.suppressFocusEventOnce = true;
     card.window.focus();
   }
+});
+
+ipcMain.handle('alert-dialog', (event, id: string, msg: string) => {
+  const card = cards.get(id);
+  if (!card) {
+    return;
+  }
+
+  dialog
+    .showMessageBox(card.window, {
+      type: 'question',
+      buttons: ['OK'],
+      message: msg,
+    })
+    .then(() => {})
+    .catch(() => {});
 });
