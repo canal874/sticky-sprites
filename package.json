@@ -5,12 +5,13 @@
   "description": "Small sticky browser windows",
   "main": "dist/main.js",
   "scripts": {
-    "compile-clean": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && tsc",
-    "compile": "tsc",
+    "compile-clean": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && npx eslint --fix --ext .ts .  && tsc",
+    "compile": "npx eslint --fix --ext .ts . && tsc",
+    "compile-quick": "tsc",
     "start": "tsc && electron-forge start",
-    "package": "electron-forge package",
-    "make": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && tsc && electron-forge make",
-    "publish": "electron-forge publish",
+    "package": "npx eslint --fix --ext .ts . && electron-forge package",
+    "make": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && npx eslint --fix --ext .ts . && tsc && electron-forge make",
+    "publish": "npx eslint --fix --ext .ts . && electron-forge publish",
     "lint": "eslint --ext .ts ."
   },
   "keywords": [],
