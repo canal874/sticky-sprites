@@ -139,11 +139,6 @@ app.on('window-all-closed', () => {
 /**
  * Utils
  */
-export const setWindowSize = (id: string, width: number, height: number) => {
-  const card = cards.get(id);
-  // eslint-disable-next-line no-unused-expressions
-  card?.window.setSize(width, height);
-};
 
 ipcMain.handle('blurAndFocus', (event, id: string) => {
   const card = cards.get(id);
@@ -175,4 +170,10 @@ ipcMain.handle('alert-dialog', (event, id: string, msg: string) => {
     })
     .then(() => {})
     .catch(() => {});
+});
+
+ipcMain.handle('set-window-size', (event, id: string, width: number, height: number) => {
+  const card = cards.get(id);
+  // eslint-disable-next-line no-unused-expressions
+  card?.window.setSize(width, height);
 });

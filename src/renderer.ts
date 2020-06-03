@@ -10,28 +10,17 @@ import { ipcRenderer, remote } from 'electron';
 import uniqid from 'uniqid'; // electron-context-menu uses CommonJS compatible export
 import contextMenu from 'electron-context-menu';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
-
 import { CardCssStyle, ICardEditor } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
 import {
   getRenderOffsetHeight,
   getRenderOffsetWidth,
   initCardRenderer,
+  MESSAGE,
   render,
 } from './modules_renderer/card_renderer';
-import { alertDialog, getImageTag, logger } from './modules_common/utils';
+import { getImageTag, logger } from './modules_common/utils';
 import { saveCardColor, saveData, waitUnfinishedSaveTasks } from './modules_renderer/save';
-import { Messages } from './modules_common/base.msg';
-
-const main = remote.require('./main');
-
-let MESSAGE: Messages;
-ipcRenderer
-  .invoke('get-messages')
-  .then(res => {
-    MESSAGE = res;
-  })
-  .catch(e => {});
 
 let cardProp: CardProp = new CardProp('');
 
@@ -154,7 +143,7 @@ const initializeUIEvents = () => {
 
     const dropImg = new Image();
     if (file) {
-      dropImg.addEventListener('load', () => {
+      dropImg.addEventListener('load', async () => {
         const width = dropImg.naturalWidth;
         const height = dropImg.naturalHeight;
 
@@ -177,7 +166,13 @@ const initializeUIEvents = () => {
           cardProp.rect.height += newHeight + 15;
         }
 
-        main.setWindowSize(cardProp.id, cardProp.rect.width, cardProp.rect.height);
+        await ipcRenderer.invoke(
+          'set-window-size',
+          cardProp.id,
+          cardProp.rect.width,
+          cardProp.rect.height
+        );
+
         render(['Decoration', 'ContentsData']);
         saveData(cardProp);
       });

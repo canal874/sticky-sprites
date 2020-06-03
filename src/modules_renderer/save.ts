@@ -8,10 +8,8 @@
 
 import { ipcRenderer, remote } from 'electron';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
-import { setTitleMessage } from './card_renderer';
+import { MESSAGE, setTitleMessage } from './card_renderer';
 import { getCurrentDate, logger } from '../modules_common/utils';
-
-const main = remote.require('./main');
 
 const unfinishedSaveTasks: CardPropSerializable[] = [];
 
@@ -30,7 +28,7 @@ export const waitUnfinishedSaveTasks = () => {
             buttons: ['Ok', 'Cancel'],
             defaultId: 0,
             cancelId: 1,
-            message: main.MESSAGE.confirmWaitMore,
+            message: MESSAGE.confirmWaitMore,
           });
           if (res === 0) {
             // OK

@@ -6,9 +6,11 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
+import { ipcRenderer } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, ICardEditor } from '../modules_common/types';
 import { convertHexColorToRgba } from '../modules_common/utils';
+import { Messages } from '../modules_common/base.msg';
 
 let cardCssStyle: CardCssStyle;
 let cardProp: CardProp;
@@ -16,6 +18,15 @@ let cardEditor: ICardEditor;
 
 let renderOffsetHeight = 0; // Offset of card height from actual window height;
 let renderOffsetWidth = 0; // Offset of card height from actual window width;
+
+// eslint-disable-next-line import/no-mutable-exports
+export let MESSAGE: Messages;
+ipcRenderer
+  .invoke('get-messages')
+  .then(res => {
+    MESSAGE = res;
+  })
+  .catch(e => {});
 
 export const getRenderOffsetWidth = () => {
   return renderOffsetWidth;

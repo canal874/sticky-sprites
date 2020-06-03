@@ -6,28 +6,13 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-/**
- * Common part
- */
-
 import uniqid from 'uniqid';
-import { ipcRenderer, remote } from 'electron';
+import { ipcRenderer } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
-import { render, setRenderOffsetHeight } from '../modules_renderer/card_renderer';
+import { MESSAGE, render, setRenderOffsetHeight } from '../modules_renderer/card_renderer';
 import { alertDialog, getImageTag, logger, sleep } from '../modules_common/utils';
 import { saveCardColor, saveData } from '../modules_renderer/save';
-import { Messages } from '../modules_common/base.msg';
-
-const main = remote.require('./main');
-
-let MESSAGE: Messages;
-ipcRenderer
-  .invoke('get-messages')
-  .then(res => {
-    MESSAGE = res;
-  })
-  .catch(e => {});
 
 export class CardEditor implements ICardEditor {
   /**
@@ -130,7 +115,7 @@ export class CardEditor implements ICardEditor {
       return;
     }
 
-    main.setWindowSize(this._cardProp.id, width, height);
+    ipcRenderer.invoke('set-window-size', this._cardProp.id, width, height);
 
     this._cardProp.rect.width = width;
     this._cardProp.rect.height = height;
@@ -259,7 +244,8 @@ export class CardEditor implements ICardEditor {
               this._cardCssStyle.padding.bottom +
               document.getElementById('titleBar')!.offsetHeight;
 
-            main.setWindowSize(
+            ipcRenderer.invoke(
+              'set-window-size',
               this._cardProp.id,
               this._cardProp.rect.width,
               this._cardProp.rect.height
@@ -357,7 +343,12 @@ export class CardEditor implements ICardEditor {
     }
     // Expand card to add toolbar.
     const expandedHeight = this._cardProp.rect.height + this._TOOLBAR_HEIGHT;
-    main.setWindowSize(this._cardProp.id, this._cardProp.rect.width, expandedHeight);
+    ipcRenderer.invoke(
+      'set-window-size',
+      this._cardProp.id,
+      this._cardProp.rect.width,
+      expandedHeight
+    );
     setRenderOffsetHeight(-this._TOOLBAR_HEIGHT);
 
     const toolbar = document.getElementById('cke_1_bottom');
@@ -382,7 +373,8 @@ export class CardEditor implements ICardEditor {
       dataChanged = true;
     }
 
-    main.setWindowSize(
+    ipcRenderer.invoke(
+      'set-window-size',
       this._cardProp.id,
       this._cardProp.rect.width,
       this._cardProp.rect.height
