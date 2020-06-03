@@ -10,6 +10,7 @@
  * Common part
  */
 import uniqid from 'uniqid';
+import PouchDB from 'pouchdb';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
 import { logger } from '../modules_common/utils';
@@ -23,7 +24,6 @@ if (process.env.NODE_CARDDIR) {
  * Module specific part
  */
 
-import pouchDB from 'pouchdb';
 var cardsDB: PouchDB.Database<{}>;
 
 class CardIOClass implements ICardIO {
@@ -32,9 +32,9 @@ class CardIOClass implements ICardIO {
     return uniqid();
   };
 
-  public getCardIdList = (): Promise<Array<string>> => {
+  public getCardIdList = (): Promise<string[]> => {
     // returns all card ids.
-    cardsDB = new pouchDB(cardDir);
+    cardsDB = new PouchDB(cardDir);
     return new Promise((resolve, reject) => {
       cardsDB
         .allDocs()
@@ -55,8 +55,8 @@ class CardIOClass implements ICardIO {
           cardsDB.remove(res);
           resolve(id);
         })
-        .catch(err => {
-          reject(err);
+        .catch(e => {
+          reject(e);
         });
     });
   };
@@ -66,12 +66,10 @@ class CardIOClass implements ICardIO {
       cardsDB
         .get(id)
         .then(doc => {
-          const propsRequired: CardPropSerializable = new CardProp(
-            ''
-          ).toObject();
+          const propsRequired: CardPropSerializable = new CardProp('').toObject();
           // Checking properties retrieved from database
-          for (let key in propsRequired) {
-            if (key == 'id') {
+          for (const key in propsRequired) {
+            if (key === 'id') {
               // skip
               // pouchDB does not have id but has _id.
             }
@@ -109,45 +107,37 @@ class CardIOClass implements ICardIO {
             )
           );
         })
-        .catch(err => {
-          reject(err);
+        .catch(e => {
+          reject(e);
         });
     });
   };
 
-  public writeOrCreateCardData = (prop: CardProp): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      logger.debug('Saving card...: ' + JSON.stringify(prop.toObject()));
+  public writeOrCreateCardData = async (prop: CardProp): Promise<string> => {
+    logger.debug('Saving card...: ' + JSON.stringify(prop.toObject()));
+    // In PouchDB, _id must be used instead of id in document.
+    // Convert class to Object to serialize.
+    const propObj = Object.assign({ _id: prop.id, _rev: '' }, prop.toObject());
+    delete propObj.id;
 
-      // In PouchDB, _id must be used instead of id in document.
-      // Convert class to Object to serialize.
-      let propObj = Object.assign({ _id: prop.id, _rev: '' }, prop.toObject());
+    await cardsDB
+      .get(prop.id)
+      .then(oldCard => {
+        // Update existing card
+        propObj._rev = oldCard._rev;
+      })
+      .catch(() => {
+        /* Create new card */
+      });
 
-      delete propObj.id;
-
-      cardsDB
-        .get(prop.id)
-        .then(oldCard => {
-          // Update existing card
-          propObj._rev = oldCard._rev;
-        })
-        .catch(() => {
-          /* Create new card */
-        })
-        .then(() => {
-          cardsDB
-            .put(propObj)
-            .then(res => {
-              resolve(res.id);
-            })
-            .catch(err => {
-              throw err;
-            });
-        })
-        .catch(err => {
-          reject(err);
-        });
-    });
+    return cardsDB
+      .put(propObj)
+      .then(res => {
+        return res.id;
+      })
+      .catch(e => {
+        throw e;
+      });
   };
 }
 

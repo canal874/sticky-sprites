@@ -265,6 +265,8 @@ const onload = async () => {
   }
   const id = params.id;
   if (!id) {
+    // TODO: remove alert
+    // eslint-disable-next-line no-alert
     alert(MESSAGE.pleaseRestartErrorInOpeningCard);
     console.error('id parameter is not given in URL');
     return;

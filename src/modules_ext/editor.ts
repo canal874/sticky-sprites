@@ -326,6 +326,8 @@ export class CardEditor implements ICardEditor {
         cont = false;
         // logger.error does not work in ipcRenderer event.
         console.error(`Error in showEditor ${this._cardProp.id}: too many setData errors`);
+        // TODO: remove alert
+        // eslint-disable-next-line no-alert
         alert(MESSAGE.pleaseRestartErrorInOpeningCard);
       }
       if (cont) {
