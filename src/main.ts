@@ -10,11 +10,11 @@ import { app, dialog, ipcMain } from 'electron';
 import { selectPreferredLanguage } from 'typed-intl';
 import { logger } from './modules_common/utils';
 import translations from './modules_common/base.msg';
+import { DialogButton } from './modules_common/types';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 import { CardIO } from './modules_ext/io';
 import { Card, cards } from './modules_main/card';
 import { setGlobalFocusEventListenerPermission } from './modules_main/global';
-// import { sleep } from './modules_common/utils';
 
 // process.on('unhandledRejection', console.dir);
 
@@ -37,13 +37,10 @@ ipcMain.handle('get-messages', () => {
 /**
  * Card I/O
  */
-ipcMain.handle('save', (event, cardPropObj: CardPropSerializable) => {
+ipcMain.handle('save', async (event, cardPropObj: CardPropSerializable) => {
   const prop = CardProp.fromObject(cardPropObj);
 
-  // for debug
-  // await sleep(10000);
-
-  CardIO.writeOrCreateCardData(prop)
+  await CardIO.writeOrCreateCardData(prop)
     .then(() => {
       const card = cards.get(prop.id);
       if (card) {
@@ -61,15 +58,15 @@ ipcMain.handle('save', (event, cardPropObj: CardPropSerializable) => {
 ipcMain.handle('delete-card', (event, id: string) => {
   CardIO.deleteCardData(id)
     .catch((e: Error) => {
-      logger.error(e.message);
+      logger.error(`delete-card: ${e.message}`);
     })
     .then(() => {
-      logger.debug('deleted :' + id);
+      logger.debug(`deleted : ${id}`);
       // eslint-disable-next-line no-unused-expressions
       cards.get(id)?.window.webContents.send('card-close');
     })
     .catch((e: Error) => {
-      logger.error(e.message);
+      logger.error(`send card-close: ${e.message}`);
     });
 });
 
@@ -162,14 +159,25 @@ ipcMain.handle('alert-dialog', (event, id: string, msg: string) => {
     return;
   }
 
-  dialog
-    .showMessageBox(card.window, {
-      type: 'question',
-      buttons: ['OK'],
-      message: msg,
-    })
-    .then(() => {})
-    .catch(() => {});
+  dialog.showMessageBoxSync(card.window, {
+    type: 'question',
+    buttons: ['OK'],
+    message: msg,
+  });
+});
+
+ipcMain.handle('confirm-dialog', (event, id: string, buttons: string[], msg: string) => {
+  const card = cards.get(id);
+  if (!card) {
+    return;
+  }
+  return dialog.showMessageBoxSync(card.window, {
+    type: 'question',
+    buttons: buttons,
+    defaultId: DialogButton.Default,
+    cancelId: DialogButton.Cancel,
+    message: msg,
+  });
 });
 
 ipcMain.handle('set-window-size', (event, id: string, width: number, height: number) => {

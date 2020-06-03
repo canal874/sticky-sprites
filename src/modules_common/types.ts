@@ -53,3 +53,9 @@ export type CardCssStyle = {
 };
 
 export type EditorType = 'WYSIWYG' | 'Markup';
+
+export const DialogButton = {
+  Error: -1,
+  Default: 0,
+  Cancel: 1,
+};

@@ -13,7 +13,7 @@ import uniqid from 'uniqid';
 import PouchDB from 'pouchdb';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
-import { logger } from '../modules_common/utils';
+import { logger, sleep } from '../modules_common/utils';
 
 let cardDir = './cards';
 if (process.env.NODE_CARDDIR) {
@@ -119,6 +119,9 @@ class CardIOClass implements ICardIO {
     // Convert class to Object to serialize.
     const propObj = Object.assign({ _id: prop.id, _rev: '' }, prop.toObject());
     delete propObj.id;
+
+    // for debug
+    // await sleep(60000);
 
     await cardsDB
       .get(prop.id)

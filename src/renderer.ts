@@ -10,7 +10,7 @@ import { ipcRenderer, remote } from 'electron';
 import uniqid from 'uniqid'; // electron-context-menu uses CommonJS compatible export
 import contextMenu from 'electron-context-menu';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
-import { CardCssStyle, ICardEditor } from './modules_common/types';
+import { CardCssStyle, DialogButton, ICardEditor } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
 import {
   getRenderOffsetHeight,
@@ -20,7 +20,7 @@ import {
   render,
 } from './modules_renderer/card_renderer';
 import { getImageTag, logger } from './modules_common/utils';
-import { saveCardColor, saveData, waitUnfinishedSaveTasks } from './modules_renderer/save';
+import { saveCardColor, saveData, waitUnfinishedTasks } from './modules_renderer/save';
 
 let cardProp: CardProp = new CardProp('');
 
@@ -32,7 +32,7 @@ let cardCssStyle: CardCssStyle = {
 const cardEditor: ICardEditor = new CardEditor();
 
 const close = async () => {
-  await waitUnfinishedSaveTasks().catch((e: Error) => {
+  await waitUnfinishedTasks(cardProp.id).catch((e: Error) => {
     logger.debug(e.message);
   });
   window.close();
@@ -224,20 +224,19 @@ const initializeUIEvents = () => {
        * It disturbs correct behavior of CKEditor.
        * Caret of CKEditor is disappeared just after push Cancel button of window.confirm()
        */
-      remote.dialog
-        .showMessageBox(remote.getCurrentWindow(), {
-          type: 'question',
-          buttons: [MESSAGE.btnCloseCard, 'Cancel'],
-          defaultId: 0,
-          cancelId: 1,
-          message: MESSAGE.confirmClosing,
-        })
-        .then(res => {
-          if (res.response === 0) {
+      ipcRenderer
+        .invoke(
+          'confirm-dialog',
+          cardProp.id,
+          [MESSAGE.btnCloseCard, 'Cancel'],
+          MESSAGE.confirmClosing
+        )
+        .then((res: number) => {
+          if (res === DialogButton.Default) {
             // OK
             close();
           }
-          else if (res.response === 1) {
+          else if (res === DialogButton.Cancel) {
             // Cancel
           }
         })
