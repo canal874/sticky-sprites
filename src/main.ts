@@ -37,7 +37,7 @@ ipcMain.handle('get-messages', () => {
 /**
  * Card I/O
  */
-ipcMain.handle('save', async (event, cardPropObj: CardPropSerializable) => {
+ipcMain.handle('save-card', async (event, cardPropObj: CardPropSerializable) => {
   const prop = CardProp.fromObject(cardPropObj);
 
   await CardIO.writeOrCreateCardData(prop)
@@ -55,8 +55,8 @@ ipcMain.handle('save', async (event, cardPropObj: CardPropSerializable) => {
     });
 });
 
-ipcMain.handle('delete-card', (event, id: string) => {
-  CardIO.deleteCardData(id)
+ipcMain.handle('delete-card', async (event, id: string) => {
+  await CardIO.deleteCardData(id)
     .catch((e: Error) => {
       logger.error(`delete-card: ${e.message}`);
     })

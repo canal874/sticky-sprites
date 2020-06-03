@@ -48,6 +48,9 @@ class CardIOClass implements ICardIO {
   };
 
   public deleteCardData = (id: string): Promise<string> => {
+    // for debug
+    // await sleep(60000);
+
     return new Promise((resolve, reject) => {
       cardsDB
         .get(id)
@@ -62,6 +65,9 @@ class CardIOClass implements ICardIO {
   };
 
   public readCardData = (id: string): Promise<CardProp> => {
+    // for debug
+    // await sleep(60000);
+
     return new Promise((resolve, reject) => {
       cardsDB
         .get(id)

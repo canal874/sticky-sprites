@@ -13,7 +13,12 @@ import { MESSAGE, setTitleMessage } from './card_renderer';
 import { getCurrentDate, logger } from '../modules_common/utils';
 import { DialogButton } from '../modules_common/types';
 
-const unfinishedTasks: CardPropSerializable[] = [];
+type task = {
+  prop: CardPropSerializable;
+  type: 'Save' | 'Delete';
+};
+
+const unfinishedTasks: task[] = [];
 
 export const waitUnfinishedTasks = (id: string) => {
   return new Promise((resolve, reject) => {
@@ -52,22 +57,38 @@ export const waitUnfinishedTasks = (id: string) => {
   });
 };
 
-const execSaveTask = async () => {
+const execTask = async () => {
   if (unfinishedTasks.length === 1) {
+    const task = unfinishedTasks[0];
     const timeout = setTimeout(() => {
-      setTitleMessage('[saving...]');
+      if (task.type === 'Save') {
+        setTitleMessage('[saving...]');
+      }
+      else if (task.type === 'Delete') {
+        setTitleMessage('[deleting...]');
+      }
     }, 1000);
 
     // Execute the first task
-    await ipcRenderer.invoke('save', unfinishedTasks[0]).catch(() => {
-      // TODO: Handle save error.
-    });
-    const finishedPropObject = unfinishedTasks.shift();
-    logger.debug(`Dequeue unfinishedTask: ${finishedPropObject?.modifiedDate}`);
+    if (task.type === 'Save') {
+      await ipcRenderer.invoke('save-card', task.prop).catch(() => {
+        // TODO: Handle save error.
+      });
+    }
+    else if (task.type === 'Delete') {
+      await ipcRenderer.invoke('delete-card', task.prop.id).catch(() => {
+        // TODO: Handle save error.
+      });
+    }
+
+    const finishedTask = unfinishedTasks.shift();
+    logger.debug(
+      `Dequeue unfinishedTask: [${finishedTask?.type}] ${finishedTask?.prop.modifiedDate}`
+    );
     clearTimeout(timeout);
     setTitleMessage('');
     if (unfinishedTasks.length > 0) {
-      execSaveTask();
+      execTask();
     }
   }
 };
@@ -85,19 +106,37 @@ export const saveCardColor = (
   cardProp.style.titleColor = titleColor;
   cardProp.style.backgroundOpacity = backgroundOpacity;
 
-  saveData(cardProp);
+  saveCard(cardProp);
 };
 
-export const saveData = (cardProp: CardProp) => {
+export const deleteCard = (cardProp: CardProp) => {
   cardProp.date.modifiedDate = getCurrentDate();
   const propObject = cardProp.toObject();
   while (unfinishedTasks.length > 1) {
-    const poppedPropObject = unfinishedTasks.pop();
-    logger.debug(`Skip unfinishedTask: ${poppedPropObject?.modifiedDate}`);
+    const poppedTask = unfinishedTasks.pop();
+    logger.debug(
+      `Skip unfinishedTask: [${poppedTask?.type}] ${poppedTask?.prop.modifiedDate}`
+    );
   }
-  logger.debug(`Enqueue unfinishedTask: ${propObject.modifiedDate}`);
+  logger.debug(`Enqueue unfinishedTask: [Delete] ${propObject.modifiedDate}`);
   // Here, current length of unfinishedTasks should be 0 or 1.
-  unfinishedTasks.push(propObject);
+  unfinishedTasks.push({ prop: propObject, type: 'Delete' });
   // Here, current length of unfinishedTasks is 1 or 2.
-  execSaveTask();
+  execTask();
+};
+
+export const saveCard = (cardProp: CardProp) => {
+  cardProp.date.modifiedDate = getCurrentDate();
+  const propObject = cardProp.toObject();
+  while (unfinishedTasks.length > 1) {
+    const poppedTask = unfinishedTasks.pop();
+    logger.debug(
+      `Skip unfinishedTask: [${poppedTask?.type}] ${poppedTask?.prop.modifiedDate}`
+    );
+  }
+  logger.debug(`Enqueue unfinishedTask: [Save] ${propObject.modifiedDate}`);
+  // Here, current length of unfinishedTasks should be 0 or 1.
+  unfinishedTasks.push({ prop: propObject, type: 'Save' });
+  // Here, current length of unfinishedTasks is 1 or 2.
+  execTask();
 };

@@ -12,7 +12,7 @@ import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
 import { MESSAGE, render, setRenderOffsetHeight } from '../modules_renderer/card_renderer';
 import { alertDialog, getImageTag, logger, sleep } from '../modules_common/utils';
-import { saveCardColor, saveData } from '../modules_renderer/save';
+import { saveCard, saveCardColor } from '../modules_renderer/save';
 
 export class CardEditor implements ICardEditor {
   /**
@@ -253,7 +253,7 @@ export class CardEditor implements ICardEditor {
 
             this._cardProp.data = CKEDITOR.instances.editor.getData();
             render(['Decoration', 'EditorRect']);
-            saveData(this._cardProp);
+            saveCard(this._cardProp);
           };
           const imgTag = getImageTag(id, file!.path, 1, 1);
           evt.data.dataValue = imgTag;

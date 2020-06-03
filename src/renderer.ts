@@ -20,7 +20,12 @@ import {
   render,
 } from './modules_renderer/card_renderer';
 import { getImageTag, logger } from './modules_common/utils';
-import { saveCardColor, saveData, waitUnfinishedTasks } from './modules_renderer/save';
+import {
+  deleteCard,
+  saveCard,
+  saveCardColor,
+  waitUnfinishedTasks,
+} from './modules_renderer/save';
 
 let cardProp: CardProp = new CardProp('');
 
@@ -44,7 +49,7 @@ const close = async () => {
  */
 let execSaveCommandTimeout: NodeJS.Timeout;
 const execSaveCommand = () => {
-  saveData(cardProp);
+  saveCard(cardProp);
 };
 
 const queueSaveCommand = () => {
@@ -174,7 +179,7 @@ const initializeUIEvents = () => {
         );
 
         render(['Decoration', 'ContentsData']);
-        saveData(cardProp);
+        saveCard(cardProp);
       });
       dropImg.src = file.path;
     }
@@ -212,11 +217,11 @@ const initializeUIEvents = () => {
       cardProp.data = data;
       render(['ContentsData', 'ContentsRect']);
       if (dataChanged && cardProp.data !== '') {
-        saveData(cardProp);
+        saveCard(cardProp);
       }
     }
     if (cardProp.data === '') {
-      ipcRenderer.invoke('delete-card', cardProp.id);
+      deleteCard(cardProp);
     }
     else {
       /**
@@ -364,7 +369,7 @@ const initializeIPCEvents = () => {
       if (dataChanged) {
         cardProp.data = data;
         render(['ContentsData', 'ContentsRect']);
-        saveData(cardProp);
+        saveCard(cardProp);
       }
     }
   });
