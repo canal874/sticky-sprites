@@ -17,19 +17,18 @@ After that you can type 'npm start' to start app.
 
 # Build installer
 
-Type 'npm run make' and you can find a installer which name is media-stickies-x.x.x.Setup.exe under out\make\squirrels.windows\x64\ (if you use Windows).
-
-Note for version 1.0.10 or less: Existing card data is overwritten when install.
+Type 'npm run make' to build an installer. You can find the installer which name is media_stickies-x.x.x.Setup.exe under out\make\squirrels.windows\x64\ (if you use Windows).
 
 Card data is saved under 
 
-C:\Users\%USERNAME%\AppData\Local\media_stickies\app-1.0.9\cards\
+C:\Users\%USERNAME%\AppData\Local\media_stickies_data\
 
-# Editor Type
+# NOTE for developers
+## Editor Type 
 
 2 editor types are available.
 
-## WYSIWYG Editor
+### WYSIWYG Editor
 
 WYSIWYG editor has only one common mode for viewing and editing.
 You can edit rich text directly on a card.
@@ -37,9 +36,9 @@ You can edit rich text directly on a card.
 * HTML contents is rendered in a WYSIWYG editor.
 * Text can be selected when a card is focused.
 * An editor is always shown.
-* An editor toobar is shown only when a card is focused.
+* An editor toolbar is shown only when a card is focused.
 
-## Markup Editor
+### Markup Editor
 
 Markup editor has two modes for viewing or editing.
 You can edit markuped text on a built-in editor and view rendered HTML on a card.
@@ -48,11 +47,11 @@ You can edit markuped text on a built-in editor and view rendered HTML on a card
 * Text can be selected when a card is focused.
 * An editor and its toolbar are shown only when &lt;div id='contents'&gt; is clicked.
 
-## Event Trigger
+### Event Trigger
 
 | Event | WYSIWYG | Markup |
 | :---: |  :---:  | :---:  |
 | render-card | showEditor() | - |
 | card-focused | startEdit() | - |
 | click | - | showEditor()<br>startEdit() |
-| card-blured | endEdit() | hideEditor()<br>endEdit() |
+| card-blurred | endEdit() | hideEditor()<br>endEdit() |
