@@ -13,7 +13,7 @@ It looks like a sticky note but accepts any HTML and can have a transparent back
 
 Type 'npm run compile-clean' on the project root directory.
 
-'compile-clean' copies required files from html/ and 3rdParty/ to dist/ and compile .ts. 
+'compile-clean' copies required files from assets, html/ and 3rdParty/ to dist/ and compile .ts. 
 
 After that you can type 'npm start' to start app.
 
