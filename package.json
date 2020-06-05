@@ -1,16 +1,16 @@
 {
   "name": "media-stickies",
   "productName": "MediaStickies",
-  "version": "1.0.10",
-  "description": "Small sticky browser windows",
+  "version": "1.0.11",
+  "description": "Media Stickies Installer",
   "main": "dist/main.js",
   "scripts": {
-    "compile-clean": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && npx eslint --fix --ext .ts .  && tsc",
+    "compile-clean": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && cp -r assets dist/ && npx eslint --fix --ext .ts .  && tsc",
     "compile": "npx eslint --fix --ext .ts . && tsc",
     "compile-quick": "tsc",
     "start": "tsc && electron-forge start",
     "package": "npx eslint --fix --ext .ts . && electron-forge package",
-    "make": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && npx eslint --fix --ext .ts . && tsc && electron-forge make",
+    "make": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && cp -r assets dist/ && npx eslint --fix --ext .ts . && tsc && electron-forge make",
     "publish": "npx eslint --fix --ext .ts . && electron-forge publish",
     "lint": "eslint --ext .ts ."
   },
@@ -20,7 +20,14 @@
   "config": {
     "forge": {
       "packagerConfig": {
-        "asar": true
+        "appCopyright": "Copyright(C) 2020 Hidekazu Kubota",
+        "asar": true,
+        "icon": "assets/media_stickies_icon.ico",
+        "iconUrl": "assets/media_stickies_icon.ico",
+        "win32metadata": {
+          "ProductName": "Media Stickies",
+          "FileDescription": "Media Stickies - A desktop gadget platform"
+        }
       },
       "makers": [
         {
