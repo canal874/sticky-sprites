@@ -1,4 +1,7 @@
+<img alt="Media Stickies" src="https://github.com/canal874/media-stickies/blob/master/assets/madia-stickies-icon-128x128.png" width=64 height=64 align="left"> 
+
 # Media Stickies
+
 A desktop gadget platform written by Electron.
 You can write or paste any HTML on your desktop as a multimedia card.
 
