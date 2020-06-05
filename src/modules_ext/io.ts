@@ -9,16 +9,20 @@
 /**
  * Common part
  */
+import path from 'path';
 import uniqid from 'uniqid';
 import PouchDB from 'pouchdb';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
 import { logger, sleep } from '../modules_common/utils';
 
-let cardDir = './cards';
-if (process.env.NODE_CARDDIR) {
-  cardDir = process.env.NODE_CARDDIR;
-}
+// '../../../../../../media_stickies_data' is default path when using asar created by squirrels.windows.
+// './media_stickies_data' is default path when starting from command line (npm start).
+// They can be distinguished by using process.defaultApp
+// TODO: Default path for Mac / Linux is needed.
+const cardDir = process.defaultApp
+  ? './media_stickies_data'
+  : path.join(__dirname, '../../../../../../media_stickies_data');
 
 /**
  * Module specific part

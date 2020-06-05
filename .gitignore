@@ -7,7 +7,7 @@ yarn-error.log*
 lerna-debug.log*
 
 # Card dir
-cards/
+media_stickies_data/
 
 # Dist dir
 dist/
