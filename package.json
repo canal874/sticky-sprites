@@ -1,8 +1,8 @@
 {
   "name": "media-stickies",
-  "productName": "MediaStickies",
+  "productName": "Media Stickies",
   "version": "1.0.11",
-  "description": "Media Stickies Installer",
+  "description": "Media Stickies",
   "main": "dist/main.js",
   "scripts": {
     "compile-clean": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && cp -r assets dist/ && npx eslint --fix --ext .ts .  && tsc",
@@ -22,8 +22,7 @@
       "packagerConfig": {
         "appCopyright": "Copyright(C) 2020 Hidekazu Kubota",
         "asar": true,
-        "icon": "assets/media_stickies_icon.ico",
-        "iconUrl": "assets/media_stickies_icon.ico",
+        "icon": "assets/media_stickies_icon",
         "win32metadata": {
           "ProductName": "Media Stickies",
           "FileDescription": "Media Stickies - A desktop gadget platform"
