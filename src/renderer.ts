@@ -344,10 +344,15 @@ const initializeIPCEvents = () => {
       render();
 
       if (cardEditor.editorType === 'WYSIWYG') {
-        cardEditor.showEditor().catch((e: Error) => {
-          // logger.error does not work in ipcRenderer event.
-          console.error(`Error in render-card: ${e.message}`);
-        });
+        cardEditor
+          .showEditor()
+          .then(() => {
+            render(['EditorColor']);
+          })
+          .catch((e: Error) => {
+            // logger.error does not work in ipcRenderer event.
+            console.error(`Error in render-card: ${e.message}`);
+          });
       }
     }
   );
