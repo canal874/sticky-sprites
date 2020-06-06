@@ -16,8 +16,15 @@ body
 	/* Remove the background color to make it transparent. */
 	background-color: transparent;
 	margin: 0px;
-	padding: 2px;
+  padding: 2px;
+  
 }
+
+/* Custom scroll bar */
+body::-webkit-scrollbar-thumb{
+  border-radius: 7px;
+}
+
 
 .cke_editable
 {
