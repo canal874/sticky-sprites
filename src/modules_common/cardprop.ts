@@ -39,7 +39,7 @@ export class CardProp implements CardBase {
     public data: string = '',
     public rect: Rectangle = { x: 70, y: 70, width: 260, height: 176 },
     public style: CardStyle = {
-      titleColor: '#d0d090',
+      titleColor: '#ffffa0',
       backgroundColor: '#ffffa0',
       backgroundOpacity: 1.0,
     },
