@@ -22,7 +22,7 @@
       "packagerConfig": {
         "appCopyright": "Copyright(C) 2020 Hidekazu Kubota",
         "asar": true,
-        "icon": "assets/media_stickies_icon",
+        "icon": "assets/media_stickies_grad_icon",
         "win32metadata": {
           "ProductName": "Media Stickies",
           "FileDescription": "Media Stickies - A desktop gadget platform"

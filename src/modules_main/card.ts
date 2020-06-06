@@ -59,7 +59,7 @@ export class Card {
       // This enables some tricks that can access the card window from other apps.
       title: id,
 
-      icon: path.join(__dirname, '../assets/media_stickies_icon.ico'),
+      icon: path.join(__dirname, '../assets/media_stickies_grad_icon.ico'),
     });
     this.window.setMaxListeners(20);
 
