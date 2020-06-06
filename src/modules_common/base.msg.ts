@@ -19,9 +19,9 @@ export interface Messages {
 
 const English: Messages = {
   confirmClosing:
-    'Close OK?\n(The card will be shown again when restating the app. If you want to delete the card, let it empty before closing it.)',
+    'Close OK?\n\nThe card will be shown again when restating the app.\nIf you want to delete the card, let it empty before closing it.)',
   confirmWaitMore:
-    'It takes a long time to save. Do you want to wait a little longer?\nIf you press Cancel, your changes will not be saved.',
+    'It takes a long time to save. Do you want to wait a little longer?\n\nIf you press Cancel, your changes will not be saved.',
   pleaseRestartErrorInOpeningCard:
     'The card cannot be opened.\nPlease close this app and any other apps, and then open this app again.',
   btnCloseCard: 'Close',
@@ -39,9 +39,9 @@ const English: Messages = {
 
 const Japanese: Messages = {
   confirmClosing:
-    'カードを閉じても良いですか？\n（閉じたカードはアプリ再起動でまた表示されます。削除したい場合、カードの内容を全て消してから閉じてください）',
+    'カードを閉じても良いですか？\n\n閉じたカードはアプリ再起動でまた表示されます。\n削除したい場合、カードの内容を全て消してから閉じてください）',
   confirmWaitMore:
-    '保存に時間が掛かっています。もう少し待ちますか？\nキャンセルを押すと、変更した内容は保存されない場合があります。',
+    '保存に時間が掛かっています。もう少し待ちますか？\n\nキャンセルを押すと、変更した内容は保存されない場合があります。',
   pleaseRestartErrorInOpeningCard:
     'カードを開くことができませんでした。\n本アプリと他のアプリを全て閉じた後、本アプリをもう一度開いてください。',
   btnCloseCard: '閉じる',
