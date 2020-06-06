@@ -472,14 +472,17 @@ export class CardEditor implements ICardEditor {
       contents.style.backgroundColor = backgroundRgba;
     }
 
-    const style = CKEDITOR.instances.editor.document.$.createElement('style');
-    style.innerHTML =
-      'body::-webkit-scrollbar { width: 7px; background-color: ' +
-      backgroundRgba +
-      '}\n' +
-      'body::-webkit-scrollbar-thumb { background-color: ' +
-      darkerRgba +
-      '}';
-    CKEDITOR.instances.editor.document.getHead().$.appendChild(style);
+    const doc = CKEDITOR.instances.editor.document;
+    if (doc) {
+      const style = doc.$.createElement('style');
+      style.innerHTML =
+        'body::-webkit-scrollbar { width: 7px; background-color: ' +
+        backgroundRgba +
+        '}\n' +
+        'body::-webkit-scrollbar-thumb { background-color: ' +
+        darkerRgba +
+        '}';
+      doc.getHead().$.appendChild(style);
+    }
   };
 }
