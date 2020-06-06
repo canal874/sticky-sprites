@@ -1,4 +1,4 @@
-<img alt="Media Stickies" src="https://github.com/canal874/media-stickies/blob/master/assets/madia-stickies-icon-128x128.png" width=64 height=64 align="left"> 
+<img alt="Media Stickies" src="https://github.com/canal874/media-stickies/blob/master/assets/madia-stickies-icon-128x128.png" width=48 height=48 align="left"> 
 
 # Media Stickies
 
