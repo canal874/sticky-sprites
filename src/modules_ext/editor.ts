@@ -392,10 +392,6 @@ export class CardEditor implements ICardEditor {
     // eslint-disable-next-line no-unused-expressions
     CKEDITOR.instances.editor.getSelection()?.removeAllRanges();
 
-    if (this._codeMode) {
-      this.endCodeMode();
-    }
-
     return [dataChanged, data];
   };
 
