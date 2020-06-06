@@ -153,6 +153,14 @@ ipcMain.handle('blurAndFocus', (event, id: string) => {
   }
 });
 
+ipcMain.handle('blur', (event, id: string) => {
+  const card = cards.get(id);
+  if (card) {
+    console.debug(`blur: ${id}`);
+    card.window.blur();
+  }
+});
+
 ipcMain.handle('alert-dialog', (event, id: string, msg: string) => {
   const card = cards.get(id);
   if (!card) {

@@ -253,7 +253,10 @@ export class CardEditor implements ICardEditor {
 
             this._cardProp.data = CKEDITOR.instances.editor.getData();
             render(['Decoration', 'EditorRect']);
-            saveCard(this._cardProp);
+
+            ipcRenderer.invoke('blur', this._cardProp.id);
+            // saveCard is automatically called when blurred.
+            // saveCard(this._cardProp);
           };
           const imgTag = getImageTag(id, file!.path, 1, 1);
           evt.data.dataValue = imgTag;
