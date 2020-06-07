@@ -108,7 +108,7 @@ export class Card {
   private _renderCard (): void {
     this.window.setSize(this.prop.rect.width, this.prop.rect.height);
     this.window.setPosition(this.prop.rect.x, this.prop.rect.y);
-    logger.debug('renderCard in main:' + JSON.stringify(this.prop.toObject()));
+    logger.debug(`renderCard in main: ${JSON.stringify(this.prop.toObject())}`);
     this.window.webContents.send('render-card', this.prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
     this.window.showInactive();
   }
@@ -122,6 +122,13 @@ export class Card {
     });
   };
 
+  private _finishReloadListener = (event: Electron.IpcMainEvent, fromId: string) => {
+    if (fromId === this.id) {
+      console.log(`reloaded in main: ${this.prop.id}`);
+      this.window.webContents.send('render-card', this.prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
+    }
+  };
+
   private _loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
       const finishLoadListener = (event: Electron.IpcMainEvent, fromId: string) => {
@@ -132,6 +139,7 @@ export class Card {
           // loadHTML resolves after loading HTML and processing required script are finished.
           //     this.window.webContents.on('did-finish-load', () => {
           ipcMain.off('finish-load', finishLoadListener);
+          ipcMain.on('finish-load', this._finishReloadListener);
           resolve();
         }
       };
