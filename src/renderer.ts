@@ -199,8 +199,9 @@ const initializeUIEvents = () => {
   });
 
   // eslint-disable-next-line no-unused-expressions
-  document.getElementById('newBtn')?.addEventListener('click', () => {
-    ipcRenderer.invoke('create-card');
+  document.getElementById('newBtn')?.addEventListener('click', async () => {
+    const newId = await ipcRenderer.invoke('create-card');
+    ipcRenderer.invoke('focus', newId);
   });
 
   // eslint-disable-next-line no-unused-expressions

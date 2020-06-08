@@ -70,16 +70,13 @@ ipcMain.handle('delete-card', async (event, id: string) => {
     });
 });
 
-ipcMain.handle('create-card', () => {
+ipcMain.handle('create-card', async () => {
   const card = new Card();
-  card
-    .render()
-    .then(() => {
-      cards.set(card.id, card);
-    })
-    .catch((e: Error) => {
-      logger.error(`Error in createCard(): ${e.message}`);
-    });
+  await card.render().catch((e: Error) => {
+    logger.error(`Error in createCard(): ${e.message}`);
+  });
+  cards.set(card.id, card);
+  return card.id;
 });
 
 /**
@@ -158,6 +155,14 @@ ipcMain.handle('blur', (event, id: string) => {
   if (card) {
     console.debug(`blur: ${id}`);
     card.window.blur();
+  }
+});
+
+ipcMain.handle('focus', (event, id: string) => {
+  const card = cards.get(id);
+  if (card) {
+    console.debug(`focus: ${id}`);
+    card.window.focus();
   }
 });
 
