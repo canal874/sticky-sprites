@@ -251,9 +251,6 @@ export class CardEditor implements ICardEditor {
               this._cardProp.rect.height
             );
 
-//            this._cardProp.data = CKEDITOR.instances.editor.getData();
-//            render(['Decoration', 'EditorRect']);
-
             ipcRenderer.invoke('blurAndFocusWithSuppressFocusEvent', this._cardProp.id);
             // saveCard is automatically called when blurred.
             // saveCard(this._cardProp);
