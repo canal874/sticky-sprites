@@ -184,7 +184,6 @@ ipcMain.handle('focus', (event, id: string) => {
 ipcMain.handle('set-title', (event, id: string, title: string) => {
   const card = cards.get(id);
   if (card) {
-    console.debug(`title: ${id}, ${title}`);
     card.window.setTitle(title);
   }
 });
