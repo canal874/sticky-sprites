@@ -271,8 +271,9 @@ export class CardEditor implements ICardEditor {
               CKEDITOR.plugins.image2.adjustEditorSize = this.adjustEditorSizeFromImage2Plugin;
             }, 3000);
 
+            // Workaround for at bug that an image cannot be resizable just after created by drag and drop.
             ipcRenderer.invoke('blurAndFocusWithSuppressFocusEvent', this._cardProp.id);
-            // saveCard is automatically called when blurred.
+            // saveCard need not to be called. It is automatically called when a card is blurred.
             // saveCard(this._cardProp);
           };
           const imgTag = getImageTag(id, file!.path, 1, 1, file!.name);
