@@ -8,10 +8,10 @@ CKEDITOR.editorConfig = function( config ) {
 	config.shiftEnterMode = 1;
 	config.allowedContent = true;
 
-	config.contentsCss = './css/ckeditor-media-stickies-contents.css';
+	config.contentsCss = './css/ckeditor-media-stickies-contents.css?20200609';
 
 	config.toolbar = [
-		{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'FontSize', 'TextColor', 'BGColor' ] }
+		{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'NumberedList', 'BulletedList', 'FontSize', 'TextColor', 'BGColor' ] }
 	];
 
 	config.plugins =
@@ -53,7 +53,7 @@ CKEDITOR.editorConfig = function( config ) {
 		'language,' +
 		'link,' +
 		'list,' +
-//		'liststyle,' +
+//		'liststyle,' +  // NOTE: If uncomment this line, context menu of CKEditor is shown by right clicking.
 		'magicline,' +
 //		'maximize,' +
 //		'newpage,' +

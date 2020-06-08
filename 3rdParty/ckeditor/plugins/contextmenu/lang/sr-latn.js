@@ -1,1 +1,0 @@
-﻿CKEDITOR.plugins.setLang("contextmenu","sr-latn",{options:"Opcije menija"});
