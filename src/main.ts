@@ -70,8 +70,8 @@ ipcMain.handle('delete-card', async (event, id: string) => {
     });
 });
 
-ipcMain.handle('create-card', async () => {
-  const card = new Card();
+ipcMain.handle('create-card', async (event, propTemplate: CardPropSerializable) => {
+  const card = new Card('', propTemplate);
   await card.render().catch((e: Error) => {
     logger.error(`Error in createCard(): ${e.message}`);
   });

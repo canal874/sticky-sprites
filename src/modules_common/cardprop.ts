@@ -33,28 +33,25 @@ export type CardPropSerializable = CardBase & Rectangle & CardStyle & CardDate;
 
 export type CardStatus = 'Focused' | 'Blurred';
 
+export const DEFAULT_CARD_RECT: Rectangle = { x: 70, y: 70, width: 260, height: 176 };
+export const DEFAULT_CARD_STYLE: CardStyle = {
+  titleColor: '#ffffa0',
+  backgroundColor: '#ffffa0',
+  backgroundOpacity: 1.0,
+};
+
 export class CardProp implements CardBase {
   constructor (
     public id: string = '',
     public data: string = '',
-    public rect: Rectangle = { x: 70, y: 70, width: 260, height: 176 },
-    public style: CardStyle = {
-      titleColor: '#ffffa0',
-      backgroundColor: '#ffffa0',
-      backgroundOpacity: 1.0,
-    },
+    public rect: Rectangle = DEFAULT_CARD_RECT,
+    public style: CardStyle = DEFAULT_CARD_STYLE,
     public date: CardDate = {
       createdDate: getCurrentDate(),
       modifiedDate: getCurrentDate(),
     },
     public status: CardStatus = 'Blurred'
-  ) {
-    if (id === '') {
-      // Create new card
-      this.rect.x += Math.floor(Math.random() * 70) - 35;
-      this.rect.y += Math.floor(Math.random() * 70) - 35;
-    }
-  }
+  ) {}
 
   public toObject = (): CardPropSerializable => {
     return {

@@ -9,7 +9,11 @@
 import { ipcRenderer, remote } from 'electron';
 import uniqid from 'uniqid';
 import contextMenu from 'electron-context-menu';
-import { CardProp, CardPropSerializable } from './modules_common/cardprop';
+import {
+  CardProp,
+  CardPropSerializable,
+  DEFAULT_CARD_RECT,
+} from './modules_common/cardprop';
 import { CardCssStyle, DialogButton, ICardEditor } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
 import {
@@ -200,7 +204,17 @@ const initializeUIEvents = () => {
 
   // eslint-disable-next-line no-unused-expressions
   document.getElementById('newBtn')?.addEventListener('click', async () => {
-    const newId = await ipcRenderer.invoke('create-card');
+    // Position of a new card is relative to this card.
+    const rect = DEFAULT_CARD_RECT;
+    rect.x = cardProp.rect.x + 30;
+    rect.y = cardProp.rect.y + 30;
+
+    const newId = await ipcRenderer.invoke('create-card', {
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height,
+    });
     ipcRenderer.invoke('focus', newId);
   });
 

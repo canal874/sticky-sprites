@@ -10,7 +10,13 @@ import url from 'url';
 import path from 'path';
 import uniqid from 'uniqid';
 import { BrowserWindow, ipcMain, shell } from 'electron';
-import { CardProp } from '../modules_common/cardprop';
+import {
+  CardDate,
+  CardProp,
+  CardPropSerializable,
+  CardStyle,
+  Rectangle,
+} from '../modules_common/cardprop';
 import { CardIO } from '../modules_ext/io';
 import { logger } from '../modules_common/utils';
 import {
@@ -42,7 +48,7 @@ export class Card {
   public suppressBlurEventOnce = false;
 
   public loadOrCreateCardData: () => Promise<CardProp>;
-  constructor (public id: string = '') {
+  constructor (public id: string = '', public propTemplate?: CardPropSerializable) {
     this.loadOrCreateCardData = this._loadCardData;
     if (this.id === '') {
       this.id = generateNewCardId();
@@ -169,7 +175,37 @@ export class Card {
     });
   };
 
+  // eslint-disable-next-line complexity
   private _createCardData: () => Promise<CardProp> = () => {
+    if (this.propTemplate) {
+      const _prop = this.propTemplate;
+      const rect: Rectangle | undefined =
+        _prop.x === undefined ||
+        _prop.y === undefined ||
+        _prop.width === undefined ||
+        _prop.height === undefined
+          ? undefined
+          : { x: _prop.x, y: _prop.y, width: _prop.width, height: _prop.height };
+      const style: CardStyle | undefined =
+        _prop.titleColor === undefined ||
+        _prop.backgroundColor === undefined ||
+        _prop.backgroundOpacity === undefined
+          ? undefined
+          : {
+            titleColor: _prop.titleColor,
+            backgroundColor: _prop.backgroundColor,
+            backgroundOpacity: _prop.backgroundOpacity,
+          };
+      const date: CardDate | undefined =
+        _prop.createdDate === undefined || _prop.modifiedDate === undefined
+          ? undefined
+          : {
+            createdDate: _prop.createdDate,
+            modifiedDate: _prop.modifiedDate,
+          };
+      return Promise.resolve(new CardProp(this.id, _prop.data, rect, style, date));
+    }
+
     return Promise.resolve(new CardProp(this.id));
   };
 
