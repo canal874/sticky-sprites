@@ -253,7 +253,6 @@ export class CardEditor implements ICardEditor {
               (this._cardProp.data === '' ? 0 : this._cardProp.rect.height) +
               newImageHeight +
               this._DRAG_IMAGE_MARGIN +
-//              this._TOOLBAR_HEIGHT +
               this._cardCssStyle.border.top +
               this._cardCssStyle.border.bottom +
               this._cardCssStyle.padding.top +
