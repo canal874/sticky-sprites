@@ -8,6 +8,7 @@
 
 import url from 'url';
 import path from 'path';
+import uniqid from 'uniqid';
 import { BrowserWindow, ipcMain, shell } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
 import { CardIO } from '../modules_ext/io';
@@ -26,6 +27,11 @@ const minimumWindowWidth = 30;
  * Card
  * A small sticky windows is called 'card'.
  */
+const generateNewCardId = (): string => {
+  // returns 18 byte unique characters
+  return uniqid();
+};
+
 export const cards: Map<string, Card> = new Map<string, Card>();
 
 export class Card {
@@ -39,7 +45,7 @@ export class Card {
   constructor (public id: string = '') {
     this.loadOrCreateCardData = this._loadCardData;
     if (this.id === '') {
-      this.id = CardIO.generateNewCardId();
+      this.id = generateNewCardId();
       this.loadOrCreateCardData = this._createCardData;
     }
 

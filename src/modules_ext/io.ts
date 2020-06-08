@@ -10,7 +10,6 @@
  * Common part
  */
 import path from 'path';
-import uniqid from 'uniqid';
 import PouchDB from 'pouchdb';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
@@ -31,11 +30,6 @@ const cardDir = process.defaultApp
 var cardsDB: PouchDB.Database<{}>;
 
 class CardIOClass implements ICardIO {
-  public generateNewCardId = (): string => {
-    // returns 18 byte unique characters
-    return uniqid();
-  };
-
   public getCardIdList = (): Promise<string[]> => {
     // returns all card ids.
     cardsDB = new PouchDB(cardDir);

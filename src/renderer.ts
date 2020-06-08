@@ -27,7 +27,7 @@ import {
   waitUnfinishedTasks,
 } from './modules_renderer/save';
 
-let cardProp: CardProp = new CardProp();
+let cardProp: CardProp = new CardProp('');
 
 let cardCssStyle: CardCssStyle = {
   padding: { left: 0, right: 0, top: 0, bottom: 0 },

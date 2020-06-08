@@ -9,7 +9,6 @@
 import { CardProp } from './cardprop';
 
 export interface ICardIO {
-  generateNewCardId(): string;
   getCardIdList(): Promise<string[]>;
   readCardData(id: string): Promise<CardProp>;
   writeOrCreateCardData(prop: CardProp): Promise<string>;
