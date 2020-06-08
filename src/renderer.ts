@@ -177,7 +177,7 @@ const initializeUIEvents = () => {
           newWidth = width;
         }
 
-        const imgTag = getImageTag(uniqid(), file!.path, newWidth, newHeight);
+        const imgTag = getImageTag(uniqid(), file!.path, newWidth, newHeight, file!.name);
         if (cardProp.data === '') {
           cardProp.data = imgTag;
           cardProp.rect.height = newHeight + 15;
@@ -400,7 +400,7 @@ const initializeIPCEvents = () => {
       const [dataChanged, data] = cardEditor.endEdit();
       if (dataChanged) {
         cardProp.data = data;
-        render(['TitleBar', 'ContentsData', 'ContentsRect']);
+        render();
         saveCard(cardProp);
       }
     }

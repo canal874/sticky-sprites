@@ -251,14 +251,14 @@ export class CardEditor implements ICardEditor {
               this._cardProp.rect.height
             );
 
-            this._cardProp.data = CKEDITOR.instances.editor.getData();
-            render(['Decoration', 'EditorRect']);
+//            this._cardProp.data = CKEDITOR.instances.editor.getData();
+//            render(['Decoration', 'EditorRect']);
 
             ipcRenderer.invoke('blur', this._cardProp.id);
             // saveCard is automatically called when blurred.
             // saveCard(this._cardProp);
           };
-          const imgTag = getImageTag(id, file!.path, 1, 1);
+          const imgTag = getImageTag(id, file!.path, 1, 1, file!.name);
           evt.data.dataValue = imgTag;
           if (this._cardProp.data === '') {
             saveCardColor(this._cardProp, '#ffffff', '#ffffff', 0.0);

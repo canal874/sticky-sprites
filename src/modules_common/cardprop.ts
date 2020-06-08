@@ -58,7 +58,10 @@ export class CardProp implements CardBase {
       return '';
     }
 
-    return data.replace(/<[^>]+?>/g, '').substr(0, 15);
+    // Replace alt attributes
+    data = data.replace(/<[^>]+?alt=["'](.+?)["'][^>]+?>/g, '$1');
+
+    return data.replace(/<[^>]+?>/g, '').substr(0, 30);
   };
 
   public toObject = (): CardPropSerializable => {
