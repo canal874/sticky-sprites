@@ -194,7 +194,7 @@ const initializeUIEvents = () => {
           cardProp.rect.height
         );
 
-        render(['Decoration', 'ContentsData']);
+        render(['TitleBar', 'Decoration', 'ContentsData']);
         saveCard(cardProp);
       });
       dropImg.src = file.path;
@@ -242,7 +242,7 @@ const initializeUIEvents = () => {
       }
       const [dataChanged, data] = cardEditor.endEdit();
       cardProp.data = data;
-      render(['ContentsData', 'ContentsRect']);
+      render(['TitleBar', 'ContentsData', 'ContentsRect']);
       if (dataChanged && cardProp.data !== '') {
         saveCard(cardProp);
       }
@@ -400,7 +400,7 @@ const initializeIPCEvents = () => {
       const [dataChanged, data] = cardEditor.endEdit();
       if (dataChanged) {
         cardProp.data = data;
-        render(['ContentsData', 'ContentsRect']);
+        render(['TitleBar', 'ContentsData', 'ContentsRect']);
         saveCard(cardProp);
       }
     }

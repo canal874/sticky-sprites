@@ -67,10 +67,6 @@ export class Card {
       maximizable: false,
       fullscreenable: false,
 
-      // Set window title to card id.
-      // This enables some tricks that can access the card window from other apps.
-      title: this.id,
-
       icon: path.join(__dirname, '../assets/media_stickies_grad_icon.ico'),
     });
     this.window.setMaxListeners(20);

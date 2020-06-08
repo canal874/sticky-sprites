@@ -53,6 +53,14 @@ export class CardProp implements CardBase {
     public status: CardStatus = 'Blurred'
   ) {}
 
+  static getPlainText = (data: string) => {
+    if (data === '') {
+      return '';
+    }
+
+    return data.replace(/<[^>]+?>/g, '').substr(0, 15);
+  };
+
   public toObject = (): CardPropSerializable => {
     return {
       id: this.id,

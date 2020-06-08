@@ -59,6 +59,11 @@ export type CardRenderOptions =
   | 'EditorColor'
   | 'EditorRect';
 
+const setWindowTitle = () => {
+  const title = cardProp.data === '' ? MESSAGE.newCard : cardProp.data;
+  ipcRenderer.invoke('set-title', cardProp.id, CardProp.getPlainText(title));
+};
+
 const renderTitleBar = () => {
   const closeBtnLeft =
     cardProp.rect.width -
@@ -72,6 +77,7 @@ const renderTitleBar = () => {
   const barwidth = closeBtnLeft - titleBarLeft;
   document.getElementById('titleBar')!.style.left = titleBarLeft + 'px';
   document.getElementById('titleBar')!.style.width = barwidth + 'px';
+  setWindowTitle();
 };
 
 const renderContentsData = () => {

@@ -10,6 +10,7 @@ import log4js from 'log4js';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { ipcRenderer } from 'electron';
+
 dayjs.extend(utc);
 
 export const logger = log4js.getLogger();

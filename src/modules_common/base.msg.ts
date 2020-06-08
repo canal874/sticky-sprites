@@ -1,6 +1,7 @@
 import { translate } from 'typed-intl';
 
 export interface Messages {
+  newCard: string;
   confirmClosing: string;
   confirmWaitMore: string;
   pleaseRestartErrorInOpeningCard: string;
@@ -18,6 +19,7 @@ export interface Messages {
 }
 
 const English: Messages = {
+  newCard: 'New card',
   confirmClosing:
     'Close OK?\n\nThe card will be shown again when restating the app.\nIf you want to delete the card, let it empty before closing it.)',
   confirmWaitMore:
@@ -38,6 +40,7 @@ const English: Messages = {
 };
 
 const Japanese: Messages = {
+  newCard: '新規カード',
   confirmClosing:
     'カードを閉じても良いですか？\n\n閉じたカードはアプリ再起動でまた表示されます。\n削除したい場合、カードの内容を全て消してから閉じてください）',
   confirmWaitMore:
