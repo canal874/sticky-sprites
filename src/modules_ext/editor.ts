@@ -24,7 +24,7 @@ export class CardEditor implements ICardEditor {
 
   private _TOOLBAR_HEIGHT = 30;
 
-  // Dragging is shaky when _DRAG_IMAGE_MARGIN is too small
+  // Dragging is shaky when _DRAG_IMAGE_MARGIN is too small, especially just after loading a card.
   //  private _DRAG_IMAGE_MARGIN = 20;
   private _DRAG_IMAGE_MARGIN = 50;
 
