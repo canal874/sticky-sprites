@@ -174,7 +174,7 @@ export class CardEditor implements ICardEditor {
      * Expected behavior is that IME always work inline on CKEditor.
      * A silly workaround is to blur and focus this browser window.
      */
-    await ipcRenderer.invoke('blurAndFocus', this._cardProp.id);
+    await ipcRenderer.invoke('blurAndFocusWithSuppressEvents', this._cardProp.id);
   };
 
   private _setData = (): Promise<void> => {
@@ -254,7 +254,7 @@ export class CardEditor implements ICardEditor {
 //            this._cardProp.data = CKEDITOR.instances.editor.getData();
 //            render(['Decoration', 'EditorRect']);
 
-            ipcRenderer.invoke('blur', this._cardProp.id);
+            ipcRenderer.invoke('blurAndFocusWithSuppressFocusEvent', this._cardProp.id);
             // saveCard is automatically called when blurred.
             // saveCard(this._cardProp);
           };

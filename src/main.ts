@@ -134,7 +134,7 @@ app.on('window-all-closed', () => {
  * Utils
  */
 
-ipcMain.handle('blurAndFocus', (event, id: string) => {
+ipcMain.handle('blurAndFocusWithSuppressEvents', (event, id: string) => {
   const card = cards.get(id);
   if (card) {
     console.debug(`blurAndFocus: ${id}`);
@@ -144,6 +144,21 @@ ipcMain.handle('blurAndFocus', (event, id: string) => {
      */
     setGlobalFocusEventListenerPermission(false);
     card.suppressBlurEventOnce = true;
+    card.window.blur();
+    card.suppressFocusEventOnce = true;
+    card.window.focus();
+  }
+});
+
+ipcMain.handle('blurAndFocusWithSuppressFocusEvent', (event, id: string) => {
+  const card = cards.get(id);
+  if (card) {
+    console.debug(`blurAndFocus: ${id}`);
+    /**
+     * When a card is blurred, another card will be focused automatically by OS.
+     * Set suppressGlobalFocusEvent to suppress to focus another card.
+     */
+    setGlobalFocusEventListenerPermission(false);
     card.window.blur();
     card.suppressFocusEventOnce = true;
     card.window.focus();
