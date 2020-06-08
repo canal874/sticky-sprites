@@ -69,7 +69,7 @@ export class Card {
 
       // Set window title to card id.
       // This enables some tricks that can access the card window from other apps.
-      title: id,
+      title: this.id,
 
       icon: path.join(__dirname, '../assets/media_stickies_grad_icon.ico'),
     });
