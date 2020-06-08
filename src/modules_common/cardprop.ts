@@ -48,7 +48,10 @@ export class CardProp implements CardBase {
       modifiedDate: getCurrentDate(),
     },
     public status: CardStatus = 'Blurred'
-  ) {}
+  ) {
+    this.rect.x += Math.floor(Math.random() * 70) - 35;
+    this.rect.y += Math.floor(Math.random() * 70) - 35;
+  }
 
   public toObject = (): CardPropSerializable => {
     return {
