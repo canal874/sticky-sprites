@@ -146,6 +146,7 @@ ipcMain.handle('blurAndFocusWithSuppressEvents', (event, id: string) => {
     card.suppressBlurEventOnce = true;
     card.window.blur();
     card.suppressFocusEventOnce = true;
+    card.recaptureGlobalFocusEventAfterLocalFocusEvent = true;
     card.window.focus();
   }
 });
@@ -160,7 +161,7 @@ ipcMain.handle('blurAndFocusWithSuppressFocusEvent', (event, id: string) => {
      */
     setGlobalFocusEventListenerPermission(false);
     card.window.blur();
-    card.suppressFocusEventOnce = true;
+    card.recaptureGlobalFocusEventAfterLocalFocusEvent = true;
     card.window.focus();
   }
 });

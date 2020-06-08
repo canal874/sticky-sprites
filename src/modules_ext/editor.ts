@@ -76,16 +76,31 @@ export class CardEditor implements ICardEditor {
       return;
     }
     let count = 0;
-    for (const elm of body.$.childNodes) {
-      if (elm.nodeType === Node.ELEMENT_NODE) {
-        if (!(elm as Element).getAttribute('data-cke-temp')) {
-          count++;
+    console.log('count start');
+    // Skip counting nodes that are appended by plugin
+    for (let i = 0; i < body.$.childNodes.length; i++) {
+      const node = body.$.childNodes.item(i) as ChildNode;
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const elm = node as Element;
+        // console.log(i + '[E:' + elm.tagName + ']' + elm.outerHTML);
+        if (elm.getAttribute('data-cke-temp')) {
+          continue;
         }
-        if (count >= 3) {
-          return;
+        if (elm.tagName.match(/br/i) && i > 0) {
+          // Skip <br>, but don't skip the first one.
+          continue;
         }
+        count++;
+      }
+      else {
+        console.log(i + '[T]' + node.textContent);
+        count++;
+      }
+      if (count >= 2) {
+        return;
       }
     }
+
     const toolbar = document.getElementById('cke_1_bottom');
     if (toolbar) {
       toolbar.style.visibility = 'hidden';
@@ -193,8 +208,8 @@ export class CardEditor implements ICardEditor {
   };
 
   private _addDragAndDropEvent = () => {
-    //    CKEDITOR.instances['editor'].on('drop', async evt => {});
-    // paste event is automatically occurred after drop.
+    // Don't use drop event : CKEDITOR.instances['editor'].on('drop', async evt => {});
+    // Paste event is automatically occurred after drop.
     CKEDITOR.instances.editor.on('paste', evt => {
       const id = uniqid();
       const dataTransfer = evt.data.dataTransfer;
@@ -250,6 +265,11 @@ export class CardEditor implements ICardEditor {
               this._cardProp.rect.width,
               this._cardProp.rect.height
             );
+
+            setTimeout(() => {
+              // @ts-ignore
+              CKEDITOR.plugins.image2.adjustEditorSize = this.adjustEditorSizeFromImage2Plugin;
+            }, 3000);
 
             ipcRenderer.invoke('blurAndFocusWithSuppressFocusEvent', this._cardProp.id);
             // saveCard is automatically called when blurred.

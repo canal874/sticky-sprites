@@ -46,6 +46,7 @@ export class Card {
 
   public suppressFocusEventOnce = false;
   public suppressBlurEventOnce = false;
+  public recaptureGlobalFocusEventAfterLocalFocusEvent = false;
 
   public loadOrCreateCardData: () => Promise<CardProp>;
   constructor (public id: string = '', public propTemplate?: CardPropSerializable) {
@@ -219,10 +220,13 @@ export class Card {
   };
 
   private _focusListener = () => {
+    if (this.recaptureGlobalFocusEventAfterLocalFocusEvent) {
+      this.recaptureGlobalFocusEventAfterLocalFocusEvent = false;
+      setGlobalFocusEventListenerPermission(true);
+    }
     if (this.suppressFocusEventOnce) {
       logger.debug(`skip focus event listener ${this.id}`);
       this.suppressFocusEventOnce = false;
-      setGlobalFocusEventListenerPermission(true);
     }
     else if (!getGlobalFocusEventListenerPermission()) {
       logger.debug(`focus event listener is suppressed ${this.id}`);
