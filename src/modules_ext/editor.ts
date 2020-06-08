@@ -76,7 +76,6 @@ export class CardEditor implements ICardEditor {
       return;
     }
     let count = 0;
-    console.log('count start');
     // Skip counting nodes that are appended by plugin
     for (let i = 0; i < body.$.childNodes.length; i++) {
       const node = body.$.childNodes.item(i) as ChildNode;
