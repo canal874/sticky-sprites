@@ -49,8 +49,11 @@ export class CardProp implements CardBase {
     },
     public status: CardStatus = 'Blurred'
   ) {
-    this.rect.x += Math.floor(Math.random() * 70) - 35;
-    this.rect.y += Math.floor(Math.random() * 70) - 35;
+    if (id === '') {
+      // Create new card
+      this.rect.x += Math.floor(Math.random() * 70) - 35;
+      this.rect.y += Math.floor(Math.random() * 70) - 35;
+    }
   }
 
   public toObject = (): CardPropSerializable => {
