@@ -253,7 +253,7 @@ export class CardEditor implements ICardEditor {
               (this._cardProp.data === '' ? 0 : this._cardProp.rect.height) +
               newImageHeight +
               this._DRAG_IMAGE_MARGIN +
-              this._TOOLBAR_HEIGHT +
+//              this._TOOLBAR_HEIGHT +
               this._cardCssStyle.border.top +
               this._cardCssStyle.border.bottom +
               this._cardCssStyle.padding.top +
@@ -266,22 +266,17 @@ export class CardEditor implements ICardEditor {
               this._cardProp.rect.width,
               this._cardProp.rect.height
             );
-
-            setTimeout(() => {
-              // @ts-ignore
-              CKEDITOR.plugins.image2.adjustEditorSize = this.adjustEditorSizeFromImage2Plugin;
-            }, 3000);
-
+            const [dataChanged, data] = this.endEdit();
+            this._cardProp.data = data;
+            saveCard(this._cardProp);
+            render();
             // Workaround for at bug that an image cannot be resizable just after created by drag and drop.
             ipcRenderer.invoke('blurAndFocusWithSuppressFocusEvent', this._cardProp.id);
-            // saveCard need not to be called. It is automatically called when a card is blurred.
-            // saveCard(this._cardProp);
           };
           const imgTag = getImageTag(id, file!.path, 1, 1, file!.name);
           evt.data.dataValue = imgTag;
           if (this._cardProp.data === '') {
             saveCardColor(this._cardProp, '#ffffff', '#ffffff', 0.0);
-            render();
           }
 
           dropImg.src = file.path;
