@@ -464,10 +464,12 @@ export class CardEditor implements ICardEditor {
     const textcolorBtn = document.getElementsByClassName('cke_button__textcolor');
     const bgcolorBtn = document.getElementsByClassName('cke_button__bgcolor');
     if (textcolorBtn) {
-      (textcolorBtn.item(0) as HTMLElement).style.display = width < 218 || height < 90 ? 'none' : 'block';
+      (textcolorBtn.item(0) as HTMLElement).style.display =
+        width < 218 || height < 90 ? 'none' : 'block';
     }
     if (bgcolorBtn) {
-      (bgcolorBtn.item(0) as HTMLElement).style.display = width < 252 || height < 90 ? 'none' : 'block';
+      (bgcolorBtn.item(0) as HTMLElement).style.display =
+        width < 252 || height < 90 ? 'none' : 'block';
     }
   };
 
