@@ -24,7 +24,7 @@ import {
   render,
   UI_COLOR_DARKENING_RATE,
 } from './modules_renderer/card_renderer';
-import { darkenHexColor, getImageTag, logger, getCurrentDateAndTime } from './modules_common/utils';
+import { darkenHexColor, getImageTag, logger } from './modules_common/utils';
 import {
   deleteCard,
   saveCard,

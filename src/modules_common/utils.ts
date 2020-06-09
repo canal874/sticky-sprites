@@ -61,7 +61,12 @@ export const darkenHexColor = (colorHEX: string, darkRate: number): string => {
     return '#000000';
   }
 
-  return `#${red.toString(16)}${green.toString(16)}${blue.toString(16)}`;
+  return (
+    '#' +
+    red.toString(16).padStart(2, '0') +
+    green.toString(16).padStart(2, '0') +
+    blue.toString(16).padStart(2, '0')
+  );
 };
 
 export const convertHexColorToRgba = (colorHEX: string, opacity = 1.0): string => {
