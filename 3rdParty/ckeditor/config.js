@@ -11,7 +11,7 @@ CKEDITOR.editorConfig = function( config ) {
 	config.contentsCss = './css/ckeditor-media-stickies-contents.css?20200609';
 
 	config.toolbar = [
-		{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'NumberedList', 'BulletedList', 'FontSize', 'TextColor', 'BGColor' ] }
+		{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'BulletedList', 'FontSize', 'TextColor', 'BGColor' ] }
 	];
 
 	config.plugins =

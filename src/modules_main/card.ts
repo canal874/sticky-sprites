@@ -27,7 +27,8 @@ import {
 /**
  * Const
  */
-const minimumWindowWidth = 30;
+const MINIMUM_WINDOW_WIDTH = 180;
+const MINIMUM_WINDOW_HEIGHT = 120;
 
 /**
  * Card
@@ -60,7 +61,9 @@ export class Card {
       webPreferences: {
         nodeIntegration: true,
       },
-      minWidth: minimumWindowWidth,
+      minWidth: MINIMUM_WINDOW_WIDTH,
+      minHeight: MINIMUM_WINDOW_HEIGHT,
+
       transparent: true,
       frame: false,
       show: false,
