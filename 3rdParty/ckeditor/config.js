@@ -9,8 +9,11 @@ CKEDITOR.editorConfig = function( config ) {
 	config.allowedContent = true;
 
 	config.contentsCss = './css/ckeditor-media-stickies-contents.css?20200609';
-
-	config.toolbar = [
+  
+  config.colorButton_enableMore = false;
+  config.colorButton_enableAutomatic = false;
+  
+  config.toolbar = [
 		{ name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike', 'BulletedList', 'FontSize', 'TextColor', 'BGColor' ] }
 	];
 
