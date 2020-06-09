@@ -28,7 +28,7 @@ import {
  * Const
  */
 const MINIMUM_WINDOW_WIDTH = 180;
-const MINIMUM_WINDOW_HEIGHT = 120;
+const MINIMUM_WINDOW_HEIGHT = 70;
 
 /**
  * Card
