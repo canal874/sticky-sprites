@@ -11,7 +11,14 @@ import { ipcRenderer } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
 import { MESSAGE, render, setRenderOffsetHeight } from '../modules_renderer/card_renderer';
-import { alertDialog, getImageTag, logger, sleep } from '../modules_common/utils';
+import {
+  alertDialog,
+  convertHexColorToRgba,
+  getImageTag,
+  logger,
+  sleep,
+  darkenHexColor,
+} from '../modules_common/utils';
 import { saveCard, saveCardColor } from '../modules_renderer/save';
 
 export class CardEditor implements ICardEditor {
@@ -481,26 +488,38 @@ export class CardEditor implements ICardEditor {
     }
   };
 
-  setColor = (backgroundRgba: string, darkerRgba: string): void => {
+  setColor = (): void => {
+    let backgroundRgba = convertHexColorToRgba(
+      this._cardProp.style.backgroundColor,
+      this._cardProp.style.opacity
+    );
+    let darkerRgba = convertHexColorToRgba(
+      darkenHexColor(this._cardProp.style.backgroundColor, 0.96),
+      this._cardProp.style.opacity
+    );
+    let uiRgba = convertHexColorToRgba(this._cardProp.style.uiColor);
+
     if (this._cardProp.style.opacity === 0 && this._isEditing) {
       backgroundRgba = 'rgba(255, 255, 255, 1.0)';
-      darkerRgba = 'rgba(204, 204, 204, 1.0)';
+      darkerRgba = 'rgba(250, 250, 250, 1.0)';
+      uiRgba = 'rgba(204, 204, 204, 1.0)';
     }
 
     const editor = document.getElementById('cke_editor');
     if (editor) {
-      editor.style.borderTopColor = darkerRgba;
+      editor.style.borderTopColor = uiRgba;
     }
     const toolbar = document.getElementById('cke_1_bottom');
     if (toolbar) {
-      toolbar.style.backgroundColor = toolbar.style.borderBottomColor = toolbar.style.borderTopColor = darkerRgba;
+      toolbar.style.backgroundColor = toolbar.style.borderBottomColor = toolbar.style.borderTopColor = uiRgba;
     }
 
     const contents = document.querySelector(
       '#cke_1_contents .cke_wysiwyg_frame'
     ) as HTMLElement;
     if (contents) {
-      contents.style.backgroundColor = backgroundRgba;
+      // contents.style.backgroundColor = backgroundRgba;
+      contents.style.background = `linear-gradient(135deg, ${backgroundRgba} 94%, ${darkerRgba})`;
     }
 
     const doc = CKEDITOR.instances.editor.document;
@@ -511,7 +530,7 @@ export class CardEditor implements ICardEditor {
         backgroundRgba +
         '}\n' +
         'body::-webkit-scrollbar-thumb { background-color: ' +
-        darkerRgba +
+        uiRgba +
         '}';
       doc.getHead().$.appendChild(style);
     }

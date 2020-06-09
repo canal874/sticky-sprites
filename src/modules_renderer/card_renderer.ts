@@ -134,12 +134,7 @@ const renderCardDecoration = () => {
 };
 
 const renderEditorColor = () => {
-  const backgroundRgba = convertHexColorToRgba(
-    cardProp.style.backgroundColor,
-    cardProp.style.opacity
-  );
-  const darkerRgba = convertHexColorToRgba(cardProp.style.uiColor);
-  cardEditor.setColor(backgroundRgba, darkerRgba);
+  cardEditor.setColor();
 };
 
 const renderEditorRect = () => {
