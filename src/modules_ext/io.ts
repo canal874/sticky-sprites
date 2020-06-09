@@ -100,9 +100,9 @@ class CardIOClass implements ICardIO {
                 height: propsRequired.height,
               },
               {
-                titleColor: propsRequired.titleColor,
+                uiColor: propsRequired.uiColor,
                 backgroundColor: propsRequired.backgroundColor,
-                backgroundOpacity: propsRequired.backgroundOpacity,
+                cardOpacity: propsRequired.cardOpacity,
               },
               {
                 createdDate: propsRequired.createdDate,

@@ -463,7 +463,7 @@ export class CardEditor implements ICardEditor {
   };
 
   setColor = (backgroundRgba: string, darkerRgba: string): void => {
-    if (this._cardProp.style.backgroundOpacity === 0 && this._isEditing) {
+    if (this._cardProp.style.cardOpacity === 0 && this._isEditing) {
       backgroundRgba = 'rgba(255, 255, 255, 1.0)';
       darkerRgba = 'rgba(204, 204, 204, 1.0)';
     }

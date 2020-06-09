@@ -96,15 +96,15 @@ const execTask = async () => {
 export const saveCardColor = (
   cardProp: CardProp,
   bgColor: string,
-  titleColor?: string,
-  backgroundOpacity = 1.0
+  uiColor?: string,
+  cardOpacity = 1.0
 ) => {
-  if (titleColor === undefined) {
-    titleColor = bgColor;
+  if (uiColor === undefined) {
+    uiColor = bgColor;
   }
   cardProp.style.backgroundColor = bgColor;
-  cardProp.style.titleColor = titleColor;
-  cardProp.style.backgroundOpacity = backgroundOpacity;
+  cardProp.style.uiColor = uiColor;
+  cardProp.style.cardOpacity = cardOpacity;
 
   saveCard(cardProp);
 };

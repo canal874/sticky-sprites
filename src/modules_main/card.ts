@@ -184,14 +184,14 @@ export class Card {
           ? undefined
           : { x: _prop.x, y: _prop.y, width: _prop.width, height: _prop.height };
       const style: CardStyle | undefined =
-        _prop.titleColor === undefined ||
+        _prop.uiColor === undefined ||
         _prop.backgroundColor === undefined ||
-        _prop.backgroundOpacity === undefined
+        _prop.cardOpacity === undefined
           ? undefined
           : {
-            titleColor: _prop.titleColor,
+            uiColor: _prop.uiColor,
             backgroundColor: _prop.backgroundColor,
-            backgroundOpacity: _prop.backgroundOpacity,
+            cardOpacity: _prop.cardOpacity,
           };
       const date: CardDate | undefined =
         _prop.createdDate === undefined || _prop.modifiedDate === undefined

@@ -22,8 +22,9 @@ import {
   initCardRenderer,
   MESSAGE,
   render,
+  UI_COLOR_DARKENING_RATE,
 } from './modules_renderer/card_renderer';
-import { getImageTag, logger } from './modules_common/utils';
+import { darkenHexColor, getImageTag, logger } from './modules_common/utils';
 import {
   deleteCard,
   saveCard,
@@ -65,6 +66,12 @@ const queueSaveCommand = () => {
  * Context Menu
  */
 
+const changeCardColor = (backgroundColor: string, opacity = 1.0) => {
+  const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
+  saveCardColor(cardProp, backgroundColor, uiColor, opacity);
+  render(['Decoration', 'EditorColor']);
+};
+
 contextMenu({
   window: remote.getCurrentWindow(),
   showSaveImageAs: true,
@@ -85,64 +92,55 @@ contextMenu({
     {
       label: MESSAGE.yellow,
       click: () => {
-        saveCardColor(cardProp, '#ffffa0');
-        render(['Decoration', 'EditorColor']);
+        changeCardColor('#ffffa0');
       },
     },
     {
       label: MESSAGE.red,
       click: () => {
-        saveCardColor(cardProp, '#ffb0b0');
-        render(['Decoration', 'EditorColor']);
+        changeCardColor('#ffb0b0');
       },
     },
     {
       label: MESSAGE.green,
       click: () => {
-        saveCardColor(cardProp, '#d0ffd0');
-        render(['Decoration', 'EditorColor']);
+        changeCardColor('#d0ffd0');
       },
     },
     {
       label: MESSAGE.blue,
       click: () => {
-        saveCardColor(cardProp, '#d0d0ff');
-        render(['Decoration', 'EditorColor']);
+        changeCardColor('#d0d0ff');
       },
     },
     {
       label: MESSAGE.orange,
       click: () => {
-        saveCardColor(cardProp, '#ffb000');
-        render(['Decoration', 'EditorColor']);
+        changeCardColor('#ffb000');
       },
     },
     {
       label: MESSAGE.purple,
       click: () => {
-        saveCardColor(cardProp, '#ffd0ff');
-        render(['Decoration', 'EditorColor']);
+        changeCardColor('#ffd0ff');
       },
     },
     {
       label: MESSAGE.white,
       click: () => {
-        saveCardColor(cardProp, '#ffffff');
-        render(['Decoration', 'EditorColor']);
+        changeCardColor('#ffffff');
       },
     },
     {
       label: MESSAGE.gray,
       click: () => {
-        saveCardColor(cardProp, '#d0d0d0');
-        render(['Decoration', 'EditorColor']);
+        changeCardColor('#d0d0d0');
       },
     },
     {
       label: MESSAGE.transparent,
       click: () => {
-        saveCardColor(cardProp, '#ffffff', '#ffffff', 0.0);
-        render(['Decoration', 'EditorColor']);
+        changeCardColor('#ffffff', 0.0);
       },
     },
   ],

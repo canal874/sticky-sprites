@@ -35,15 +35,43 @@ export const getImageTag = (
   return `<img id="${id}" src="${src}" alt="${alt}" width="${width}" height="${height}" />`;
 };
 
-export const convertHexColorToRgba = (
-  colorHEX: string,
-  opacity = 1.0,
-  darkRate = 1.0
-): string => {
-  colorHEX.match(/#(\w\w)(\w\w)(\w\w)/);
-  const red = Math.floor(parseInt(RegExp.$1, 16) * darkRate);
-  const green = Math.floor(parseInt(RegExp.$2, 16) * darkRate);
-  const blue = Math.floor(parseInt(RegExp.$3, 16) * darkRate);
+export const darkenHexColor = (colorHEX: string, darkRate: number): string => {
+  if (darkRate > 1 || darkRate < 0) {
+    logger.error(`Invalid darkRate: ${darkRate}`);
+    return '#000000';
+  }
+  const res = colorHEX.match(/#(\w\w)(\w\w)(\w\w)/);
+  let red = parseInt(RegExp.$1, 16);
+  let green = parseInt(RegExp.$2, 16);
+  let blue = parseInt(RegExp.$3, 16);
+  if (res === null || isNaN(red) || isNaN(blue) || isNaN(blue)) {
+    logger.error(`Invalid HEX color format: ${colorHEX}`);
+    return '#000000';
+  }
+  red = Math.round(red * darkRate);
+  green = Math.round(green * darkRate);
+  blue = Math.round(blue * darkRate);
+  if (red > 255 || green > 255 || red > 255) {
+    logger.error(`Invalid HEX value: ${colorHEX}`);
+    return '#000000';
+  }
+
+  return `#${red.toString(16)}${green.toString(16)}${blue.toString(16)}`;
+};
+
+export const convertHexColorToRgba = (colorHEX: string, opacity = 1.0): string => {
+  const res = colorHEX.match(/^#(\w\w)(\w\w)(\w\w)$/);
+  const red = parseInt(RegExp.$1, 16);
+  const green = parseInt(RegExp.$2, 16);
+  const blue = parseInt(RegExp.$3, 16);
+  if (res === null || isNaN(red) || isNaN(blue) || isNaN(blue)) {
+    logger.error(`Invalid HEX color format: ${colorHEX}`);
+    return 'rgba(255,255,255,1.0)';
+  }
+  if (red > 255 || green > 255 || red > 255) {
+    logger.error(`Invalid HEX value: ${colorHEX}`);
+    return '#000000';
+  }
 
   const rgba = 'rgba(' + red + ',' + green + ',' + blue + ',' + opacity + ')';
 

@@ -12,6 +12,8 @@ import { CardCssStyle, ICardEditor } from '../modules_common/types';
 import { convertHexColorToRgba } from '../modules_common/utils';
 import { Messages } from '../modules_common/base.msg';
 
+export const UI_COLOR_DARKENING_RATE = 0.8;
+
 let cardCssStyle: CardCssStyle;
 let cardProp: CardProp;
 let cardEditor: ICardEditor;
@@ -112,27 +114,19 @@ const renderCardDecoration = () => {
     document.getElementById('card')!.style.border = '3px solid transparent';
   }
 
-  let titleOpacity = cardProp.style.backgroundOpacity;
-
   document.getElementById('title')!.style.visibility = 'visible';
-  if (cardProp.style.backgroundOpacity === 0) {
-    if (cardProp.status === 'Focused') {
-      titleOpacity = 1.0;
-    }
-    else if (cardProp.status === 'Blurred') {
-      document.getElementById('title')!.style.visibility = 'hidden';
-      titleOpacity = 1.0;
-    }
+  if (cardProp.style.cardOpacity === 0 && cardProp.status === 'Blurred') {
+    document.getElementById('title')!.style.visibility = 'hidden';
   }
 
   // Set card properties
   const backgroundRgba = convertHexColorToRgba(
     cardProp.style.backgroundColor,
-    cardProp.style.backgroundOpacity
+    cardProp.style.cardOpacity
   );
   document.getElementById('contents')!.style.backgroundColor = backgroundRgba;
 
-  const titleRgba = convertHexColorToRgba(cardProp.style.titleColor, titleOpacity, 0.8);
+  const titleRgba = convertHexColorToRgba(cardProp.style.uiColor);
 
   [...document.getElementsByClassName('title-color')].forEach(node => {
     (node as HTMLElement).style.backgroundColor = titleRgba;
@@ -142,13 +136,9 @@ const renderCardDecoration = () => {
 const renderEditorColor = () => {
   const backgroundRgba = convertHexColorToRgba(
     cardProp.style.backgroundColor,
-    cardProp.style.backgroundOpacity
+    cardProp.style.cardOpacity
   );
-  const darkerRgba = convertHexColorToRgba(
-    cardProp.style.titleColor,
-    cardProp.style.backgroundOpacity,
-    0.8
-  );
+  const darkerRgba = convertHexColorToRgba(cardProp.style.uiColor);
   cardEditor.setColor(backgroundRgba, darkerRgba);
 };
 

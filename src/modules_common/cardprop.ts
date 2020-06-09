@@ -19,9 +19,9 @@ export type CardBase = {
   data: string;
 };
 export type CardStyle = {
-  titleColor: string;
+  uiColor: string;
   backgroundColor: string;
-  backgroundOpacity: number;
+  cardOpacity: number;
 };
 export type CardDate = {
   createdDate: string;
@@ -35,9 +35,9 @@ export type CardStatus = 'Focused' | 'Blurred';
 
 export const DEFAULT_CARD_RECT: Rectangle = { x: 70, y: 70, width: 260, height: 176 };
 export const DEFAULT_CARD_STYLE: CardStyle = {
-  titleColor: '#ffffa0',
+  uiColor: '#cdcd80',
   backgroundColor: '#ffffa0',
-  backgroundOpacity: 1.0,
+  cardOpacity: 1.0,
 };
 
 export class CardProp implements CardBase {
@@ -72,9 +72,9 @@ export class CardProp implements CardBase {
       y: this.rect.y,
       width: this.rect.width,
       height: this.rect.height,
-      titleColor: this.style.titleColor,
+      uiColor: this.style.uiColor,
       backgroundColor: this.style.backgroundColor,
-      backgroundOpacity: this.style.backgroundOpacity,
+      cardOpacity: this.style.cardOpacity,
       createdDate: this.date.createdDate,
       modifiedDate: this.date.modifiedDate,
     };
@@ -86,9 +86,9 @@ export class CardProp implements CardBase {
       json.data,
       { x: json.x, y: json.y, width: json.width, height: json.height },
       {
-        titleColor: json.titleColor,
+        uiColor: json.uiColor,
         backgroundColor: json.backgroundColor,
-        backgroundOpacity: json.backgroundOpacity,
+        cardOpacity: json.cardOpacity,
       },
       {
         createdDate: json.createdDate,
