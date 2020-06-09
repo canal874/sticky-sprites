@@ -97,14 +97,14 @@ export const saveCardColor = (
   cardProp: CardProp,
   bgColor: string,
   uiColor?: string,
-  cardOpacity = 1.0
+  opacity = 1.0
 ) => {
   if (uiColor === undefined) {
     uiColor = bgColor;
   }
   cardProp.style.backgroundColor = bgColor;
   cardProp.style.uiColor = uiColor;
-  cardProp.style.cardOpacity = cardOpacity;
+  cardProp.style.opacity = opacity;
 
   saveCard(cardProp);
 };

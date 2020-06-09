@@ -22,7 +22,7 @@ export type CardBase = {
 export type CardStyle = {
   uiColor: string;
   backgroundColor: string;
-  cardOpacity: number;
+  opacity: number;
   zoom: number;
 };
 export type CardDate = {
@@ -45,7 +45,7 @@ export const DEFAULT_CARD_GEOMETRY: Geometry = {
 export const DEFAULT_CARD_STYLE: CardStyle = {
   uiColor: '#cdcd80',
   backgroundColor: '#ffffa0',
-  cardOpacity: 1.0,
+  opacity: 1.0,
   zoom: 1.0,
 };
 
@@ -84,7 +84,7 @@ export class CardProp implements CardBase {
       height: this.geometry.height,
       uiColor: this.style.uiColor,
       backgroundColor: this.style.backgroundColor,
-      cardOpacity: this.style.cardOpacity,
+      opacity: this.style.opacity,
       zoom: this.style.zoom,
       createdDate: this.date.createdDate,
       modifiedDate: this.date.modifiedDate,
@@ -99,7 +99,7 @@ export class CardProp implements CardBase {
       {
         uiColor: json.uiColor,
         backgroundColor: json.backgroundColor,
-        cardOpacity: json.cardOpacity,
+        opacity: json.opacity,
         zoom: json.zoom,
       },
       {

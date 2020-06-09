@@ -115,14 +115,14 @@ const renderCardDecoration = () => {
   }
 
   document.getElementById('title')!.style.visibility = 'visible';
-  if (cardProp.style.cardOpacity === 0 && cardProp.status === 'Blurred') {
+  if (cardProp.style.opacity === 0 && cardProp.status === 'Blurred') {
     document.getElementById('title')!.style.visibility = 'hidden';
   }
 
   // Set card properties
   const backgroundRgba = convertHexColorToRgba(
     cardProp.style.backgroundColor,
-    cardProp.style.cardOpacity
+    cardProp.style.opacity
   );
   document.getElementById('contents')!.style.backgroundColor = backgroundRgba;
 
@@ -136,7 +136,7 @@ const renderCardDecoration = () => {
 const renderEditorColor = () => {
   const backgroundRgba = convertHexColorToRgba(
     cardProp.style.backgroundColor,
-    cardProp.style.cardOpacity
+    cardProp.style.opacity
   );
   const darkerRgba = convertHexColorToRgba(cardProp.style.uiColor);
   cardEditor.setColor(backgroundRgba, darkerRgba);

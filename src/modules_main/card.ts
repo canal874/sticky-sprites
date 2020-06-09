@@ -196,13 +196,13 @@ export class Card {
       const style: CardStyle | undefined =
         _prop.uiColor === undefined ||
         _prop.backgroundColor === undefined ||
-        _prop.cardOpacity === undefined ||
+        _prop.opacity === undefined ||
         _prop.zoom === undefined
           ? undefined
           : {
             uiColor: _prop.uiColor,
             backgroundColor: _prop.backgroundColor,
-            cardOpacity: _prop.cardOpacity,
+            opacity: _prop.opacity,
             zoom: _prop.zoom,
           };
       const date: CardDate | undefined =
