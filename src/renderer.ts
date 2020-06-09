@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { ipcRenderer, remote } from 'electron';
+import { ipcRenderer, remote, webFrame } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import contextMenu from 'electron-context-menu';
 import {
@@ -87,6 +87,40 @@ contextMenu({
     actions.separator(),
     actions.copyLink({}),
     actions.separator(),
+  ],
+  prepend: () => [
+    {
+      label: MESSAGE.zoomIn,
+      click: () => {
+        if (cardProp.style.zoom < 1.0) {
+          cardProp.style.zoom += 0.2;
+        }
+        else {
+          cardProp.style.zoom += 0.5;
+        }
+        if (cardProp.style.zoom > 3) {
+          cardProp.style.zoom = 3;
+        }
+        cardEditor.setZoom(cardProp.style.zoom);
+        saveCard(cardProp);
+      },
+    },
+    {
+      label: MESSAGE.zoomOut,
+      click: () => {
+        if (cardProp.style.zoom <= 1.0) {
+          cardProp.style.zoom -= 0.2;
+        }
+        else {
+          cardProp.style.zoom -= 0.5;
+        }
+        if (cardProp.style.zoom <= 0.4) {
+          cardProp.style.zoom = 0.4;
+        }
+        cardEditor.setZoom(cardProp.style.zoom);
+        saveCard(cardProp);
+      },
+    },
   ],
   append: () => [
     {

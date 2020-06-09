@@ -338,6 +338,8 @@ export class CardEditor implements ICardEditor {
       }
     }
 
+    this.setZoom(this._cardProp.style.zoom);
+
     this._addDragAndDropEvent();
 
     this.isOpened = true;
@@ -440,6 +442,12 @@ export class CardEditor implements ICardEditor {
     render(['EditorColor']);
 
     CKEDITOR.instances.editor.focus();
+  };
+
+  setZoom = (scale: number) => {
+    if (scale > 0) {
+      CKEDITOR.instances.editor.document.$.body.style.zoom = `${scale}`;
+    }
   };
 
   setSize = (

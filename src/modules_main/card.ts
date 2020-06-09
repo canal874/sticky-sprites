@@ -189,12 +189,14 @@ export class Card {
       const style: CardStyle | undefined =
         _prop.uiColor === undefined ||
         _prop.backgroundColor === undefined ||
-        _prop.cardOpacity === undefined
+        _prop.cardOpacity === undefined ||
+        _prop.zoom === undefined
           ? undefined
           : {
             uiColor: _prop.uiColor,
             backgroundColor: _prop.backgroundColor,
             cardOpacity: _prop.cardOpacity,
+            zoom: _prop.zoom,
           };
       const date: CardDate | undefined =
         _prop.createdDate === undefined || _prop.modifiedDate === undefined

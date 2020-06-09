@@ -1,6 +1,8 @@
 import { translate } from 'typed-intl';
 
 export interface Messages {
+  zoomIn: string;
+  zoomOut: string;
   newCard: string;
   confirmClosing: string;
   confirmWaitMore: string;
@@ -19,6 +21,8 @@ export interface Messages {
 }
 
 const English: Messages = {
+  zoomIn: 'Zoom In',
+  zoomOut: 'Zoom Out',
   newCard: 'New card',
   confirmClosing:
     'Close OK?\n\nThe card will be shown again when restating the app.\nIf you want to delete the card, let it empty before closing it.)',
@@ -40,6 +44,8 @@ const English: Messages = {
 };
 
 const Japanese: Messages = {
+  zoomIn: '拡大',
+  zoomOut: '縮小',
   newCard: '新規カード',
   confirmClosing:
     'カードを閉じても良いですか？\n\n閉じたカードはアプリ再起動でまた表示されます。\n削除したい場合、カードの内容を全て消してから閉じてください）',
