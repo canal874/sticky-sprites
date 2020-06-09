@@ -460,6 +460,15 @@ export class CardEditor implements ICardEditor {
     else {
       logger.error(`Error in setSize: editor is undefined.`);
     }
+
+    const textcolorBtn = document.getElementsByClassName('cke_button__textcolor');
+    const bgcolorBtn = document.getElementsByClassName('cke_button__bgcolor');
+    if (textcolorBtn) {
+      (textcolorBtn.item(0) as HTMLElement).style.display = width < 218 || height < 90 ? 'none' : 'block';
+    }
+    if (bgcolorBtn) {
+      (bgcolorBtn.item(0) as HTMLElement).style.display = width < 252 || height < 90 ? 'none' : 'block';
+    }
   };
 
   setColor = (backgroundRgba: string, darkerRgba: string): void => {

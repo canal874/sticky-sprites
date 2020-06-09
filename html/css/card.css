@@ -154,7 +154,6 @@ body > #card > #cke_editor .cke_combo__fontsize a.cke_combo_button .cke_combo_op
 
 body > #card > #cke_editor .cke_bottom{
   padding:0px;
-  zoom: 0.7;
 }
 
 body > #card > #cke_editor .cke_toolgroup{
@@ -168,5 +167,4 @@ body > #card > #cke_editor .cke_combo{
 body > #card > #cke_editor .cke_inner{
   background-color: rgba(255,255,255,0);
 }
-
 
