@@ -14,10 +14,10 @@ import { MESSAGE, render, setRenderOffsetHeight } from '../modules_renderer/card
 import {
   alertDialog,
   convertHexColorToRgba,
+  darkenHexColor,
   getImageTag,
   logger,
   sleep,
-  darkenHexColor,
 } from '../modules_common/utils';
 import { saveCard, saveCardColor } from '../modules_renderer/save';
 
