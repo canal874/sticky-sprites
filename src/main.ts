@@ -15,6 +15,7 @@ import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 import { CardIO } from './modules_ext/io';
 import { Card, cards } from './modules_main/card';
 import { setGlobalFocusEventListenerPermission } from './modules_main/global';
+import { saveCard } from './modules_renderer/save';
 
 // process.on('unhandledRejection', console.dir);
 
@@ -111,16 +112,39 @@ app.on('ready', async () => {
       return [];
     });
 
+  const renderers = [];
   for (const card of cardArray) {
-    card
-      .render()
-      .then(() => {
-        cards.set(card.id, card);
-      })
-      .catch((e: Error) => {
-        logger.error(`Error while loading card in ready event: ${e.message}`);
-      });
+    renderers.push(
+      card
+        .render()
+        .then(() => {
+          cards.set(card.id, card);
+        })
+        .catch((e: Error) => {
+          logger.error(`Error while loading card in ready event: ${e.message}`);
+        })
+    );
   }
+  Promise.all(renderers)
+    .then(() => {
+      const backToFront = [...cards.keys()].sort((a, b) => {
+        if (cards.get(a)!.prop.geometry.z < cards.get(b)!.prop.geometry.z) {
+          return -1;
+        }
+        else if (cards.get(a)!.prop.geometry.z > cards.get(b)!.prop.geometry.z) {
+          return 1;
+        }
+        return 0;
+      });
+
+      for (const key of backToFront) {
+        cards.get(key)!.suppressFocusEventOnce = true;
+        cards.get(key)!.window.focus();
+      }
+    })
+    .catch((e: Error) => {
+      logger.error(`Error while rendering cards in ready event: ${e.message}`);
+    });
 });
 
 /**
@@ -220,4 +244,64 @@ ipcMain.handle('set-window-size', (event, id: string, width: number, height: num
   const card = cards.get(id);
   // eslint-disable-next-line no-unused-expressions
   card?.window.setSize(width, height);
+});
+
+ipcMain.handle('bring-to-front', (event, id: string, rearrange = false) => {
+  const targetCard = cards.get(id);
+  if (!targetCard) {
+    return;
+  }
+
+  const backToFront = [...cards.keys()].sort((a, b) => {
+    if (cards.get(a)!.prop.geometry.z < cards.get(b)!.prop.geometry.z) {
+      return -1;
+    }
+    else if (cards.get(a)!.prop.geometry.z > cards.get(b)!.prop.geometry.z) {
+      return 1;
+    }
+    return 0;
+  });
+
+  const newZ = cards.get(backToFront[backToFront.length - 1])!.prop.geometry.z + 1;
+  targetCard.prop.geometry.z = newZ;
+  backToFront.splice(backToFront.indexOf(id), 1);
+  backToFront.push(id);
+
+  // NOTE: When bring-to-front is invoked by focus event, the card has been already brought to front.
+  if (rearrange) {
+    for (const key of backToFront) {
+      cards.get(key)!.suppressFocusEventOnce = true;
+      cards.get(key)!.window.focus();
+    }
+  }
+
+  return newZ;
+});
+
+ipcMain.handle('send-to-back', (event, id: string) => {
+  const targetCard = cards.get(id);
+  if (!targetCard) {
+    return;
+  }
+
+  const backToFront = [...cards.keys()].sort((a, b) => {
+    if (cards.get(a)!.prop.geometry.z < cards.get(b)!.prop.geometry.z) {
+      return -1;
+    }
+    else if (cards.get(a)!.prop.geometry.z > cards.get(b)!.prop.geometry.z) {
+      return 1;
+    }
+    return 0;
+  });
+
+  const newZ = cards.get(backToFront[0])!.prop.geometry.z - 1;
+  targetCard.prop.geometry.z = newZ;
+  backToFront.splice(backToFront.indexOf(id), 1);
+  backToFront.unshift(id);
+
+  for (const key of backToFront) {
+    cards.get(key)!.suppressFocusEventOnce = true;
+    cards.get(key)!.window.focus();
+  }
+  return newZ;
 });

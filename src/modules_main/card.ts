@@ -15,7 +15,7 @@ import {
   CardProp,
   CardPropSerializable,
   CardStyle,
-  Rectangle,
+  Geometry,
 } from '../modules_common/cardprop';
 import { CardIO } from '../modules_ext/io';
 import { getCurrentDate, logger } from '../modules_common/utils';
@@ -118,8 +118,8 @@ export class Card {
   };
 
   private _renderCard (_prop: CardProp): void {
-    this.window.setSize(_prop.rect.width, _prop.rect.height);
-    this.window.setPosition(_prop.rect.x, _prop.rect.y);
+    this.window.setSize(_prop.geometry.width, _prop.geometry.height);
+    this.window.setPosition(_prop.geometry.x, _prop.geometry.y);
     logger.debug(`renderCard in main: ${JSON.stringify(_prop.toObject())}`);
     this.window.webContents.send('render-card', _prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
     this.window.showInactive();
@@ -179,13 +179,20 @@ export class Card {
   private _createCardData: () => Promise<CardProp> = () => {
     if (this.propTemplate) {
       const _prop = this.propTemplate;
-      const rect: Rectangle | undefined =
+      const geometry: Geometry | undefined =
         _prop.x === undefined ||
         _prop.y === undefined ||
+        _prop.z === undefined ||
         _prop.width === undefined ||
         _prop.height === undefined
           ? undefined
-          : { x: _prop.x, y: _prop.y, width: _prop.width, height: _prop.height };
+          : {
+            x: _prop.x,
+            y: _prop.y,
+            z: _prop.z,
+            width: _prop.width,
+            height: _prop.height,
+          };
       const style: CardStyle | undefined =
         _prop.uiColor === undefined ||
         _prop.backgroundColor === undefined ||
@@ -205,7 +212,7 @@ export class Card {
             createdDate: _prop.createdDate,
             modifiedDate: _prop.modifiedDate,
           };
-      return Promise.resolve(new CardProp(this.id, _prop.data, rect, style, date));
+      return Promise.resolve(new CardProp(this.id, _prop.data, geometry, style, date));
     }
 
     return Promise.resolve(new CardProp(this.id));

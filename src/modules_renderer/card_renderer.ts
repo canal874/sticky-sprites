@@ -68,7 +68,7 @@ const setWindowTitle = () => {
 
 const renderTitleBar = () => {
   const closeBtnLeft =
-    cardProp.rect.width -
+    cardProp.geometry.width -
     cardCssStyle.border.left -
     cardCssStyle.border.right -
     document.getElementById('closeBtn')!.offsetWidth;
@@ -87,9 +87,9 @@ const renderContentsData = () => {
 };
 
 const renderContentsRect = () => {
-  // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
+  // width of BrowserWindow (namely cardProp.geometry.width) equals border + padding + content.
   document.getElementById('contents')!.style.width =
-    cardProp.rect.width -
+    cardProp.geometry.width -
     cardCssStyle.border.left -
     cardCssStyle.border.right -
     cardCssStyle.padding.left -
@@ -97,7 +97,7 @@ const renderContentsRect = () => {
     'px';
 
   document.getElementById('contents')!.style.height =
-    cardProp.rect.height -
+    cardProp.geometry.height -
     cardCssStyle.border.top -
     cardCssStyle.border.bottom -
     document.getElementById('titleBar')!.offsetHeight -

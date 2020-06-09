@@ -96,6 +96,7 @@ class CardIOClass implements ICardIO {
               {
                 x: propsRequired.x,
                 y: propsRequired.y,
+                z: propsRequired.z,
                 width: propsRequired.width,
                 height: propsRequired.height,
               },

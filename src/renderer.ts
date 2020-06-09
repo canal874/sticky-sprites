@@ -12,7 +12,7 @@ import contextMenu from 'electron-context-menu';
 import {
   CardProp,
   CardPropSerializable,
-  DEFAULT_CARD_RECT,
+  DEFAULT_CARD_GEOMETRY,
 } from './modules_common/cardprop';
 import { CardCssStyle, DialogButton, ICardEditor } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
@@ -121,6 +121,26 @@ contextMenu({
         saveCard(cardProp);
       },
     },
+    /*
+    {
+      label: MESSAGE.bringToFront,
+      click: async () => {
+        const newZ = await ipcRenderer.invoke('bring-to-front', cardProp.id);
+        // eslint-disable-next-line require-atomic-updates
+        cardProp.geometry.z = newZ;
+        saveCard(cardProp);
+      },
+    },
+    */
+    {
+      label: MESSAGE.sendToBack,
+      click: async () => {
+        const newZ = await ipcRenderer.invoke('send-to-back', cardProp.id);
+        // eslint-disable-next-line require-atomic-updates
+        cardProp.geometry.z = newZ;
+        saveCard(cardProp);
+      },
+    },
   ],
   append: () => [
     {
@@ -200,7 +220,7 @@ const initializeUIEvents = () => {
         const width = dropImg.naturalWidth;
         const height = dropImg.naturalHeight;
 
-        let newWidth = cardProp.rect.width - 15;
+        let newWidth = cardProp.geometry.width - 15;
         let newHeight = height;
         if (newWidth < width) {
           newHeight = (height * newWidth) / width;
@@ -212,18 +232,18 @@ const initializeUIEvents = () => {
         const imgTag = getImageTag(uuidv4(), file!.path, newWidth, newHeight, file!.name);
         if (cardProp.data === '') {
           cardProp.data = imgTag;
-          cardProp.rect.height = newHeight + 15;
+          cardProp.geometry.height = newHeight + 15;
         }
         else {
           cardProp.data = cardProp.data + '<br />' + imgTag;
-          cardProp.rect.height += newHeight + 15;
+          cardProp.geometry.height += newHeight + 15;
         }
 
         await ipcRenderer.invoke(
           'set-window-size',
           cardProp.id,
-          cardProp.rect.width,
-          cardProp.rect.height
+          cardProp.geometry.width,
+          cardProp.geometry.height
         );
 
         render(['TitleBar', 'Decoration', 'ContentsData']);
@@ -237,15 +257,15 @@ const initializeUIEvents = () => {
   // eslint-disable-next-line no-unused-expressions
   document.getElementById('newBtn')?.addEventListener('click', async () => {
     // Position of a new card is relative to this card.
-    const rect = DEFAULT_CARD_RECT;
-    rect.x = cardProp.rect.x + 30;
-    rect.y = cardProp.rect.y + 30;
+    const geometry = DEFAULT_CARD_GEOMETRY;
+    geometry.x = cardProp.geometry.x + 30;
+    geometry.y = cardProp.geometry.y + 30;
 
     const newId = await ipcRenderer.invoke('create-card', {
-      x: rect.x,
-      y: rect.y,
-      width: rect.width,
-      height: rect.height,
+      x: geometry.x,
+      y: geometry.y,
+      width: geometry.width,
+      height: geometry.height,
     });
     ipcRenderer.invoke('focus', newId);
   });
@@ -408,7 +428,7 @@ const initializeIPCEvents = () => {
     close();
   });
 
-  ipcRenderer.on('card-focused', () => {
+  ipcRenderer.on('card-focused', async () => {
     console.debug('card-focused');
 
     cardProp.status = 'Focused';
@@ -417,6 +437,10 @@ const initializeIPCEvents = () => {
     if (cardEditor.editorType === 'WYSIWYG') {
       cardEditor.startEdit();
     }
+    const newZ = await ipcRenderer.invoke('bring-to-front', cardProp.id);
+    // eslint-disable-next-line require-atomic-updates
+    cardProp.geometry.z = newZ;
+    saveCard(cardProp);
   });
 
   ipcRenderer.on('card-blurred', () => {
@@ -441,8 +465,8 @@ const initializeIPCEvents = () => {
   ipcRenderer.on(
     'resize-by-hand',
     (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
-      cardProp.rect.width = newBounds.width + getRenderOffsetWidth();
-      cardProp.rect.height = newBounds.height + getRenderOffsetHeight();
+      cardProp.geometry.width = newBounds.width + getRenderOffsetWidth();
+      cardProp.geometry.height = newBounds.height + getRenderOffsetHeight();
 
       render(['TitleBar', 'ContentsRect', 'EditorRect']);
 
@@ -453,8 +477,8 @@ const initializeIPCEvents = () => {
   ipcRenderer.on(
     'move-by-hand',
     (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
-      cardProp.rect.x = newBounds.x;
-      cardProp.rect.y = newBounds.y;
+      cardProp.geometry.x = newBounds.x;
+      cardProp.geometry.y = newBounds.y;
 
       queueSaveCommand();
     }

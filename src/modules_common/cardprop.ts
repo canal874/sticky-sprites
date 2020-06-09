@@ -8,9 +8,10 @@
 
 import { getCurrentDateAndTime } from './utils';
 
-export type Rectangle = {
+export type Geometry = {
   x: number;
   y: number;
+  z: number;
   width: number;
   height: number;
 };
@@ -30,11 +31,17 @@ export type CardDate = {
 };
 // Properties of a card that must be serialized
 // Each of them must have unique name to be able to use as a key when serialize.
-export type CardPropSerializable = CardBase & Rectangle & CardStyle & CardDate;
+export type CardPropSerializable = CardBase & Geometry & CardStyle & CardDate;
 
 export type CardStatus = 'Focused' | 'Blurred';
 
-export const DEFAULT_CARD_RECT: Rectangle = { x: 70, y: 70, width: 260, height: 176 };
+export const DEFAULT_CARD_GEOMETRY: Geometry = {
+  x: 70,
+  y: 70,
+  z: 0,
+  width: 260,
+  height: 176,
+};
 export const DEFAULT_CARD_STYLE: CardStyle = {
   uiColor: '#cdcd80',
   backgroundColor: '#ffffa0',
@@ -46,7 +53,7 @@ export class CardProp implements CardBase {
   constructor (
     public id: string = '',
     public data: string = '',
-    public rect: Rectangle = DEFAULT_CARD_RECT,
+    public geometry: Geometry = DEFAULT_CARD_GEOMETRY,
     public style: CardStyle = DEFAULT_CARD_STYLE,
     public date: CardDate = {
       createdDate: getCurrentDateAndTime(),
@@ -70,10 +77,11 @@ export class CardProp implements CardBase {
     return {
       id: this.id,
       data: this.data,
-      x: this.rect.x,
-      y: this.rect.y,
-      width: this.rect.width,
-      height: this.rect.height,
+      x: this.geometry.x,
+      y: this.geometry.y,
+      z: this.geometry.z,
+      width: this.geometry.width,
+      height: this.geometry.height,
       uiColor: this.style.uiColor,
       backgroundColor: this.style.backgroundColor,
       cardOpacity: this.style.cardOpacity,
@@ -87,7 +95,7 @@ export class CardProp implements CardBase {
     return new CardProp(
       json.id,
       json.data,
-      { x: json.x, y: json.y, width: json.width, height: json.height },
+      { x: json.x, y: json.y, z: json.z, width: json.width, height: json.height },
       {
         uiColor: json.uiColor,
         backgroundColor: json.backgroundColor,

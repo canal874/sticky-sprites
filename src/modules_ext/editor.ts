@@ -133,8 +133,8 @@ export class CardEditor implements ICardEditor {
 
     ipcRenderer.invoke('set-window-size', this._cardProp.id, width, height);
 
-    this._cardProp.rect.width = width;
-    this._cardProp.rect.height = height;
+    this._cardProp.geometry.width = width;
+    this._cardProp.geometry.height = height;
 
     render(['TitleBar', 'EditorRect']);
   };
@@ -224,7 +224,7 @@ export class CardEditor implements ICardEditor {
             const height = dropImg.naturalHeight;
 
             let newImageWidth =
-              this._cardProp.rect.width -
+              this._cardProp.geometry.width -
               this._DRAG_IMAGE_MARGIN -
               this._cardCssStyle.border.left -
               this._cardCssStyle.border.right -
@@ -249,8 +249,8 @@ export class CardEditor implements ICardEditor {
               img.setAttribute('height', `${newImageHeight}`);
             }
 
-            this._cardProp.rect.height =
-              (this._cardProp.data === '' ? 0 : this._cardProp.rect.height) +
+            this._cardProp.geometry.height =
+              (this._cardProp.data === '' ? 0 : this._cardProp.geometry.height) +
               newImageHeight +
               this._DRAG_IMAGE_MARGIN +
               this._cardCssStyle.border.top +
@@ -262,8 +262,8 @@ export class CardEditor implements ICardEditor {
             ipcRenderer.invoke(
               'set-window-size',
               this._cardProp.id,
-              this._cardProp.rect.width,
-              this._cardProp.rect.height
+              this._cardProp.geometry.width,
+              this._cardProp.geometry.height
             );
             const [dataChanged, data] = this.endEdit();
             this._cardProp.data = data;
@@ -360,11 +360,11 @@ export class CardEditor implements ICardEditor {
       await this._imeWorkaround();
     }
     // Expand card to add toolbar.
-    const expandedHeight = this._cardProp.rect.height + this._TOOLBAR_HEIGHT;
+    const expandedHeight = this._cardProp.geometry.height + this._TOOLBAR_HEIGHT;
     ipcRenderer.invoke(
       'set-window-size',
       this._cardProp.id,
-      this._cardProp.rect.width,
+      this._cardProp.geometry.width,
       expandedHeight
     );
     setRenderOffsetHeight(-this._TOOLBAR_HEIGHT);
@@ -394,8 +394,8 @@ export class CardEditor implements ICardEditor {
     ipcRenderer.invoke(
       'set-window-size',
       this._cardProp.id,
-      this._cardProp.rect.width,
-      this._cardProp.rect.height
+      this._cardProp.geometry.width,
+      this._cardProp.geometry.height
     );
     setRenderOffsetHeight(0);
 
@@ -451,16 +451,16 @@ export class CardEditor implements ICardEditor {
   };
 
   setSize = (
-    width: number = this._cardProp.rect.width -
+    width: number = this._cardProp.geometry.width -
       this._cardCssStyle.border.left -
       this._cardCssStyle.border.right,
-    height: number = this._cardProp.rect.height +
+    height: number = this._cardProp.geometry.height +
       this._TOOLBAR_HEIGHT -
       this._cardCssStyle.border.top -
       this._cardCssStyle.border.bottom -
       document.getElementById('titleBar')!.offsetHeight
   ): void => {
-    // width of BrowserWindow (namely cardProp.rect.width) equals border + padding + content.
+    // width of BrowserWindow (namely cardProp.geometry.width) equals border + padding + content.
     const editor = CKEDITOR.instances.editor;
     if (editor) {
       CKEDITOR.instances.editor.resize(width, height);
