@@ -7,7 +7,7 @@
  */
 
 import { ipcRenderer, remote } from 'electron';
-import uniqid from 'uniqid';
+import { v4 as uuidv4 } from 'uuid';
 import contextMenu from 'electron-context-menu';
 import {
   CardProp,
@@ -175,7 +175,7 @@ const initializeUIEvents = () => {
           newWidth = width;
         }
 
-        const imgTag = getImageTag(uniqid(), file!.path, newWidth, newHeight, file!.name);
+        const imgTag = getImageTag(uuidv4(), file!.path, newWidth, newHeight, file!.name);
         if (cardProp.data === '') {
           cardProp.data = imgTag;
           cardProp.rect.height = newHeight + 15;

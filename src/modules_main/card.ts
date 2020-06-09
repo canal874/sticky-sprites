@@ -8,7 +8,7 @@
 
 import url from 'url';
 import path from 'path';
-import uniqid from 'uniqid';
+import { v4 as uuidv4 } from 'uuid';
 import { BrowserWindow, ipcMain, shell } from 'electron';
 import {
   CardDate,
@@ -18,7 +18,7 @@ import {
   Rectangle,
 } from '../modules_common/cardprop';
 import { CardIO } from '../modules_ext/io';
-import { logger } from '../modules_common/utils';
+import { getCurrentDate, logger } from '../modules_common/utils';
 import {
   getGlobalFocusEventListenerPermission,
   setGlobalFocusEventListenerPermission,
@@ -34,8 +34,8 @@ const minimumWindowWidth = 30;
  * A small sticky windows is called 'card'.
  */
 const generateNewCardId = (): string => {
-  // returns 18 byte unique characters
-  return uniqid();
+  // YYYY-MM-DD-UUID4
+  return `${getCurrentDate()}-${uuidv4()}`;
 };
 
 export const cards: Map<string, Card> = new Map<string, Card>();

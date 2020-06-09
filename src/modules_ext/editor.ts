@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import uniqid from 'uniqid';
+import { v4 as uuidv4 } from 'uuid';
 import { ipcRenderer } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
@@ -212,7 +212,7 @@ export class CardEditor implements ICardEditor {
     // Don't use drop event : CKEDITOR.instances['editor'].on('drop', async evt => {});
     // Paste event is automatically occurred after drop.
     CKEDITOR.instances.editor.on('paste', evt => {
-      const id = uniqid();
+      const id = uuidv4();
       const dataTransfer = evt.data.dataTransfer;
       if (dataTransfer.$.files) {
         const file = dataTransfer.$.files[0];

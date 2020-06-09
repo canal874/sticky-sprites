@@ -20,9 +20,14 @@ logger.level = 'all';
 export const sleep = (msec: number) =>
   new Promise<void>(resolve => setTimeout(resolve, msec));
 
-export const getCurrentDate = (): string => {
+export const getCurrentDateAndTime = (): string => {
   // @ts-ignore
   return dayjs.utc().format('YYYY-MM-DD HH:mm:ss');
+};
+
+export const getCurrentDate = (): string => {
+  // @ts-ignore
+  return dayjs.utc().format('YYYY-MM-DD');
 };
 
 export const getImageTag = (

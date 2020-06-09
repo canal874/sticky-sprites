@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { getCurrentDate } from './utils';
+import { getCurrentDateAndTime } from './utils';
 
 export type Rectangle = {
   x: number;
@@ -47,8 +47,8 @@ export class CardProp implements CardBase {
     public rect: Rectangle = DEFAULT_CARD_RECT,
     public style: CardStyle = DEFAULT_CARD_STYLE,
     public date: CardDate = {
-      createdDate: getCurrentDate(),
-      modifiedDate: getCurrentDate(),
+      createdDate: getCurrentDateAndTime(),
+      modifiedDate: getCurrentDateAndTime(),
     },
     public status: CardStatus = 'Blurred'
   ) {}

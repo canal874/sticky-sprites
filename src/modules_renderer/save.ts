@@ -10,7 +10,7 @@ import { checkServerIdentity } from 'tls';
 import { ipcRenderer } from 'electron';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { MESSAGE, setTitleMessage } from './card_renderer';
-import { getCurrentDate, logger } from '../modules_common/utils';
+import { getCurrentDateAndTime, logger } from '../modules_common/utils';
 import { DialogButton } from '../modules_common/types';
 
 type task = {
@@ -110,7 +110,7 @@ export const saveCardColor = (
 };
 
 export const deleteCard = (cardProp: CardProp) => {
-  cardProp.date.modifiedDate = getCurrentDate();
+  cardProp.date.modifiedDate = getCurrentDateAndTime();
   const propObject = cardProp.toObject();
   while (unfinishedTasks.length > 1) {
     const poppedTask = unfinishedTasks.pop();
@@ -126,7 +126,7 @@ export const deleteCard = (cardProp: CardProp) => {
 };
 
 export const saveCard = (cardProp: CardProp) => {
-  cardProp.date.modifiedDate = getCurrentDate();
+  cardProp.date.modifiedDate = getCurrentDateAndTime();
   const propObject = cardProp.toObject();
   while (unfinishedTasks.length > 1) {
     const poppedTask = unfinishedTasks.pop();
