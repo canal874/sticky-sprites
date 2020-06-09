@@ -24,7 +24,7 @@ import {
   render,
   UI_COLOR_DARKENING_RATE,
 } from './modules_renderer/card_renderer';
-import { darkenHexColor, getImageTag, logger } from './modules_common/utils';
+import { darkenHexColor, getImageTag, logger, getCurrentDateAndTime } from './modules_common/utils';
 import {
   deleteCard,
   saveCard,
@@ -264,6 +264,7 @@ const initializeUIEvents = () => {
     const newId = await ipcRenderer.invoke('create-card', {
       x: geometry.x,
       y: geometry.y,
+      z: geometry.z + 1,
       width: geometry.width,
       height: geometry.height,
     });
