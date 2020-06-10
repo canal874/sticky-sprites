@@ -20,7 +20,6 @@ body > .card{
   border: 3px solid transparent;
   box-sizing: border-box;
   visibility: hidden;
-  overflow: hidden;
   z-index: 0;
 }
 
@@ -120,14 +119,6 @@ body > #card > .cke_screen_reader_only{
   display: none;
 }
 
-/* Hide #cke_1_bottom when toolbar exists on the top position.
-  (	config.toolbarLocation = 'top';) */
-/*
-body > #card > #cke_editor #cke_1_bottom{
-  display:none;
-}
-*/
-
 body > #card > #cke_editor{
   top: 18px;  
   border: 0px;
@@ -166,5 +157,9 @@ body > #card > #cke_editor .cke_combo{
 
 body > #card > #cke_editor .cke_inner{
   background-color: rgba(255,255,255,0);
+}
+
+body > #card > #cke_editor .cke_wysiwyg_frame{
+  position: fixed; /* Need for blocking scroll of <body> of BrowserWindow */
 }
 

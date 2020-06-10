@@ -471,6 +471,11 @@ export class CardEditor implements ICardEditor {
     const editor = CKEDITOR.instances.editor;
     if (editor) {
       CKEDITOR.instances.editor.resize(width, height);
+      const iframe = document.getElementsByClassName('cke_wysiwyg_frame');
+      (iframe.item(0) as HTMLElement).style.width =
+        document.getElementById('cke_editor')!.offsetWidth + 'px';
+      (iframe.item(0) as HTMLElement).style.height =
+        document.getElementById('cke_editor')!.offsetHeight + 'px';
     }
     else {
       logger.error(`Error in setSize: editor is undefined.`);
