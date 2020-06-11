@@ -49,6 +49,8 @@ export class Card {
   public suppressBlurEventOnce = false;
   public recaptureGlobalFocusEventAfterLocalFocusEvent = false;
 
+  public renderingCompleted = false;
+
   public loadOrCreateCardData: () => Promise<CardProp>;
   constructor (public id: string = '', public propTemplate?: CardPropSerializable) {
     this.loadOrCreateCardData = this._loadCardData;
@@ -106,24 +108,34 @@ export class Card {
     this.window.on('blur', this._blurListener);
   }
 
-  public render = () => {
-    return Promise.all([this._readyToShow(), this._loadHTML(), this.loadOrCreateCardData()])
-      .then(([, , _prop]) => {
-        this.prop = _prop;
-        this._renderCard(_prop);
-      })
-      .catch((e: Error) => {
-        throw new Error(`Cannot load card: ${this.id}: ${e.message}`);
-      });
+  public render = async () => {
+    const [, , _prop] = await Promise.all([
+      this._readyToShow(),
+      this._loadHTML(),
+      this.loadOrCreateCardData(),
+    ]).catch((e: Error) => {
+      throw new Error(`Cannot load card: ${this.id}: ${e.message}`);
+    });
+    this.prop = _prop;
+    await this._renderCard(_prop);
   };
 
-  private _renderCard (_prop: CardProp): void {
-    this.window.setSize(_prop.geometry.width, _prop.geometry.height);
-    this.window.setPosition(_prop.geometry.x, _prop.geometry.y);
-    logger.debug(`renderCard in main: ${JSON.stringify(_prop.toObject())}`);
-    this.window.webContents.send('render-card', _prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
-    this.window.showInactive();
-  }
+  private _renderCard = (_prop: CardProp) => {
+    return new Promise(resolve => {
+      this.window.setSize(_prop.geometry.width, _prop.geometry.height);
+      this.window.setPosition(_prop.geometry.x, _prop.geometry.y);
+      // logger.debug(`renderCard in main: ${JSON.stringify(_prop.toObject())}`);
+      logger.debug(`renderCard in main [${_prop.id}] ${_prop.data.substr(0, 40)}`);
+      this.window.showInactive();
+      this.window.webContents.send('render-card', _prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
+      const checkTimer = setInterval(() => {
+        if (this.renderingCompleted) {
+          clearInterval(checkTimer);
+          resolve();
+        }
+      }, 200);
+    });
+  };
 
   private _readyToShow: () => Promise<void> = () => {
     return new Promise(resolve => {

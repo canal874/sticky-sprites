@@ -71,12 +71,19 @@ ipcMain.handle('delete-card', async (event, id: string) => {
     });
 });
 
+ipcMain.handle('finish-render-card', (event, id: string) => {
+  const card = cards.get(id);
+  if (card) {
+    card.renderingCompleted = true;
+  }
+});
+
 ipcMain.handle('create-card', async (event, propTemplate: CardPropSerializable) => {
   const card = new Card('', propTemplate);
+  cards.set(card.id, card);
   await card.render().catch((e: Error) => {
     logger.error(`Error in createCard(): ${e.message}`);
   });
-  cards.set(card.id, card);
   return card.id;
 });
 
@@ -114,19 +121,16 @@ app.on('ready', async () => {
 
   const renderers = [];
   for (const card of cardArray) {
+    cards.set(card.id, card);
     renderers.push(
-      card
-        .render()
-        .then(() => {
-          cards.set(card.id, card);
-        })
-        .catch((e: Error) => {
-          logger.error(`Error while loading card in ready event: ${e.message}`);
-        })
+      card.render().catch((e: Error) => {
+        logger.error(`Error while loading card in ready event: ${e.message}`);
+      })
     );
   }
   Promise.all(renderers)
     .then(() => {
+      logger.debug('All cards are rendered.');
       const backToFront = [...cards.keys()].sort((a, b) => {
         if (cards.get(a)!.prop.geometry.z < cards.get(b)!.prop.geometry.z) {
           return -1;
@@ -138,8 +142,7 @@ app.on('ready', async () => {
       });
 
       for (const key of backToFront) {
-        cards.get(key)!.suppressFocusEventOnce = true;
-        cards.get(key)!.window.focus();
+        cards.get(key)!.window.moveTop();
       }
     })
     .catch((e: Error) => {
