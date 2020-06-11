@@ -415,7 +415,7 @@ const initializeIPCEvents = () => {
         cardEditor
           .showEditor()
           .then(() => {
-            render(['EditorColor']);
+            // 
           })
           .catch((e: Error) => {
             // logger.error does not work in ipcRenderer event.

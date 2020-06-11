@@ -297,7 +297,7 @@ export class CardEditor implements ICardEditor {
       return;
     }
 
-    render(['EditorRect']);
+    render(['EditorRect', 'EditorColor']);
 
     const contents = document.getElementById('contents');
     if (contents) {
