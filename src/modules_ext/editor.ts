@@ -445,8 +445,11 @@ export class CardEditor implements ICardEditor {
     CKEDITOR.instances.editor.setMode('wysiwyg', () => {});
     await this.waitUntilActivationComplete();
 
-    // Reset editor color to card color
-    render(['EditorColor']);
+    /*
+     * Reset editor color to card color
+     * and reset width and height of cke_wysiwyg_frame
+     */
+    render(['EditorColor', 'EditorRect']);
 
     CKEDITOR.instances.editor.focus();
   };
