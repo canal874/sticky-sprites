@@ -110,6 +110,10 @@ body > .card > .contents{
   word-wrap: break-word;
 }
 
+body > .card > .contents > ol,ul,dl
+{
+	padding: 0 25px;
+}
 
 /**
  * for CKEditor
