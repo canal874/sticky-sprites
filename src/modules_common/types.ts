@@ -32,7 +32,7 @@ export interface ICardEditor {
   startCodeMode(): void;
   endCodeMode(): void;
 
-  setZoom(scale: number): void;
+  setZoom(): void;
   setSize(width?: number, height?: number): void;
   setColor(): void;
 }

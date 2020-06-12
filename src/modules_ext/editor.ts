@@ -297,24 +297,6 @@ export class CardEditor implements ICardEditor {
       return;
     }
 
-    render(['EditorRect', 'EditorColor']);
-
-    const contents = document.getElementById('contents');
-    if (contents) {
-      contents.style.visibility = 'hidden';
-    }
-    const ckeEditor = document.getElementById('cke_editor');
-    if (ckeEditor) {
-      ckeEditor.style.visibility = 'visible';
-      const toolbar = document.getElementById('cke_1_bottom');
-      if (toolbar) {
-        toolbar.style.visibility = 'hidden';
-      }
-    }
-    else {
-      throw new Error('cke_editor does not exist.');
-    }
-
     let contCounter = 0;
     for (;;) {
       let cont = false;
@@ -345,7 +327,23 @@ export class CardEditor implements ICardEditor {
       }
     }
 
-    this.setZoom(this._cardProp.style.zoom);
+    const contents = document.getElementById('contents');
+    if (contents) {
+      contents.style.visibility = 'hidden';
+    }
+    const ckeEditor = document.getElementById('cke_editor');
+    if (ckeEditor) {
+      ckeEditor.style.visibility = 'visible';
+      const toolbar = document.getElementById('cke_1_bottom');
+      if (toolbar) {
+        toolbar.style.visibility = 'hidden';
+      }
+    }
+    else {
+      throw new Error('cke_editor does not exist.');
+    }
+
+    render(['EditorRect', 'EditorStyle']);
 
     this._addDragAndDropEvent();
 
@@ -360,7 +358,7 @@ export class CardEditor implements ICardEditor {
 
   startEdit = async () => {
     this._isEditing = true;
-    render(['EditorColor']);
+    render(['EditorStyle']);
 
     if (this._startEditorFirstTime) {
       this._startEditorFirstTime = false;
@@ -383,13 +381,12 @@ export class CardEditor implements ICardEditor {
 
     await this.waitUntilActivationComplete();
     CKEDITOR.instances.editor.focus();
-    if (this.editorType === 'Markup') {
-      this._moveCursorToBottom();
-    }
   };
 
   endEdit = (): [boolean, string] => {
     this._isEditing = false;
+
+    CKEDITOR.instances.editor.window.$.scrollTo(0, 0);
 
     let dataChanged = false;
     // Save data to CardProp
@@ -407,7 +404,7 @@ export class CardEditor implements ICardEditor {
     setRenderOffsetHeight(0);
 
     // Reset editor color to card color
-    render(['EditorColor']);
+    render(['EditorStyle']);
 
     const toolbar = document.getElementById('cke_1_bottom');
     if (toolbar) {
@@ -449,14 +446,14 @@ export class CardEditor implements ICardEditor {
      * Reset editor color to card color
      * and reset width and height of cke_wysiwyg_frame
      */
-    render(['EditorColor', 'EditorRect']);
+    render(['EditorStyle', 'EditorRect']);
 
     CKEDITOR.instances.editor.focus();
   };
 
-  setZoom = (scale: number) => {
-    if (scale > 0) {
-      CKEDITOR.instances.editor.document.$.body.style.zoom = `${scale}`;
+  setZoom = () => {
+    if (this._cardProp) {
+      CKEDITOR.instances.editor.document.$.body.style.zoom = `${this._cardProp.style.zoom}`;
     }
   };
 

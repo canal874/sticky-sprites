@@ -54,11 +54,11 @@ export const initCardRenderer = (
 };
 
 export type CardRenderOptions =
-  | 'Decoration'
   | 'TitleBar'
+  | 'CardStyle'
   | 'ContentsData'
   | 'ContentsRect'
-  | 'EditorColor'
+  | 'EditorStyle'
   | 'EditorRect';
 
 const setWindowTitle = () => {
@@ -83,7 +83,7 @@ const renderTitleBar = () => {
 };
 
 const renderContentsData = () => {
-  document.getElementById('contents')!.innerHTML = cardProp.data;
+  document.getElementById('contentsData')!.innerHTML = cardProp.data;
 };
 
 const renderContentsRect = () => {
@@ -106,7 +106,7 @@ const renderContentsRect = () => {
     'px';
 };
 
-const renderCardDecoration = () => {
+const renderCardStyle = () => {
   if (cardProp.status === 'Focused') {
     document.getElementById('card')!.style.border = '3px solid red';
   }
@@ -131,10 +131,13 @@ const renderCardDecoration = () => {
   [...document.getElementsByClassName('title-color')].forEach(node => {
     (node as HTMLElement).style.backgroundColor = titleRgba;
   });
+
+  document.getElementById('contentsData')!.style.zoom = `${cardProp.style.zoom}`;
 };
 
-const renderEditorColor = () => {
+const renderEditorStyle = () => {
   cardEditor.setColor();
+  cardEditor.setZoom();
 };
 
 const renderEditorRect = () => {
@@ -152,8 +155,8 @@ export const render = (
     'TitleBar',
     'ContentsData',
     'ContentsRect',
-    'Decoration',
-    'EditorColor',
+    'CardStyle',
+    'EditorStyle',
     'EditorRect',
   ]
 ) => {
@@ -161,8 +164,8 @@ export const render = (
     if (opt === 'TitleBar') renderTitleBar();
     else if (opt === 'ContentsData') renderContentsData();
     else if (opt === 'ContentsRect') renderContentsRect();
-    else if (opt === 'Decoration') renderCardDecoration();
-    else if (opt === 'EditorColor') renderEditorColor();
+    else if (opt === 'CardStyle') renderCardStyle();
+    else if (opt === 'EditorStyle') renderEditorStyle();
     else if (opt === 'EditorRect') renderEditorRect();
   }
 };

@@ -69,7 +69,7 @@ const queueSaveCommand = () => {
 const changeCardColor = (backgroundColor: string, opacity = 1.0) => {
   const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
   saveCardColor(cardProp, backgroundColor, uiColor, opacity);
-  render(['Decoration', 'EditorColor']);
+  render(['CardStyle', 'EditorStyle']);
 };
 
 contextMenu({
@@ -101,7 +101,8 @@ contextMenu({
         if (cardProp.style.zoom > 3) {
           cardProp.style.zoom = 3;
         }
-        cardEditor.setZoom(cardProp.style.zoom);
+        render(['CardStyle', 'EditorStyle']);
+
         saveCard(cardProp);
       },
     },
@@ -117,7 +118,8 @@ contextMenu({
         if (cardProp.style.zoom <= 0.4) {
           cardProp.style.zoom = 0.4;
         }
-        cardEditor.setZoom(cardProp.style.zoom);
+        render(['CardStyle', 'EditorStyle']);
+
         saveCard(cardProp);
       },
     },
@@ -246,7 +248,7 @@ const initializeUIEvents = () => {
           cardProp.geometry.height
         );
 
-        render(['TitleBar', 'Decoration', 'ContentsData']);
+        render(['TitleBar', 'CardStyle', 'ContentsData']);
         saveCard(cardProp);
       });
       dropImg.src = file.path;
@@ -272,13 +274,16 @@ const initializeUIEvents = () => {
   });
 
   // eslint-disable-next-line no-unused-expressions
-  document.getElementById('contents')?.addEventListener('click', async () => {
+  document.getElementById('contents')?.addEventListener('click', async event => {
     // 'contents' can be clicked when cardEditor.editorType is 'Markup'
+    console.log(event.clientX + ',' + event.clientY);
     if (window.getSelection()?.toString() === '') {
       await cardEditor.showEditor().catch((e: Error) => {
         logger.error(`Error in clicking contents: ${e.message}`);
       });
       cardEditor.startEdit();
+
+      ipcRenderer.invoke('send-mouse-input', cardProp.id, event.clientX, event.clientY);
     }
   });
 
@@ -433,7 +438,7 @@ const initializeIPCEvents = () => {
     console.debug('card-focused');
 
     cardProp.status = 'Focused';
-    render(['Decoration']);
+    render(['CardStyle']);
 
     if (cardEditor.editorType === 'WYSIWYG') {
       cardEditor.startEdit();
@@ -448,7 +453,7 @@ const initializeIPCEvents = () => {
     console.debug('card-blurred');
 
     cardProp.status = 'Blurred';
-    render(['Decoration']);
+    render(['CardStyle']);
 
     if (cardEditor.isOpened) {
       if (cardEditor.editorType === 'Markup') {
@@ -466,8 +471,8 @@ const initializeIPCEvents = () => {
   ipcRenderer.on(
     'resize-by-hand',
     (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
-      cardProp.geometry.width = newBounds.width + getRenderOffsetWidth();
-      cardProp.geometry.height = newBounds.height + getRenderOffsetHeight();
+      cardProp.geometry.width = Math.round(newBounds.width + getRenderOffsetWidth());
+      cardProp.geometry.height = Math.round(newBounds.height + getRenderOffsetHeight());
 
       render(['TitleBar', 'ContentsRect', 'EditorRect']);
 
@@ -478,8 +483,8 @@ const initializeIPCEvents = () => {
   ipcRenderer.on(
     'move-by-hand',
     (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
-      cardProp.geometry.x = newBounds.x;
-      cardProp.geometry.y = newBounds.y;
+      cardProp.geometry.x = Math.round(newBounds.x);
+      cardProp.geometry.y = Math.round(newBounds.y);
 
       queueSaveCommand();
     }

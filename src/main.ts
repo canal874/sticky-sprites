@@ -308,3 +308,16 @@ ipcMain.handle('send-to-back', (event, id: string) => {
   }
   return newZ;
 });
+
+ipcMain.handle('send-mouse-input', (event, id: string, x: number, y: number) => {
+  const targetCard = cards.get(id);
+  if (!targetCard) {
+    return;
+  }
+  targetCard.window.webContents.sendInputEvent({
+    type: 'mouseDown',
+    x: x,
+    y: y,
+    button: 'left',
+  });
+});

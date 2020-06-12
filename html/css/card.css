@@ -110,6 +110,11 @@ body > .card > .contents{
   word-wrap: break-word;
 }
 
+body > .card > .contents > .contentsData{
+  width: 100%;
+  height: 100%;
+}
+
 body > .card > .contents > ol,ul,dl
 {
 	padding: 0 25px;
