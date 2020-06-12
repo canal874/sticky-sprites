@@ -520,15 +520,13 @@ export class CardEditor implements ICardEditor {
       toolbar.style.backgroundColor = toolbar.style.borderBottomColor = toolbar.style.borderTopColor = uiRgba;
     }
 
-    /*
     const contents = document.querySelector(
       '#cke_1_contents .cke_wysiwyg_frame'
     ) as HTMLElement;
     if (contents) {
-      // contents.style.backgroundColor = backgroundRgba;
-      contents.style.background = `linear-gradient(135deg, ${backgroundRgba} 94%, ${darkerRgba})`;
+      contents.style.backgroundColor = backgroundRgba;
+      // contents.style.background = `linear-gradient(135deg, ${backgroundRgba} 94%, ${darkerRgba})`;
     }
-    */
 
     const doc = CKEDITOR.instances.editor.document;
     if (doc) {
