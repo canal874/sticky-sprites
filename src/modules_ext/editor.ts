@@ -8,7 +8,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { ipcRenderer } from 'electron';
-import { CardProp } from '../modules_common/cardprop';
+import { CardProp, DRAG_IMAGE_MARGIN } from '../modules_common/cardprop';
 import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
 import { MESSAGE, render, setRenderOffsetHeight } from '../modules_renderer/card_renderer';
 import {
@@ -30,10 +30,6 @@ export class CardEditor implements ICardEditor {
   private _codeMode = false;
 
   private _TOOLBAR_HEIGHT = 30;
-
-  // Dragging is shaky when _DRAG_IMAGE_MARGIN is too small, especially just after loading a card.
-  //  private _DRAG_IMAGE_MARGIN = 20;
-  private _DRAG_IMAGE_MARGIN = 50;
 
   private _startEditorFirstTime = true;
 
@@ -115,14 +111,14 @@ export class CardEditor implements ICardEditor {
     }
     width =
       width +
-      this._DRAG_IMAGE_MARGIN +
+      DRAG_IMAGE_MARGIN +
       this._cardCssStyle.border.left +
       this._cardCssStyle.border.right +
       this._cardCssStyle.padding.left +
       this._cardCssStyle.padding.right;
     height =
       height +
-      this._DRAG_IMAGE_MARGIN +
+      DRAG_IMAGE_MARGIN +
       this._cardCssStyle.border.top +
       this._cardCssStyle.border.bottom +
       this._cardCssStyle.padding.top +
@@ -232,7 +228,7 @@ export class CardEditor implements ICardEditor {
 
             let newImageWidth =
               this._cardProp.geometry.width -
-              this._DRAG_IMAGE_MARGIN -
+              (this._cardProp.data === '' ? DRAG_IMAGE_MARGIN : 0) -
               this._cardCssStyle.border.left -
               this._cardCssStyle.border.right -
               this._cardCssStyle.padding.left -
@@ -256,15 +252,20 @@ export class CardEditor implements ICardEditor {
               img.setAttribute('height', `${newImageHeight}`);
             }
 
-            this._cardProp.geometry.height =
-              (this._cardProp.data === '' ? 0 : this._cardProp.geometry.height) +
-              newImageHeight +
-              this._DRAG_IMAGE_MARGIN +
-              this._cardCssStyle.border.top +
-              this._cardCssStyle.border.bottom +
-              this._cardCssStyle.padding.top +
-              this._cardCssStyle.padding.bottom +
-              document.getElementById('titleBar')!.offsetHeight;
+            if (this._cardProp.data === '') {
+              this._cardProp.geometry.height =
+                newImageHeight +
+                DRAG_IMAGE_MARGIN +
+                this._cardCssStyle.border.top +
+                this._cardCssStyle.border.bottom +
+                this._cardCssStyle.padding.top +
+                this._cardCssStyle.padding.bottom +
+                document.getElementById('titleBar')!.offsetHeight;
+            }
+            else {
+              this._cardProp.geometry.height =
+                this._cardProp.geometry.height + newImageHeight;
+            }
 
             ipcRenderer.invoke(
               'set-window-size',
@@ -519,6 +520,7 @@ export class CardEditor implements ICardEditor {
       toolbar.style.backgroundColor = toolbar.style.borderBottomColor = toolbar.style.borderTopColor = uiRgba;
     }
 
+    /*
     const contents = document.querySelector(
       '#cke_1_contents .cke_wysiwyg_frame'
     ) as HTMLElement;
@@ -526,6 +528,7 @@ export class CardEditor implements ICardEditor {
       // contents.style.backgroundColor = backgroundRgba;
       contents.style.background = `linear-gradient(135deg, ${backgroundRgba} 94%, ${darkerRgba})`;
     }
+    */
 
     const doc = CKEDITOR.instances.editor.document;
     if (doc) {

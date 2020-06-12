@@ -6,13 +6,14 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { ipcRenderer, remote, webFrame } from 'electron';
+import { ipcRenderer, remote } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import contextMenu from 'electron-context-menu';
 import {
   CardProp,
   CardPropSerializable,
   DEFAULT_CARD_GEOMETRY,
+  DRAG_IMAGE_MARGIN,
 } from './modules_common/cardprop';
 import { CardCssStyle, DialogButton, ICardEditor } from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
@@ -219,26 +220,56 @@ const initializeUIEvents = () => {
     const dropImg = new Image();
     if (file) {
       dropImg.addEventListener('load', async () => {
+        let imageOnly = false;
+        if (cardProp.data === '') {
+          imageOnly = true;
+        }
         const width = dropImg.naturalWidth;
         const height = dropImg.naturalHeight;
 
-        let newWidth = cardProp.geometry.width - 15;
-        let newHeight = height;
-        if (newWidth < width) {
-          newHeight = (height * newWidth) / width;
+        let newImageWidth =
+          cardProp.geometry.width -
+          (imageOnly ? DRAG_IMAGE_MARGIN : 0) -
+          cardCssStyle.border.left -
+          cardCssStyle.border.right -
+          cardCssStyle.padding.left -
+          cardCssStyle.padding.right;
+
+        let newImageHeight = height;
+        if (newImageWidth < width) {
+          newImageHeight = (height * newImageWidth) / width;
         }
         else {
-          newWidth = width;
+          newImageWidth = width;
         }
 
-        const imgTag = getImageTag(uuidv4(), file!.path, newWidth, newHeight, file!.name);
-        if (cardProp.data === '') {
+        newImageWidth = Math.floor(newImageWidth);
+        newImageHeight = Math.floor(newImageHeight);
+
+        const imgTag = getImageTag(
+          uuidv4(),
+          file!.path,
+          newImageWidth,
+          newImageHeight,
+          file!.name
+        );
+
+        if (imageOnly) {
+          cardProp.geometry.height =
+            newImageHeight +
+            DRAG_IMAGE_MARGIN +
+            cardCssStyle.border.top +
+            cardCssStyle.border.bottom +
+            cardCssStyle.padding.top +
+            cardCssStyle.padding.bottom +
+            document.getElementById('titleBar')!.offsetHeight;
+
           cardProp.data = imgTag;
-          cardProp.geometry.height = newHeight + 15;
         }
         else {
+          cardProp.geometry.height = cardProp.geometry.height + newImageHeight;
+
           cardProp.data = cardProp.data + '<br />' + imgTag;
-          cardProp.geometry.height += newHeight + 15;
         }
 
         await ipcRenderer.invoke(
@@ -248,9 +279,21 @@ const initializeUIEvents = () => {
           cardProp.geometry.height
         );
 
-        render(['TitleBar', 'CardStyle', 'ContentsData']);
-        saveCard(cardProp);
+        if (imageOnly) {
+          saveCardColor(cardProp, '#ffffff', '#ffffff', 0.0);
+        }
+        else {
+          saveCard(cardProp);
+        }
+        render(['TitleBar', 'CardStyle', 'ContentsData', 'ContentsRect']);
+
+        ipcRenderer.invoke('focus', cardProp.id);
+        await cardEditor.showEditor().catch((err: Error) => {
+          logger.error(`Error in clicking contents: ${err.message}`);
+        });
+        cardEditor.startEdit();
       });
+
       dropImg.src = file.path;
     }
     return false;
@@ -276,7 +319,6 @@ const initializeUIEvents = () => {
   // eslint-disable-next-line no-unused-expressions
   document.getElementById('contents')?.addEventListener('click', async event => {
     // 'contents' can be clicked when cardEditor.editorType is 'Markup'
-    console.log(event.clientX + ',' + event.clientY);
     if (window.getSelection()?.toString() === '') {
       await cardEditor.showEditor().catch((e: Error) => {
         logger.error(`Error in clicking contents: ${e.message}`);
