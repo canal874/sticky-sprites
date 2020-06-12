@@ -9,7 +9,7 @@
 import { ipcRenderer } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, ICardEditor } from '../modules_common/types';
-import { convertHexColorToRgba } from '../modules_common/utils';
+import { convertHexColorToRgba, darkenHexColor } from '../modules_common/utils';
 import { Messages } from '../modules_common/base.msg';
 
 export const UI_COLOR_DARKENING_RATE = 0.8;
@@ -124,7 +124,14 @@ const renderCardStyle = () => {
     cardProp.style.backgroundColor,
     cardProp.style.opacity
   );
-  document.getElementById('contents')!.style.backgroundColor = backgroundRgba;
+  // document.getElementById('contents')!.style.backgroundColor = backgroundRgba;
+  const darkerRgba = convertHexColorToRgba(
+    darkenHexColor(cardProp.style.backgroundColor, 0.95),
+    cardProp.style.opacity
+  );
+  document.getElementById(
+    'contents'
+  )!.style.background = `linear-gradient(135deg, ${backgroundRgba} 94%, ${darkerRgba})`;
 
   const titleRgba = convertHexColorToRgba(cardProp.style.uiColor);
 
