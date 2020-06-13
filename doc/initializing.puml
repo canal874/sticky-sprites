@@ -1,0 +1,96 @@
+' PlantUML
+@startuml
+title Initializing Media Stickies
+
+autonumber "<font color=orange>0. "
+participant main <<main.ts>> order 10
+entity Card <<card.ts>> order 20
+database ICardIO as "CardIO\nimplements\nICardIO" <<io.ts>> order 50
+box "Renderer Process" #LightBlue
+  entity BrowserWindow <<renderer.ts>> order 100
+  participant ICardEditor as "CardEditorCKE\nimplements\nICardEditor" <<editor.ts>> order 110
+  participant CKEDITOR <<ckeditor>> order 111
+end box 
+
+[-> main: app.on('ready')
+activate main
+
+main ->>ICardIO: ICardIO.getCardIdList()
+activate main #6060f0
+main <-- ICardIO: card IDs
+deactivate main
+loop Create Cards with IDs
+  main -> Card: new
+  activate Card
+  Card -> BrowserWindow: new
+  activate BrowserWindow
+end
+
+group Promise.all(Card.render()[])
+  main ->> Card: Card.render():Promise
+  activate main #6060f0  
+  group Promise.all([_readyToShow(),loadOrCreateCardData(),_loadHTML()])    
+    |||
+    rnote right Card: Check ready-to-show
+    Card ->> Card: _readyToShow():Promise
+    activate Card  #6060f0
+    Card ->> Card: window.once('ready-to-show')
+    Card <-- Card: resolve()
+    deactivate Card
+    |||
+    rnote Right Card: Load CardProp        
+    Card ->> Card: loadOreCreateCardData():Promise
+    activate Card  #6060f0
+    Card ->> ICardIO: readCardData
+    Card <<-- ICardIO: CardProp
+    Card <-- Card: resolve()
+    deactivate Card
+    |||
+    rnote Right Card: Load HTML skelton
+    Card ->> Card: _loadHTML():Promise
+    activate Card  #6060f0
+    Card ->> BrowserWindow: loadURL
+      BrowserWindow ->> BrowserWindow: onload
+        activate BrowserWindow #f0f0f0
+        BrowserWindow ->> CKEDITOR: Load ckeditor.js
+        activate CKEDITOR
+        BrowserWindow -> ICardEditor: new
+        activate ICardEditor
+        BrowserWindow ->> ICardEditor: loadUI():Promise
+          activate BrowserWindow #6060f0
+          ICardEditor ->> CKEDITOR: replace('editor')
+            activate ICardEditor #6060f0
+            hnote over CKEDITOR: Create instance
+            ICardEditor <- CKEDITOR: instanceReady
+            deactivate ICardEditor
+            BrowserWindow <-- ICardEditor: resolve()            
+          deactivate BrowserWindow
+        Card <-- BrowserWindow: finish-load
+        deactivate BrowserWindow
+    Card <-- Card: resolve()
+    deactivate Card
+    |||
+  end
+
+  group _renderCard
+    hnote over Card: Call setSize()\nwith loaded CardProp
+    hnote over Card: Call setPotision()\nwith loaded CardProp
+    hnote over Card: Call showInactive()
+    Card ->> BrowserWindow: Send 'render-card' with CardProp
+    activate Card #6060f0
+    BrowserWindow -> ICardEditor: setCard(CardProp)
+    note over ICardEditor: Ready to show card
+    BrowserWindow -> BrowserWindow: Set contents to visible
+    note left BrowserWindow: Render Card contents
+    BrowserWindow -> BrowserWindow: render()
+    main <-- BrowserWindow: Invoke 'finish-render-card'
+    main -> Card: Set renderingCompleted to true
+    Card -> Card: resolve()
+    deactivate Card
+    |||
+  end
+  main <-- Card: resolve()
+  deactivate main
+end 
+hnote over main: Sort Cards by Z order
+@enduml
