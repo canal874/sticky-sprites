@@ -469,6 +469,12 @@ const initializeIPCEvents = () => {
             console.error(`Error in render-card: ${e.message}`);
           });
       }
+      else {
+        ipcRenderer.invoke('finish-render-card', cardProp.id).catch((e: Error) => {
+          // logger.error does not work in ipcRenderer event.
+          console.error(`Error in render-card: ${e.message}`);
+        });
+      }
     }
   );
 
