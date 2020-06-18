@@ -289,7 +289,7 @@ const initializeUIEvents = () => {
 
         ipcRenderer.invoke('focus', cardProp.id);
         await cardEditor.showEditor().catch((err: Error) => {
-          logger.error(`Error in clicking contents: ${err.message}`);
+          logger.error(`Error in loading image: ${err.message}`);
         });
         cardEditor.startEdit();
       });
