@@ -387,7 +387,9 @@ export class CardEditor implements ICardEditor {
   endEdit = (): [boolean, string] => {
     this._isEditing = false;
 
-    CKEDITOR.instances.editor.window.$.scrollTo(0, 0);
+    if (CKEDITOR.instances.editor && CKEDITOR.instances.editor.window) {
+      CKEDITOR.instances.editor.window.$.scrollTo(0, 0);
+    }
 
     let dataChanged = false;
     // Save data to CardProp
@@ -454,7 +456,9 @@ export class CardEditor implements ICardEditor {
 
   setZoom = () => {
     if (this._cardProp) {
-      CKEDITOR.instances.editor.document.$.body.style.zoom = `${this._cardProp.style.zoom}`;
+      if (CKEDITOR.instances.editor.document && CKEDITOR.instances.editor.document.$.body) {
+        CKEDITOR.instances.editor.document.$.body.style.zoom = `${this._cardProp.style.zoom}`;
+      }
     }
   };
 
@@ -473,10 +477,12 @@ export class CardEditor implements ICardEditor {
     if (editor) {
       CKEDITOR.instances.editor.resize(width, height);
       const iframe = document.getElementsByClassName('cke_wysiwyg_frame');
-      (iframe.item(0) as HTMLElement).style.width =
-        document.getElementById('cke_editor')!.offsetWidth + 'px';
-      (iframe.item(0) as HTMLElement).style.height =
-        document.getElementById('cke_editor')!.offsetHeight + 'px';
+      if (iframe.item && iframe.item(0)) {
+        (iframe.item(0) as HTMLElement).style.width =
+          document.getElementById('cke_editor')!.offsetWidth + 'px';
+        (iframe.item(0) as HTMLElement).style.height =
+          document.getElementById('cke_editor')!.offsetHeight + 'px';
+      }
     }
     else {
       logger.error(`Error in setSize: editor is undefined.`);
