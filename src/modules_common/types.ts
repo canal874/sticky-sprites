@@ -54,6 +54,16 @@ export type CardCssStyle = {
 
 export type EditorType = 'WYSIWYG' | 'Markup';
 
+export type ContentsFrameCommand = 'overwrite-iframe' | 'click-parent';
+export type ContentsFrameMessage = {
+  command: ContentsFrameCommand;
+  arg: string;
+};
+export type InnerClickEvent = {
+  x: number;
+  y: number;
+};
+
 export const DialogButton = {
   Error: -1,
   Default: 0,

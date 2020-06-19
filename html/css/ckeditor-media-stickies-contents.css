@@ -17,7 +17,7 @@ body
 	background-color: transparent;
 	margin: 0px;
   padding: 2px;
-  
+  word-wrap: break-word;
 }
 
 /* Custom scroll bar */

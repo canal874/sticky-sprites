@@ -15,7 +15,13 @@ import {
   DEFAULT_CARD_GEOMETRY,
   DRAG_IMAGE_MARGIN,
 } from './modules_common/cardprop';
-import { CardCssStyle, DialogButton, ICardEditor } from './modules_common/types';
+import {
+  CardCssStyle,
+  ContentsFrameMessage,
+  DialogButton,
+  ICardEditor,
+  InnerClickEvent,
+} from './modules_common/types';
 import { CardEditor } from './modules_ext/editor';
 import {
   getRenderOffsetHeight,
@@ -336,19 +342,6 @@ const initializeUIEvents = () => {
   });
 
   // eslint-disable-next-line no-unused-expressions
-  document.getElementById('contents')?.addEventListener('click', async event => {
-    // 'contents' can be clicked when cardEditor.editorType is 'Markup'
-    if (window.getSelection()?.toString() === '') {
-      await cardEditor.showEditor().catch((e: Error) => {
-        logger.error(`Error in clicking contents: ${e.message}`);
-      });
-      cardEditor.startEdit();
-
-      ipcRenderer.invoke('send-mouse-input', cardProp.id, event.clientX, event.clientY);
-    }
-  });
-
-  // eslint-disable-next-line no-unused-expressions
   document.getElementById('codeBtn')?.addEventListener('click', () => {
     cardEditor.toggleCodeMode();
   });
@@ -556,6 +549,22 @@ const initializeIPCEvents = () => {
       queueSaveCommand();
     }
   );
+
+  window.addEventListener('message', async (event: { data: ContentsFrameMessage }) => {
+    // Message from iframe
+    if (!event.data.command) {
+      return;
+    }
+    if (event.data.command === 'click-parent' && event.data.arg !== undefined) {
+      const clickEvent: InnerClickEvent = JSON.parse(event.data.arg);
+      await cardEditor.showEditor().catch((e: Error) => {
+        logger.error(`Error in clicking contents: ${e.message}`);
+      });
+      cardEditor.startEdit();
+
+      ipcRenderer.invoke('send-mouse-input', cardProp.id, clickEvent.x, clickEvent.y);
+    }
+  });
 };
 
 initializeIPCEvents();

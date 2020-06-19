@@ -8,7 +8,7 @@
 
 import { ipcRenderer } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
-import { CardCssStyle, ICardEditor } from '../modules_common/types';
+import { CardCssStyle, ContentsFrameMessage, ICardEditor } from '../modules_common/types';
 import { convertHexColorToRgba, darkenHexColor } from '../modules_common/utils';
 import { Messages } from '../modules_common/base.msg';
 
@@ -83,7 +83,23 @@ const renderTitleBar = () => {
 };
 
 const renderContentsData = () => {
-  document.getElementById('contentsData')!.innerHTML = cardProp.data;
+  const html = `<!DOCTYPE html>
+  <html>
+    <head>
+      <link href='../css/ckeditor-media-stickies-contents.css' type='text/css' rel='stylesheet' />
+      <script type='text/javascript' src='contents_frame.js'></script>
+    </head>
+    <body>
+      ${cardProp.data}
+    </body>
+  </html>`;
+  const mes: ContentsFrameMessage = {
+    command: 'overwrite-iframe',
+    arg: html,
+  };
+  (document.getElementById(
+    'contentsFrame'
+  )! as HTMLIFrameElement).contentWindow!.postMessage(mes, '*');
 };
 
 const renderContentsRect = () => {
@@ -133,13 +149,32 @@ const renderCardStyle = () => {
     'contents'
   )!.style.background = `linear-gradient(135deg, ${backgroundRgba} 94%, ${darkerRgba})`;
 
-  const titleRgba = convertHexColorToRgba(cardProp.style.uiColor);
+  const uiRgba = convertHexColorToRgba(cardProp.style.uiColor);
 
   [...document.getElementsByClassName('title-color')].forEach(node => {
-    (node as HTMLElement).style.backgroundColor = titleRgba;
+    (node as HTMLElement).style.backgroundColor = uiRgba;
   });
 
-  document.getElementById('contentsData')!.style.zoom = `${cardProp.style.zoom}`;
+  const doc = (document.getElementById('contentsFrame')! as HTMLIFrameElement)
+    .contentWindow!.document;
+  if (doc) {
+    const style = doc.createElement('style');
+    style.innerHTML =
+      'body::-webkit-scrollbar { width: 7px; background-color: ' +
+      backgroundRgba +
+      '}\n' +
+      'body::-webkit-scrollbar-thumb { background-color: ' +
+      uiRgba +
+      '}';
+    doc
+      .getElementsByTagName('head')
+      .item(0)!
+      .appendChild(style);
+  }
+
+  (document.getElementById(
+    'contentsFrame'
+  )! as HTMLIFrameElement).contentWindow!.document.body.style.zoom = `${cardProp.style.zoom}`;
 };
 
 const renderEditorStyle = () => {

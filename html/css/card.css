@@ -96,28 +96,23 @@ body > .card > .title > .close-btn{
 
   
 body > .card > .contents{
-  padding: 2px;
-  font-size: 16px;
-  font-family: sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  padding: 0px;
+  margin: 0px;
+  border: 0px;
   top: 18px;
   left: 0px;
   width: 10px;
   height: 10px;
   position: absolute;
+  z-index: 10;
+}
+
+body > .card > .contents > .contentsFrame{
+  padding: 0px;
   margin: 0px;
   border: 0px;
-  z-index: 10;
-  word-wrap: break-word;
-}
-
-body > .card > .contents > .contentsData{
   width: 100%;
   height: 100%;
-}
-
-body > .card > .contents > ol,ul,dl
-{
-	padding: 0 25px;
 }
 
 /**
@@ -129,6 +124,7 @@ body > #card > .cke_screen_reader_only{
 }
 
 body > #card > #cke_editor{
+  padding: 0px;
   top: 18px;  
   border: 0px;
   visibility: hidden;
