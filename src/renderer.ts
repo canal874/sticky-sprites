@@ -40,6 +40,11 @@ let cardCssStyle: CardCssStyle = {
   border: { left: 0, right: 0, top: 0, bottom: 0 },
 };
 
+let isShiftDown = false;
+let isCtrlDown = false;
+let isAltDown = false;
+let isMetaDown = false;
+
 const cardEditor: ICardEditor = new CardEditor();
 
 const close = async () => {
@@ -207,6 +212,20 @@ contextMenu({
  * Initialize
  */
 const initializeUIEvents = () => {
+  document.addEventListener('keydown', e => {
+    isShiftDown = e.shiftKey;
+    isCtrlDown = e.ctrlKey;
+    isAltDown = e.altKey;
+    isMetaDown = e.metaKey; // Windows key, Command key
+  });
+
+  document.addEventListener('keyup', e => {
+    isShiftDown = e.shiftKey;
+    isCtrlDown = e.ctrlKey;
+    isAltDown = e.altKey;
+    isMetaDown = e.metaKey; // Windows key, Command key
+  });
+
   document.addEventListener('dragover', e => {
     e.preventDefault();
     return false;
@@ -347,7 +366,7 @@ const initializeUIEvents = () => {
         saveCard(cardProp);
       }
     }
-    if (cardProp.data === '') {
+    if (cardProp.data === '' || isCtrlDown) {
       deleteCard(cardProp);
     }
     else {
