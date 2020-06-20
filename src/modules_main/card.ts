@@ -19,16 +19,29 @@ import {
 } from '../modules_common/cardprop';
 import { CardIO } from '../modules_ext/io';
 import { getCurrentDate, logger } from '../modules_common/utils';
-import {
-  getGlobalFocusEventListenerPermission,
-  setGlobalFocusEventListenerPermission,
-} from './global';
 
 /**
  * Const
  */
 const MINIMUM_WINDOW_WIDTH = 180;
 const MINIMUM_WINDOW_HEIGHT = 80;
+
+/**
+ * Focus control
+ */
+let globalFocusListenerPermission = true;
+/**
+ * Set permission to call focus event listener in all renderer processes.
+ */
+export const setGlobalFocusEventListenerPermission = (
+  canExecuteFocusEventListener: boolean
+) => {
+  globalFocusListenerPermission = canExecuteFocusEventListener;
+};
+
+export const getGlobalFocusEventListenerPermission = () => {
+  return globalFocusListenerPermission;
+};
 
 /**
  * Card

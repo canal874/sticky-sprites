@@ -13,8 +13,7 @@ import translations from './modules_common/base.msg';
 import { DialogButton } from './modules_common/types';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 import { CardIO } from './modules_ext/io';
-import { Card, cards } from './modules_main/card';
-import { setGlobalFocusEventListenerPermission } from './modules_main/global';
+import { Card, cards, setGlobalFocusEventListenerPermission } from './modules_main/card';
 import { saveCard } from './modules_renderer/save';
 
 // process.on('unhandledRejection', console.dir);
