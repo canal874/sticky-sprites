@@ -18,6 +18,7 @@ import {
 import {
   CardCssStyle,
   ContentsFrameMessage,
+  FileDropEvent,
   ICardEditor,
   InnerClickEvent,
 } from './modules_common/types';
@@ -234,93 +235,6 @@ const initializeUIEvents = () => {
 
   document.addEventListener('dragover', e => {
     e.preventDefault();
-    return false;
-  });
-
-  document.addEventListener('drop', e => {
-    e.preventDefault();
-
-    const file = e.dataTransfer?.files[0];
-
-    const dropImg = new Image();
-    if (file) {
-      dropImg.addEventListener('load', async () => {
-        let imageOnly = false;
-        if (cardProp.data === '') {
-          imageOnly = true;
-        }
-        const width = dropImg.naturalWidth;
-        const height = dropImg.naturalHeight;
-
-        let newImageWidth =
-          cardProp.geometry.width -
-          (imageOnly ? DRAG_IMAGE_MARGIN : 0) -
-          cardCssStyle.border.left -
-          cardCssStyle.border.right -
-          cardCssStyle.padding.left -
-          cardCssStyle.padding.right;
-
-        let newImageHeight = height;
-        if (newImageWidth < width) {
-          newImageHeight = (height * newImageWidth) / width;
-        }
-        else {
-          newImageWidth = width;
-        }
-
-        newImageWidth = Math.floor(newImageWidth);
-        newImageHeight = Math.floor(newImageHeight);
-
-        const imgTag = cardEditor.getImageTag(
-          uuidv4(),
-          file!.path,
-          newImageWidth,
-          newImageHeight,
-          file!.name
-        );
-
-        if (imageOnly) {
-          cardProp.geometry.height =
-            newImageHeight +
-            DRAG_IMAGE_MARGIN +
-            cardCssStyle.border.top +
-            cardCssStyle.border.bottom +
-            cardCssStyle.padding.top +
-            cardCssStyle.padding.bottom +
-            document.getElementById('titleBar')!.offsetHeight;
-
-          cardProp.data = imgTag;
-        }
-        else {
-          cardProp.geometry.height = cardProp.geometry.height + newImageHeight;
-
-          cardProp.data = cardProp.data + '<br />' + imgTag;
-        }
-
-        await ipcRenderer.invoke(
-          'set-window-size',
-          cardProp.id,
-          cardProp.geometry.width,
-          cardProp.geometry.height
-        );
-
-        if (imageOnly) {
-          saveCardColor(cardProp, '#ffffff', '#ffffff', 0.0);
-        }
-        else {
-          saveCard(cardProp);
-        }
-        render(['TitleBar', 'CardStyle', 'ContentsData', 'ContentsRect']);
-
-        ipcRenderer.invoke('focus', cardProp.id);
-        await cardEditor.showEditor().catch((err: Error) => {
-          logger.error(`Error in loading image: ${err.message}`);
-        });
-        cardEditor.startEdit();
-      });
-
-      dropImg.src = file.path;
-    }
     return false;
   });
 
@@ -568,6 +482,91 @@ const initializeContentsFrameEvents = () => {
       cardEditor.startEdit();
 
       ipcRenderer.invoke('send-mouse-input', cardProp.id, clickEvent.x, clickEvent.y);
+    }
+    else if (
+      event.data.command === 'contents-frame-file-dropped' &&
+      event.data.arg !== undefined
+    ) {
+      const fileDropEvent: FileDropEvent = JSON.parse(event.data.arg);
+
+      const dropImg = new Image();
+
+      dropImg.addEventListener('load', async () => {
+        let imageOnly = false;
+        if (cardProp.data === '') {
+          imageOnly = true;
+        }
+        const width = dropImg.naturalWidth;
+        const height = dropImg.naturalHeight;
+
+        let newImageWidth =
+          cardProp.geometry.width -
+          (imageOnly ? DRAG_IMAGE_MARGIN : 0) -
+          cardCssStyle.border.left -
+          cardCssStyle.border.right -
+          cardCssStyle.padding.left -
+          cardCssStyle.padding.right;
+
+        let newImageHeight = height;
+        if (newImageWidth < width) {
+          newImageHeight = (height * newImageWidth) / width;
+        }
+        else {
+          newImageWidth = width;
+        }
+
+        newImageWidth = Math.floor(newImageWidth);
+        newImageHeight = Math.floor(newImageHeight);
+
+        const imgTag = cardEditor.getImageTag(
+          uuidv4(),
+          fileDropEvent.path,
+          newImageWidth,
+          newImageHeight,
+          fileDropEvent.name
+        );
+
+        if (imageOnly) {
+          cardProp.geometry.height =
+            newImageHeight +
+            DRAG_IMAGE_MARGIN +
+            cardCssStyle.border.top +
+            cardCssStyle.border.bottom +
+            cardCssStyle.padding.top +
+            cardCssStyle.padding.bottom +
+            document.getElementById('titleBar')!.offsetHeight;
+
+          cardProp.data = imgTag;
+        }
+        else {
+          cardProp.geometry.height = cardProp.geometry.height + newImageHeight;
+
+          cardProp.data = cardProp.data + '<br />' + imgTag;
+        }
+
+        await ipcRenderer.invoke(
+          'set-window-size',
+          cardProp.id,
+          cardProp.geometry.width,
+          cardProp.geometry.height
+        );
+
+        if (imageOnly) {
+          saveCardColor(cardProp, '#ffffff', '#ffffff', 0.0);
+        }
+        else {
+          saveCard(cardProp);
+        }
+        render(['TitleBar', 'CardStyle', 'ContentsData', 'ContentsRect']);
+
+        ipcRenderer.invoke('focus', cardProp.id);
+        await cardEditor.showEditor().catch((err: Error) => {
+          logger.error(`Error in loading image: ${err.message}`);
+        });
+        cardEditor.startEdit();
+      });
+
+      dropImg.src = fileDropEvent.path;
     }
   });
 };
