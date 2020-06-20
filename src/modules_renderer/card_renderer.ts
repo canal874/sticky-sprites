@@ -10,7 +10,7 @@ import { ipcRenderer } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, ContentsFrameMessage, ICardEditor } from '../modules_common/types';
 import { convertHexColorToRgba, darkenHexColor } from '../modules_common/utils';
-import { Messages } from '../modules_common/base.msg';
+import { Messages } from '../modules_common/i18n';
 
 export const UI_COLOR_DARKENING_RATE = 0.8;
 
