@@ -11,7 +11,7 @@ import { ipcRenderer } from 'electron';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { MESSAGE, setTitleMessage } from './card_renderer';
 import { getCurrentDateAndTime, logger } from '../modules_common/utils';
-import { DialogButton } from '../modules_common/types';
+import { DialogButton } from '../modules_common/const';
 
 type task = {
   prop: CardPropSerializable;

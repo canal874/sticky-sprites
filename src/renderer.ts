@@ -18,10 +18,10 @@ import {
 import {
   CardCssStyle,
   ContentsFrameMessage,
-  DialogButton,
   ICardEditor,
   InnerClickEvent,
 } from './modules_common/types';
+import { DialogButton } from './modules_common/const';
 import { CardEditor } from './modules_ext/editor';
 import {
   getRenderOffsetHeight,

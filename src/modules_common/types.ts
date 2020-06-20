@@ -59,17 +59,12 @@ export type ContentsFrameCommand =
   | 'click-parent'
   | 'contents-frame-loaded';
 
-export type ContentsFrameMessage = {
-  command: ContentsFrameCommand;
-  arg: string;
-};
 export type InnerClickEvent = {
   x: number;
   y: number;
 };
 
-export const DialogButton = {
-  Error: -1,
-  Default: 0,
-  Cancel: 1,
+export type ContentsFrameMessage = {
+  command: ContentsFrameCommand;
+  arg: string;
 };

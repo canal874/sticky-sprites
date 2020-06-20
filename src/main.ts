@@ -10,7 +10,7 @@ import { app, dialog, ipcMain } from 'electron';
 import { selectPreferredLanguage } from 'typed-intl';
 import { logger } from './modules_common/utils';
 import translations from './modules_common/i18n';
-import { DialogButton } from './modules_common/types';
+import { DialogButton } from './modules_common/const';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 import { CardIO } from './modules_ext/io';
 import { Card, cards, setGlobalFocusEventListenerPermission } from './modules_main/card';
