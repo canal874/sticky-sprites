@@ -9,12 +9,11 @@
 import { app, dialog, ipcMain } from 'electron';
 import { selectPreferredLanguage } from 'typed-intl';
 import { logger } from './modules_common/utils';
-import translations from './modules_common/base.msg';
+import translations from './modules_common/i18n';
 import { DialogButton } from './modules_common/types';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 import { CardIO } from './modules_ext/io';
 import { Card, cards, setGlobalFocusEventListenerPermission } from './modules_main/card';
-import { saveCard } from './modules_renderer/save';
 
 // process.on('unhandledRejection', console.dir);
 
