@@ -30,16 +30,6 @@ export const getCurrentDate = (): string => {
   return dayjs.utc().format('YYYY-MM-DD');
 };
 
-export const getImageTag = (
-  id: string,
-  src: string,
-  width: number,
-  height: number,
-  alt: string
-): string => {
-  return `<img id="${id}" src="${src}" alt="${alt}" width="${width}" height="${height}" />`;
-};
-
 export const darkenHexColor = (colorHEX: string, darkRate: number): string => {
   if (darkRate > 1 || darkRate < 0) {
     logger.error(`Invalid darkRate: ${darkRate}`);

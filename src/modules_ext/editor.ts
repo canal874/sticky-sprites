@@ -15,7 +15,6 @@ import {
   alertDialog,
   convertHexColorToRgba,
   darkenHexColor,
-  getImageTag,
   logger,
   sleep,
 } from '../modules_common/utils';
@@ -73,6 +72,16 @@ export class CardEditor implements ICardEditor {
   public isOpened = false;
 
   private _isEditing = false;
+
+  getImageTag = (
+    id: string,
+    src: string,
+    width: number,
+    height: number,
+    alt: string
+  ): string => {
+    return `<img id="${id}" src="${src}" alt="${alt}" width="${width}" height="${height}" />`;
+  };
 
   adjustEditorSizeFromImage2Plugin = (width: number, height: number) => {
     // Cancel the resizing when the card contains anything other than an image.
@@ -280,7 +289,7 @@ export class CardEditor implements ICardEditor {
             // Workaround for at bug that an image cannot be resizable just after created by drag and drop.
             ipcRenderer.invoke('blurAndFocusWithSuppressFocusEvent', this._cardProp.id);
           };
-          const imgTag = getImageTag(id, file!.path, 1, 1, file!.name);
+          const imgTag = this.getImageTag(id, file!.path, 1, 1, file!.name);
           evt.data.dataValue = imgTag;
           if (this._cardProp.data === '') {
             saveCardColor(this._cardProp, '#ffffff', '#ffffff', 0.0);

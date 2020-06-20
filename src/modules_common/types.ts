@@ -20,6 +20,8 @@ export interface ICardEditor {
   readonly hasCodeMode: boolean;
   isOpened: boolean;
 
+  getImageTag(id: string, src: string, width: number, height: number, alt: string): string;
+
   loadUI(cardCssStyle: CardCssStyle): Promise<void>; // A Promise resolves when required initialization is finished.
   setCard(prop: CardProp): void; // Loading a card after loadUI().
 
@@ -57,11 +59,17 @@ export type EditorType = 'WYSIWYG' | 'Markup';
 export type ContentsFrameCommand =
   | 'overwrite-iframe'
   | 'click-parent'
-  | 'contents-frame-loaded';
+  | 'contents-frame-loaded'
+  | 'contents-frame-file-dropped';
 
 export type InnerClickEvent = {
   x: number;
   y: number;
+};
+
+export type FileDropEvent = {
+  name: string;
+  path: string;
 };
 
 export type ContentsFrameMessage = {
