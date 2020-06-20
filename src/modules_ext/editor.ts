@@ -155,6 +155,18 @@ export class CardEditor implements ICardEditor {
     this._cardCssStyle = _cardCssStyle;
     return new Promise<void>(resolve => {
       CKEDITOR.replace('editor');
+
+      // Set default value of link target to _blank
+      CKEDITOR.on('dialogDefinition', function (ev) {
+        var dialogName = ev.data.name;
+        var dialogDefinition = ev.data.definition;
+        if (dialogName === 'link') {
+          var targetTab = dialogDefinition.getContents('target');
+          var targetField = targetTab.get('linkTargetType');
+          targetField.default = '_blank';
+        }
+      });
+
       CKEDITOR.on('instanceReady', () => {
         // @ts-ignore
         CKEDITOR.plugins.image2.adjustEditorSize = this.adjustEditorSizeFromImage2Plugin;
