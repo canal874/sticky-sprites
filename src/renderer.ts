@@ -549,7 +549,9 @@ const initializeIPCEvents = () => {
       queueSaveCommand();
     }
   );
+};
 
+const initializeContentsFrameEvents = () => {
   window.addEventListener('message', async (event: { data: ContentsFrameMessage }) => {
     // Message from iframe
     if (!event.data.command) {
@@ -565,7 +567,18 @@ const initializeIPCEvents = () => {
       ipcRenderer.invoke('send-mouse-input', cardProp.id, clickEvent.x, clickEvent.y);
     }
   });
+
+  window.addEventListener('message', (event: { data: ContentsFrameMessage }) => {
+    // Message from iframe
+    if (!event.data.command) {
+      return;
+    }
+    if (event.data.command === 'contents-frame-loaded') {
+      render(['CardStyle']);
+    }
+  });
 };
 
 initializeIPCEvents();
+initializeContentsFrameEvents();
 window.addEventListener('load', onload, false);

@@ -54,7 +54,11 @@ export type CardCssStyle = {
 
 export type EditorType = 'WYSIWYG' | 'Markup';
 
-export type ContentsFrameCommand = 'overwrite-iframe' | 'click-parent';
+export type ContentsFrameCommand =
+  | 'overwrite-iframe'
+  | 'click-parent'
+  | 'contents-frame-loaded';
+
 export type ContentsFrameMessage = {
   command: ContentsFrameCommand;
   arg: string;

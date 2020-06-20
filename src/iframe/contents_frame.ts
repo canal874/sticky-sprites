@@ -36,3 +36,12 @@ window.addEventListener('click', event => {
     window.parent.postMessage(mes, '*');
   }
 });
+
+window.addEventListener('load', event => {
+  const mes: ContentsFrameMessage = {
+    command: 'contents-frame-loaded',
+    arg: '',
+  };
+  // Message to parent frame
+  window.parent.postMessage(mes, '*');
+});
