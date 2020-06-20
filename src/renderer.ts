@@ -31,7 +31,7 @@ import {
   render,
   UI_COLOR_DARKENING_RATE,
 } from './modules_renderer/card_renderer';
-import { darkenHexColor, getImageTag, logger } from './modules_common/utils';
+import { darkenHexColor, logger } from './modules_common/utils';
 import {
   deleteCard,
   saveCard,
@@ -271,7 +271,7 @@ const initializeUIEvents = () => {
         newImageWidth = Math.floor(newImageWidth);
         newImageHeight = Math.floor(newImageHeight);
 
-        const imgTag = getImageTag(
+        const imgTag = cardEditor.getImageTag(
           uuidv4(),
           file!.path,
           newImageWidth,
@@ -557,7 +557,10 @@ const initializeContentsFrameEvents = () => {
     if (!event.data.command) {
       return;
     }
-    if (event.data.command === 'click-parent' && event.data.arg !== undefined) {
+    if (event.data.command === 'contents-frame-loaded') {
+      render(['CardStyle']);
+    }
+    else if (event.data.command === 'click-parent' && event.data.arg !== undefined) {
       const clickEvent: InnerClickEvent = JSON.parse(event.data.arg);
       await cardEditor.showEditor().catch((e: Error) => {
         logger.error(`Error in clicking contents: ${e.message}`);
@@ -565,16 +568,6 @@ const initializeContentsFrameEvents = () => {
       cardEditor.startEdit();
 
       ipcRenderer.invoke('send-mouse-input', cardProp.id, clickEvent.x, clickEvent.y);
-    }
-  });
-
-  window.addEventListener('message', (event: { data: ContentsFrameMessage }) => {
-    // Message from iframe
-    if (!event.data.command) {
-      return;
-    }
-    if (event.data.command === 'contents-frame-loaded') {
-      render(['CardStyle']);
     }
   });
 };
