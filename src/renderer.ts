@@ -368,7 +368,7 @@ const onload = async () => {
   const isWebviewLoaded = new Promise((resolve, reject) => {
     let counter = 0;
     const checkTimer = setInterval(() => {
-      if (webview.isLoading()) {
+      if (!webview.isLoading()) {
         clearInterval(checkTimer);
         resolve();
       }
