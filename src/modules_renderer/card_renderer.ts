@@ -100,7 +100,7 @@ const renderContentsData = () => {
     command: 'overwrite-iframe',
     arg: html,
   };
-  const webview = document.getElementById('contentsFrame')! as WebviewTag;
+  const webview = document.getElementById('contentsFrame') as WebviewTag;
   /*
   if (!webview.isDevToolsOpened()) {
     webview.openDevTools();
@@ -162,6 +162,8 @@ const renderCardStyle = () => {
     (node as HTMLElement).style.backgroundColor = uiRgba;
   });
 
+  const webview = document.getElementById('contentsFrame') as WebviewTag;
+
   /* TODO:
   const doc = (document.getElementById('contentsFrame')! as HTMLIFrameElement)
     .contentWindow!.document;
@@ -179,11 +181,14 @@ const renderCardStyle = () => {
       .item(0)!
       .appendChild(style);
   }
+*/
 
-  (document.getElementById(
-    'contentsFrame'
-  )! as HTMLIFrameElement).contentWindow!.document.body.style.zoom = `${cardProp.style.zoom}`;
-  */
+  const zoomMsg: ContentsFrameMessage = {
+    command: 'zoom',
+    arg: `${cardProp.style.zoom}`,
+  };
+  console.log('renderCardStyle: ' + zoomMsg.arg);
+  webview.send('message', zoomMsg);
 };
 
 const renderEditorStyle = () => {

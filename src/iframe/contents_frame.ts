@@ -15,6 +15,17 @@ import {
   InnerClickEvent,
 } from '../modules_common/types';
 
+window.addEventListener('load', () => {
+  const msg: ContentsFrameMessage = {
+    command: 'contents-frame-loaded',
+    arg: '',
+  };
+  // Message to parent frame
+  // window.webviewPostMessage() is defined in preloaded script
+  // @ts-ignore
+  window.webviewPostMessage(msg);
+});
+
 // window.addEventListener('click', event => {
 window.addEventListener('mouseup', event => {
   // 'contents' can be clicked when cardEditor.editorType is 'Markup'

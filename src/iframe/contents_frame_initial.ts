@@ -23,6 +23,11 @@ ipcRenderer.on('message', (event, msg: ContentsFrameMessage) => {
     document.write(msg.arg);
     document.close();
   }
+  else if (msg.command === 'zoom' && msg.arg !== undefined) {
+    if (document.body) {
+      document.body.style.zoom = msg.arg;
+    }
+  }
 });
 
 // Webview has the isolated scope from this preloaded script file.

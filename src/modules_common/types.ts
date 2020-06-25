@@ -70,6 +70,7 @@ export const contentsFrameCommand = [
   'click-parent',
   'contents-frame-loaded',
   'contents-frame-file-dropped',
+  'zoom',
 ];
 // ContentsFrameCommand is union. e.g) 'overwrite-iframe' | 'click-parent' | ...
 // Use ContentsFrameCommand to check type.
