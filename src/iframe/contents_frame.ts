@@ -9,7 +9,6 @@
 /**
  * ATTENTION: Only types can be import for type checking in iframe.
  */
-import { fileURLToPath } from 'url';
 import {
   ContentsFrameMessage,
   FileDropEvent,
@@ -69,13 +68,4 @@ document.addEventListener('drop', event => {
     // Message to parent frame
     window.parent.postMessage(mes, '*');
   }
-});
-
-window.addEventListener('load', event => {
-  const mes: ContentsFrameMessage = {
-    command: 'contents-frame-loaded',
-    arg: '',
-  };
-  // Message to parent frame
-  window.parent.postMessage(mes, '*');
 });
