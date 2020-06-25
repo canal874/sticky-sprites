@@ -8,8 +8,9 @@ entity Card <<card.ts>> order 20
 database ICardIO as "CardIO\nimplements\nICardIO" <<io.ts>> order 50
 box "Renderer Process" #LightBlue
   entity BrowserWindow <<renderer.ts>> order 100
-  participant ICardEditor as "CardEditorCKE\nimplements\nICardEditor" <<editor.ts>> order 110
-  participant CKEDITOR <<ckeditor>> order 111
+  entity Webview <<contents_frame.html>> order 101
+  participant ICardEditor as "CardEditorCKE\nimplements\nICardEditor" <<editor.ts>> order 111
+  participant CKEDITOR <<ckeditor>> order 112
 end box 
 
 [-> main: app.on('ready')
@@ -56,15 +57,27 @@ group Promise.all(Card.render()[])
         activate CKEDITOR
         BrowserWindow -> ICardEditor: new
         activate ICardEditor
+
+        group Promise.all([loadUI(),isWebviewLoaded])    
         BrowserWindow ->> ICardEditor: loadUI():Promise
+          rnote Right BrowserWindow: Check if editor is loaded
           activate BrowserWindow #6060f0
           ICardEditor ->> CKEDITOR: replace('editor')
             activate ICardEditor #6060f0
             hnote over CKEDITOR: Create instance
             ICardEditor <- CKEDITOR: instanceReady
             deactivate ICardEditor
-            BrowserWindow <-- ICardEditor: resolve()            
+            BrowserWindow <-- ICardEditor: resolve()
           deactivate BrowserWindow
+
+        BrowserWindow ->> Webview: isWebviewLoaded: Promise\n(Checking isLoading())
+          rnote Right BrowserWindow: Check if webview is loaded
+          activate BrowserWindow #6060f0
+        BrowserWindow <-- BrowserWindow: resolve()      
+        activate Webview
+        deactivate BrowserWindow
+        end
+
         Card <-- BrowserWindow: finish-load
         deactivate BrowserWindow
     Card <-- Card: resolve()
