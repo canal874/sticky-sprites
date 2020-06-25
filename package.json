@@ -6,11 +6,10 @@
   "main": "dist/main.js",
   "scripts": {
     "compile-clean": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && cp -r assets dist/ && npm run compile",
-    "compile": "npx eslint --fix --ext .ts . && tsc && npm run replace",
-    "replace": "npx rexreplace \"(Object.defineProperty.+?)$\" \"//$1\" ./dist/iframe/*.js",
-    "start": "tsc && npm run replace && electron-forge start",
+    "compile": "npx eslint --fix --ext .ts . && tsc ",
+    "start": "tsc && electron-forge start",
     "package": "npm run compile && electron-forge package",
-    "make": "rmp run compile-clean && electron-forge make",
+    "make": "npm run compile-clean && electron-forge make",
     "publish": "npm run compile-clean && electron-forge publish",
     "lint": "eslint --ext .ts ."
   },
