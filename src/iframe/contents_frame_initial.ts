@@ -9,7 +9,7 @@
 /**
  * ATTENTION: Only types can be import for type checking in iframe.
  */
-import { ContentsFrameMessage, InnerClickEvent } from '../modules_common/types';
+import { ContentsFrameMessage } from '../modules_common/types';
 
 window.addEventListener('message', (event: { data: ContentsFrameMessage }) => {
   if (!event.data.command) {
