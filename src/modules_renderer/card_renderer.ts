@@ -88,6 +88,7 @@ const renderContentsData = () => {
   <html>
     <head>
       <link href='../css/ckeditor-media-stickies-contents.css' type='text/css' rel='stylesheet' />
+      <script> var exports = {}; </script>
       <script type='text/javascript' src='contents_frame.js'></script>
     </head>
     <body>
