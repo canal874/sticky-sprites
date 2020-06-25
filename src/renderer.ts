@@ -413,9 +413,6 @@ const initializeIPCEvents = () => {
   ipcRenderer.on('card-focused', async () => {
     console.debug('card-focused');
 
-    // for debug
-    render();
-
     cardProp.status = 'Focused';
     render(['CardStyle']);
 
@@ -470,7 +467,7 @@ const initializeIPCEvents = () => {
   );
 };
 
-const initializeContentsFrameEvents = () => {
+const initializeContentsFrameEvents = async () => {
   const webview = document.getElementById('contentsFrame')! as WebviewTag;
   webview.addEventListener('ipc-message', async event => {
     if (event.channel !== 'message') {
@@ -492,10 +489,8 @@ const initializeContentsFrameEvents = () => {
       await cardEditor.showEditor().catch((e: Error) => {
         logger.error(`Error in clicking contents: ${e.message}`);
       });
-      cardEditor.startEdit();
-      setTimeout(() => {
-        ipcRenderer.invoke('send-mouse-input', cardProp.id, clickEvent.x, clickEvent.y);
-      }, 3000);
+      await cardEditor.startEdit();
+      ipcRenderer.invoke('send-mouse-input', cardProp.id, clickEvent.x, clickEvent.y);
     }
     else if (msg.command === 'contents-frame-file-dropped' && msg.arg !== undefined) {
       const fileDropEvent: FileDropEvent = JSON.parse(msg.arg);

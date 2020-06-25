@@ -28,7 +28,7 @@ export interface ICardEditor {
   showEditor(): Promise<void>;
   hideEditor(): void;
 
-  startEdit(): void;
+  startEdit(): Promise<void>;
   endEdit(): [boolean, string];
   toggleCodeMode(): void;
   startCodeMode(): void;

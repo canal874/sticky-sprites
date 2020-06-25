@@ -101,9 +101,11 @@ const renderContentsData = () => {
     arg: html,
   };
   const webview = document.getElementById('contentsFrame')! as WebviewTag;
+  /*
   if (!webview.isDevToolsOpened()) {
     webview.openDevTools();
   }
+  */
   webview.send('message', msg);
 };
 
