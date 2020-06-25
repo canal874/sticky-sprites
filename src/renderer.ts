@@ -467,7 +467,7 @@ const initializeIPCEvents = () => {
   );
 };
 
-const initializeContentsFrameEvents = async () => {
+const initializeContentsFrameEvents = () => {
   const webview = document.getElementById('contentsFrame')! as WebviewTag;
   webview.addEventListener('ipc-message', async event => {
     if (event.channel !== 'message') {
@@ -485,12 +485,19 @@ const initializeContentsFrameEvents = async () => {
       render(['CardStyle']);
     }
     else if (msg.command === 'click-parent' && msg.arg !== undefined) {
+      // Click request from child frame (webview)
       const clickEvent: InnerClickEvent = JSON.parse(msg.arg);
       await cardEditor.showEditor().catch((e: Error) => {
         logger.error(`Error in clicking contents: ${e.message}`);
       });
       await cardEditor.startEdit();
-      ipcRenderer.invoke('send-mouse-input', cardProp.id, clickEvent.x, clickEvent.y);
+      const offsetY = document.getElementById('titleBar')!.offsetHeight;
+      ipcRenderer.invoke(
+        'send-mouse-input',
+        cardProp.id,
+        clickEvent.x,
+        clickEvent.y + offsetY
+      );
     }
     else if (msg.command === 'contents-frame-file-dropped' && msg.arg !== undefined) {
       const fileDropEvent: FileDropEvent = JSON.parse(msg.arg);
