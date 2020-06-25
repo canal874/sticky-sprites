@@ -9,14 +9,27 @@
 /**
  * ATTENTION: Only types can be import for type checking in iframe.
  */
-import { ContentsFrameMessage } from '../modules_common/types';
+import { ipcRenderer } from 'electron';
+import { contentsFrameCommand, ContentsFrameMessage } from '../modules_common/types';
 
-window.addEventListener('message', (event: { data: ContentsFrameMessage }) => {
-  if (!event.data.command) {
+ipcRenderer.on('message', (event, msg: ContentsFrameMessage) => {
+  if (msg === undefined) {
     return;
   }
-  if (event.data.command === 'overwrite-iframe' && event.data.arg !== undefined) {
-    document.write(event.data.arg);
+  if (!contentsFrameCommand.includes(msg.command)) {
+    return;
+  }
+  if (msg.command === 'overwrite-iframe' && msg.arg !== undefined) {
+    document.write(msg.arg);
     document.close();
   }
 });
+
+// Webview has the isolated scope from this preloaded script file.
+// Set window object to functions that can be called from the scope.
+// @ts-ignore
+window.webviewPostMessage = (msg: ContentsFrameMessage) => {
+  if (contentsFrameCommand.includes(msg.command)) {
+    ipcRenderer.sendToHost('message', msg);
+  }
+};

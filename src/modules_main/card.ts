@@ -75,6 +75,7 @@ export class Card {
     this.window = new BrowserWindow({
       webPreferences: {
         nodeIntegration: true,
+        webviewTag: true,
       },
       minWidth: MINIMUM_WINDOW_WIDTH,
       minHeight: MINIMUM_WINDOW_HEIGHT,
@@ -256,7 +257,8 @@ export class Card {
     });
   };
 
-  private _focusListener = () => {
+  // @ts-ignore
+  private _focusListener = e => {
     if (this.recaptureGlobalFocusEventAfterLocalFocusEvent) {
       this.recaptureGlobalFocusEventAfterLocalFocusEvent = false;
       setGlobalFocusEventListenerPermission(true);

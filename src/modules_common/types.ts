@@ -56,11 +56,26 @@ export type CardCssStyle = {
 
 export type EditorType = 'WYSIWYG' | 'Markup';
 
+/*
 export type ContentsFrameCommand =
   | 'overwrite-iframe'
   | 'click-parent'
   | 'contents-frame-loaded'
   | 'contents-frame-file-dropped';
+*/
+// Use iterable union instead of normal union type
+// because ContentsFrameCommand is also used for runtime type check.
+export const contentsFrameCommand = [
+  'overwrite-iframe',
+  'click-parent',
+  'contents-frame-loaded',
+  'contents-frame-file-dropped',
+];
+// ContentsFrameCommand is union. e.g) 'overwrite-iframe' | 'click-parent' | ...
+// Use ContentsFrameCommand to check type.
+// Use below to iterate ContentsFrameCommands:
+//   for (const cmd of contentsFrameCommand) { ... }
+type ContentsFrameCommand = typeof contentsFrameCommand[number];
 
 export type InnerClickEvent = {
   x: number;

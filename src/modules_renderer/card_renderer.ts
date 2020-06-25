@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, WebviewTag } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, ContentsFrameMessage, ICardEditor } from '../modules_common/types';
 import { convertHexColorToRgba, darkenHexColor } from '../modules_common/utils';
@@ -95,13 +95,16 @@ const renderContentsData = () => {
       ${cardProp.data}
     </body>
   </html>`;
-  const mes: ContentsFrameMessage = {
+
+  const msg: ContentsFrameMessage = {
     command: 'overwrite-iframe',
     arg: html,
   };
-  (document.getElementById(
-    'contentsFrame'
-  )! as HTMLIFrameElement).contentWindow!.postMessage(mes, '*');
+  const webview = document.getElementById('contentsFrame')! as WebviewTag;
+  if (!webview.isDevToolsOpened()) {
+    webview.openDevTools();
+  }
+  webview.send('message', msg);
 };
 
 const renderContentsRect = () => {
@@ -157,6 +160,7 @@ const renderCardStyle = () => {
     (node as HTMLElement).style.backgroundColor = uiRgba;
   });
 
+  /* TODO:
   const doc = (document.getElementById('contentsFrame')! as HTMLIFrameElement)
     .contentWindow!.document;
   if (doc) {
@@ -177,6 +181,7 @@ const renderCardStyle = () => {
   (document.getElementById(
     'contentsFrame'
   )! as HTMLIFrameElement).contentWindow!.document.body.style.zoom = `${cardProp.style.zoom}`;
+  */
 };
 
 const renderEditorStyle = () => {

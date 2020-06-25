@@ -15,29 +15,22 @@ import {
   InnerClickEvent,
 } from '../modules_common/types';
 
-window.addEventListener('message', (event: { data: ContentsFrameMessage }) => {
-  if (!event.data.command) {
-    return;
-  }
-  if (event.data.command === 'overwrite-iframe' && event.data.arg !== undefined) {
-    document.write(event.data.arg);
-    document.close();
-  }
-});
-
-window.addEventListener('click', event => {
+// window.addEventListener('click', event => {
+window.addEventListener('mouseup', event => {
   // 'contents' can be clicked when cardEditor.editorType is 'Markup'
   if (window.getSelection()?.toString() === '') {
     const e: InnerClickEvent = {
       x: event.clientX,
       y: event.clientY,
     };
-    const mes: ContentsFrameMessage = {
+    const msg: ContentsFrameMessage = {
       command: 'click-parent',
       arg: JSON.stringify(e),
     };
     // Message to parent frame
-    window.parent.postMessage(mes, '*');
+    // window.webviewPostMessage() is defined in preloaded script
+    // @ts-ignore
+    window.webviewPostMessage(msg);
   }
 });
 
@@ -61,11 +54,13 @@ document.addEventListener('drop', event => {
       name: file.name,
       path: file.path,
     };
-    const mes: ContentsFrameMessage = {
+    const msg: ContentsFrameMessage = {
       command: 'contents-frame-file-dropped',
       arg: JSON.stringify(e),
     };
     // Message to parent frame
-    window.parent.postMessage(mes, '*');
+    // window.webviewPostMessage() is defined in preloaded script
+    // @ts-ignore
+    window.webviewPostMessage(msg);
   }
 });

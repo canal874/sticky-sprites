@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { ipcRenderer, remote } from 'electron';
+import { ipcRenderer, remote, WebviewTag } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import contextMenu from 'electron-context-menu';
 import {
@@ -17,6 +17,7 @@ import {
 } from './modules_common/cardprop';
 import {
   CardCssStyle,
+  contentsFrameCommand,
   ContentsFrameMessage,
   FileDropEvent,
   ICardEditor,
@@ -360,6 +361,7 @@ const onload = async () => {
     },
   };
 
+  initializeContentsFrameEvents();
   initializeUIEvents();
 
   await cardEditor.loadUI(cardCssStyle);
@@ -410,6 +412,9 @@ const initializeIPCEvents = () => {
 
   ipcRenderer.on('card-focused', async () => {
     console.debug('card-focused');
+
+    // for debug
+    render();
 
     cardProp.status = 'Focused';
     render(['CardStyle']);
@@ -466,28 +471,42 @@ const initializeIPCEvents = () => {
 };
 
 const initializeContentsFrameEvents = () => {
-  window.addEventListener('message', async (event: { data: ContentsFrameMessage }) => {
-    // Message from iframe
-    if (!event.data.command) {
+  const webview = document.getElementById('contentsFrame')! as WebviewTag;
+  webview.addEventListener('ipc-message', async event => {
+    if (event.channel !== 'message') {
       return;
     }
-    if (event.data.command === 'contents-frame-loaded') {
+    if (!event.args || !event.args[0]) {
+      return;
+    }
+    const msg: ContentsFrameMessage = event.args[0];
+    if (!contentsFrameCommand.includes(msg.command)) {
+      return;
+    }
+
+    if (msg.command === 'contents-frame-loaded') {
       render(['CardStyle']);
     }
-    else if (event.data.command === 'click-parent' && event.data.arg !== undefined) {
-      const clickEvent: InnerClickEvent = JSON.parse(event.data.arg);
+    else if (msg.command === 'click-parent' && msg.arg !== undefined) {
+      const clickEvent: InnerClickEvent = JSON.parse(msg.arg);
       await cardEditor.showEditor().catch((e: Error) => {
         logger.error(`Error in clicking contents: ${e.message}`);
       });
       cardEditor.startEdit();
-
-      ipcRenderer.invoke('send-mouse-input', cardProp.id, clickEvent.x, clickEvent.y);
+      setTimeout(() => {
+        ipcRenderer.invoke('send-mouse-input', cardProp.id, clickEvent.x, clickEvent.y);
+      }, 3000);
     }
-    else if (
-      event.data.command === 'contents-frame-file-dropped' &&
-      event.data.arg !== undefined
-    ) {
-      const fileDropEvent: FileDropEvent = JSON.parse(event.data.arg);
+    else if (msg.command === 'contents-frame-file-dropped' && msg.arg !== undefined) {
+      const fileDropEvent: FileDropEvent = JSON.parse(msg.arg);
+      /*
+       * Must sanitize params from webview
+       * - fileDropEvent.path is checked whether it is correct path or not
+       *   by using dropImg.src = fileDropEvent.path;
+       *   Incorrect path cannot be loaded.
+       * - Break 'onXXX=' event format in fileDropEvent.name by replacing '=' with '-'.
+       */
+      fileDropEvent.name = fileDropEvent.name.replace('=', '-');
 
       const dropImg = new Image();
 
@@ -572,5 +591,4 @@ const initializeContentsFrameEvents = () => {
 };
 
 initializeIPCEvents();
-initializeContentsFrameEvents();
 window.addEventListener('load', onload, false);
