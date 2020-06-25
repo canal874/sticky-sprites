@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { ipcRenderer, remote, WebviewTag } from 'electron';
+import { IpcMessageEvent, ipcRenderer, remote, WebviewTag } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import contextMenu from 'electron-context-menu';
 import {
@@ -364,7 +364,27 @@ const onload = async () => {
   initializeContentsFrameEvents();
   initializeUIEvents();
 
-  await cardEditor.loadUI(cardCssStyle);
+  const webview = document.getElementById('contentsFrame')! as WebviewTag;
+  const isWebviewLoaded = new Promise((resolve, reject) => {
+    let counter = 0;
+    const checkTimer = setInterval(() => {
+      if (webview.isLoading()) {
+        clearInterval(checkTimer);
+        resolve();
+      }
+      else {
+        counter++;
+        if (counter > 100) {
+          reject(new Error('Failed to load webview'));
+        }
+      }
+    }, 100);
+  });
+
+  await Promise.all([cardEditor.loadUI(cardCssStyle), isWebviewLoaded]).catch(e => {
+    logger.error(e.message);
+  });
+
   // console.debug('(2) loadUI is completed');
   ipcRenderer.send('finish-load', id);
 };
@@ -467,127 +487,139 @@ const initializeIPCEvents = () => {
   );
 };
 
-const initializeContentsFrameEvents = () => {
-  const webview = document.getElementById('contentsFrame')! as WebviewTag;
-  webview.addEventListener('ipc-message', async event => {
-    if (event.channel !== 'message') {
-      return;
+const sendMouseInput = async (clickEvent: InnerClickEvent) => {
+  await cardEditor.showEditor().catch((e: Error) => {
+    logger.error(`Error in clicking contents: ${e.message}`);
+  });
+  await cardEditor.startEdit();
+  const offsetY = document.getElementById('titleBar')!.offsetHeight;
+  ipcRenderer.invoke('send-mouse-input', cardProp.id, clickEvent.x, clickEvent.y + offsetY);
+};
+const addDroppedImage = (fileDropEvent: FileDropEvent) => {
+  /*
+   * Must sanitize params from webview
+   * - fileDropEvent.path is checked whether it is correct path or not
+   *   by using dropImg.src = fileDropEvent.path;
+   *   Incorrect path cannot be loaded.
+   * - Break 'onXXX=' event format in fileDropEvent.name by replacing '=' with '-'.
+   */
+  fileDropEvent.name = fileDropEvent.name.replace('=', '-');
+
+  const dropImg = new Image();
+
+  dropImg.addEventListener('load', async () => {
+    let imageOnly = false;
+    if (cardProp.data === '') {
+      imageOnly = true;
     }
-    if (!event.args || !event.args[0]) {
-      return;
+    const width = dropImg.naturalWidth;
+    const height = dropImg.naturalHeight;
+
+    let newImageWidth =
+      cardProp.geometry.width -
+      (imageOnly ? DRAG_IMAGE_MARGIN : 0) -
+      cardCssStyle.border.left -
+      cardCssStyle.border.right -
+      cardCssStyle.padding.left -
+      cardCssStyle.padding.right;
+
+    let newImageHeight = height;
+    if (newImageWidth < width) {
+      newImageHeight = (height * newImageWidth) / width;
+    }
+    else {
+      newImageWidth = width;
+    }
+
+    newImageWidth = Math.floor(newImageWidth);
+    newImageHeight = Math.floor(newImageHeight);
+
+    const imgTag = cardEditor.getImageTag(
+      uuidv4(),
+      fileDropEvent.path,
+      newImageWidth,
+      newImageHeight,
+      fileDropEvent.name
+    );
+
+    if (imageOnly) {
+      cardProp.geometry.height =
+        newImageHeight +
+        DRAG_IMAGE_MARGIN +
+        cardCssStyle.border.top +
+        cardCssStyle.border.bottom +
+        cardCssStyle.padding.top +
+        cardCssStyle.padding.bottom +
+        document.getElementById('titleBar')!.offsetHeight;
+
+      cardProp.data = imgTag;
+    }
+    else {
+      cardProp.geometry.height = cardProp.geometry.height + newImageHeight;
+
+      cardProp.data = cardProp.data + '<br />' + imgTag;
+    }
+
+    await ipcRenderer.invoke(
+      'set-window-size',
+      cardProp.id,
+      cardProp.geometry.width,
+      cardProp.geometry.height
+    );
+
+    if (imageOnly) {
+      saveCardColor(cardProp, '#ffffff', '#ffffff', 0.0);
+    }
+    else {
+      saveCard(cardProp);
+    }
+    render(['TitleBar', 'CardStyle', 'ContentsData', 'ContentsRect']);
+
+    ipcRenderer.invoke('focus', cardProp.id);
+    await cardEditor.showEditor().catch((err: Error) => {
+      logger.error(`Error in loading image: ${err.message}`);
+    });
+    cardEditor.startEdit();
+  });
+
+  dropImg.src = fileDropEvent.path;
+};
+
+const initializeContentsFrameEvents = () => {
+  const getMessage = (event: IpcMessageEvent): ContentsFrameMessage => {
+    if (event.channel !== 'message' || !event.args || !event.args[0]) {
+      return { command: '', arg: '' };
     }
     const msg: ContentsFrameMessage = event.args[0];
     if (!contentsFrameCommand.includes(msg.command)) {
-      return;
+      return { command: '', arg: '' };
     }
+    return msg;
+  };
 
-    if (msg.command === 'contents-frame-loaded') {
-      render(['CardStyle']);
-    }
-    else if (msg.command === 'click-parent' && msg.arg !== undefined) {
-      // Click request from child frame (webview)
-      const clickEvent: InnerClickEvent = JSON.parse(msg.arg);
-      await cardEditor.showEditor().catch((e: Error) => {
-        logger.error(`Error in clicking contents: ${e.message}`);
-      });
-      await cardEditor.startEdit();
-      const offsetY = document.getElementById('titleBar')!.offsetHeight;
-      ipcRenderer.invoke(
-        'send-mouse-input',
-        cardProp.id,
-        clickEvent.x,
-        clickEvent.y + offsetY
-      );
-    }
-    else if (msg.command === 'contents-frame-file-dropped' && msg.arg !== undefined) {
-      const fileDropEvent: FileDropEvent = JSON.parse(msg.arg);
-      /*
-       * Must sanitize params from webview
-       * - fileDropEvent.path is checked whether it is correct path or not
-       *   by using dropImg.src = fileDropEvent.path;
-       *   Incorrect path cannot be loaded.
-       * - Break 'onXXX=' event format in fileDropEvent.name by replacing '=' with '-'.
-       */
-      fileDropEvent.name = fileDropEvent.name.replace('=', '-');
+  const webview = document.getElementById('contentsFrame')! as WebviewTag;
+  webview.addEventListener('ipc-message', event => {
+    const msg: ContentsFrameMessage = getMessage(event);
+    switch (msg.command) {
+      case 'contents-frame-loaded':
+        render(['CardStyle']);
+        break;
 
-      const dropImg = new Image();
-
-      dropImg.addEventListener('load', async () => {
-        let imageOnly = false;
-        if (cardProp.data === '') {
-          imageOnly = true;
+      case 'click-parent':
+        // Click request from child frame (webview)
+        if (msg.arg !== undefined) {
+          sendMouseInput(JSON.parse(msg.arg) as InnerClickEvent);
         }
-        const width = dropImg.naturalWidth;
-        const height = dropImg.naturalHeight;
+        break;
 
-        let newImageWidth =
-          cardProp.geometry.width -
-          (imageOnly ? DRAG_IMAGE_MARGIN : 0) -
-          cardCssStyle.border.left -
-          cardCssStyle.border.right -
-          cardCssStyle.padding.left -
-          cardCssStyle.padding.right;
-
-        let newImageHeight = height;
-        if (newImageWidth < width) {
-          newImageHeight = (height * newImageWidth) / width;
+      case 'contents-frame-file-dropped':
+        if (msg.arg !== undefined) {
+          addDroppedImage(JSON.parse(msg.arg) as FileDropEvent);
         }
-        else {
-          newImageWidth = width;
-        }
+        break;
 
-        newImageWidth = Math.floor(newImageWidth);
-        newImageHeight = Math.floor(newImageHeight);
-
-        const imgTag = cardEditor.getImageTag(
-          uuidv4(),
-          fileDropEvent.path,
-          newImageWidth,
-          newImageHeight,
-          fileDropEvent.name
-        );
-
-        if (imageOnly) {
-          cardProp.geometry.height =
-            newImageHeight +
-            DRAG_IMAGE_MARGIN +
-            cardCssStyle.border.top +
-            cardCssStyle.border.bottom +
-            cardCssStyle.padding.top +
-            cardCssStyle.padding.bottom +
-            document.getElementById('titleBar')!.offsetHeight;
-
-          cardProp.data = imgTag;
-        }
-        else {
-          cardProp.geometry.height = cardProp.geometry.height + newImageHeight;
-
-          cardProp.data = cardProp.data + '<br />' + imgTag;
-        }
-
-        await ipcRenderer.invoke(
-          'set-window-size',
-          cardProp.id,
-          cardProp.geometry.width,
-          cardProp.geometry.height
-        );
-
-        if (imageOnly) {
-          saveCardColor(cardProp, '#ffffff', '#ffffff', 0.0);
-        }
-        else {
-          saveCard(cardProp);
-        }
-        render(['TitleBar', 'CardStyle', 'ContentsData', 'ContentsRect']);
-
-        ipcRenderer.invoke('focus', cardProp.id);
-        await cardEditor.showEditor().catch((err: Error) => {
-          logger.error(`Error in loading image: ${err.message}`);
-        });
-        cardEditor.startEdit();
-      });
-
-      dropImg.src = fileDropEvent.path;
+      default:
+        break;
     }
   });
 };
