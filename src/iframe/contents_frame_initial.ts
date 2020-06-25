@@ -12,21 +12,55 @@
 import { ipcRenderer } from 'electron';
 import { contentsFrameCommand, ContentsFrameMessage } from '../modules_common/types';
 
-ipcRenderer.on('message', (event, msg: ContentsFrameMessage) => {
+const filterMessage = (msg: ContentsFrameMessage) => {
   if (msg === undefined) {
-    return;
+    return { command: '', arg: '' };
   }
   if (!contentsFrameCommand.includes(msg.command)) {
-    return;
+    return { command: '', arg: '' };
   }
-  if (msg.command === 'overwrite-iframe' && msg.arg !== undefined) {
-    document.write(msg.arg);
-    document.close();
-  }
-  else if (msg.command === 'zoom' && msg.arg !== undefined) {
-    if (document.body) {
-      document.body.style.zoom = msg.arg;
-    }
+  return msg;
+};
+
+ipcRenderer.on('message', (event, _msg: ContentsFrameMessage) => {
+  const msg: ContentsFrameMessage = filterMessage(_msg);
+  switch (msg.command) {
+    case 'overwrite-iframe':
+      if (msg.arg !== undefined) {
+        document.write(msg.arg);
+        document.close();
+      }
+      break;
+
+    case 'set-scrollbar-style':
+      if (msg.arg !== undefined) {
+        if (document.head) {
+          const style = document.createElement('style');
+          style.innerHTML =
+            'body::-webkit-scrollbar { width: 7px; background-color: ' +
+            msg.arg.backgroundRgba +
+            '}\n' +
+            'body::-webkit-scrollbar-thumb { background-color: ' +
+            msg.arg.uiRgba +
+            '}';
+          document
+            .getElementsByTagName('head')
+            .item(0)!
+            .appendChild(style);
+        }
+      }
+      break;
+
+    case 'zoom':
+      if (msg.arg !== undefined) {
+        if (document.body) {
+          document.body.style.zoom = msg.arg;
+        }
+      }
+      break;
+
+    default:
+      break;
   }
 });
 

@@ -71,6 +71,7 @@ export const contentsFrameCommand = [
   'contents-frame-loaded',
   'contents-frame-file-dropped',
   'zoom',
+  'set-scrollbar-style',
 ];
 // ContentsFrameCommand is union. e.g) 'overwrite-iframe' | 'click-parent' | ...
 // Use ContentsFrameCommand to check type.
@@ -90,5 +91,5 @@ export type FileDropEvent = {
 
 export type ContentsFrameMessage = {
   command: ContentsFrameCommand;
-  arg: string;
+  arg: any;
 };

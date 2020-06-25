@@ -164,30 +164,16 @@ const renderCardStyle = () => {
 
   const webview = document.getElementById('contentsFrame') as WebviewTag;
 
-  /* TODO:
-  const doc = (document.getElementById('contentsFrame')! as HTMLIFrameElement)
-    .contentWindow!.document;
-  if (doc) {
-    const style = doc.createElement('style');
-    style.innerHTML =
-      'body::-webkit-scrollbar { width: 7px; background-color: ' +
-      backgroundRgba +
-      '}\n' +
-      'body::-webkit-scrollbar-thumb { background-color: ' +
-      uiRgba +
-      '}';
-    doc
-      .getElementsByTagName('head')
-      .item(0)!
-      .appendChild(style);
-  }
-*/
+  const scrollbarStyleMsg: ContentsFrameMessage = {
+    command: 'set-scrollbar-style',
+    arg: { backgroundRgba: backgroundRgba, uiRgba: uiRgba },
+  };
+  webview.send('message', scrollbarStyleMsg);
 
   const zoomMsg: ContentsFrameMessage = {
     command: 'zoom',
     arg: `${cardProp.style.zoom}`,
   };
-  console.log('renderCardStyle: ' + zoomMsg.arg);
   webview.send('message', zoomMsg);
 };
 
