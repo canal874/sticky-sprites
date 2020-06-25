@@ -83,6 +83,7 @@ const renderTitleBar = () => {
 };
 
 const renderContentsData = () => {
+  // Script and CSS loaded from contents_frame.html are remained after document.write().
   const html = `<!DOCTYPE html>
   <html>
     <head>
