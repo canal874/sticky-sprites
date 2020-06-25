@@ -91,14 +91,6 @@ export class Card {
     });
     this.window.setMaxListeners(20);
 
-    // Open hyperlink on external browser window
-    // by preventing to open it on new electron window
-    // when target='_blank' is set.
-    this.window.webContents.on('new-window', (event, _url) => {
-      event.preventDefault();
-      shell.openExternal(_url);
-    });
-
     // Resized by hand
     // will-resize is only emitted when the window is being resized manually.
     // Resizing the window with setBounds/setSize will not emit this event.

@@ -6,7 +6,14 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { BrowserWindow, IpcMessageEvent, ipcRenderer, remote, WebviewTag } from 'electron';
+import {
+  BrowserWindow,
+  IpcMessageEvent,
+  ipcRenderer,
+  remote,
+  shell,
+  WebviewTag,
+} from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import contextMenu from 'electron-context-menu';
 import {
@@ -375,6 +382,13 @@ const onload = async () => {
       if (!webview.isLoading()) {
         clearInterval(checkTimer);
         setContextMenu(webview);
+
+        // Open hyperlink on external browser window
+        // by preventing to open it on new electron window
+        // when target='_blank' is set.
+        webview.addEventListener('new-window', e => {
+          shell.openExternal(e.url);
+        });
         resolve();
       }
       else {
