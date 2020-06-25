@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { IpcMessageEvent, ipcRenderer, remote, WebviewTag } from 'electron';
+import { BrowserWindow, IpcMessageEvent, ipcRenderer, remote, WebviewTag } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import contextMenu from 'electron-context-menu';
 import {
@@ -80,64 +80,65 @@ const queueSaveCommand = () => {
  * Context Menu
  */
 
-const changeCardColor = (backgroundColor: string, opacity = 1.0) => {
-  const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
-  saveCardColor(cardProp, backgroundColor, uiColor, opacity);
-  render(['CardStyle', 'EditorStyle']);
-};
+const setContextMenu = (win: BrowserWindow | WebviewTag) => {
+  const changeCardColor = (backgroundColor: string, opacity = 1.0) => {
+    const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
+    saveCardColor(cardProp, backgroundColor, uiColor, opacity);
+    render(['CardStyle', 'EditorStyle']);
+  };
 
-contextMenu({
-  window: remote.getCurrentWindow(),
-  showSaveImageAs: true,
-  showInspectElement: false,
-  menu: actions => [
-    actions.searchWithGoogle({}),
-    actions.separator(),
-    actions.cut({}),
-    actions.copy({}),
-    actions.paste({}),
-    actions.separator(),
-    actions.saveImageAs({}),
-    actions.separator(),
-    actions.copyLink({}),
-    actions.separator(),
-  ],
-  prepend: () => [
-    {
-      label: MESSAGE.zoomIn,
-      click: () => {
-        if (cardProp.style.zoom < 1.0) {
-          cardProp.style.zoom += 0.2;
-        }
-        else {
-          cardProp.style.zoom += 0.5;
-        }
-        if (cardProp.style.zoom > 3) {
-          cardProp.style.zoom = 3;
-        }
-        render(['CardStyle', 'EditorStyle']);
+  contextMenu({
+    window: win,
+    showSaveImageAs: true,
+    showInspectElement: false,
+    menu: actions => [
+      actions.searchWithGoogle({}),
+      actions.separator(),
+      actions.cut({}),
+      actions.copy({}),
+      actions.paste({}),
+      actions.separator(),
+      actions.saveImageAs({}),
+      actions.separator(),
+      actions.copyLink({}),
+      actions.separator(),
+    ],
+    prepend: () => [
+      {
+        label: MESSAGE.zoomIn,
+        click: () => {
+          if (cardProp.style.zoom < 1.0) {
+            cardProp.style.zoom += 0.2;
+          }
+          else {
+            cardProp.style.zoom += 0.5;
+          }
+          if (cardProp.style.zoom > 3) {
+            cardProp.style.zoom = 3;
+          }
+          render(['CardStyle', 'EditorStyle']);
 
-        saveCard(cardProp);
+          saveCard(cardProp);
+        },
       },
-    },
-    {
-      label: MESSAGE.zoomOut,
-      click: () => {
-        if (cardProp.style.zoom <= 1.0) {
-          cardProp.style.zoom -= 0.2;
-        }
-        else {
-          cardProp.style.zoom -= 0.5;
-        }
-        if (cardProp.style.zoom <= 0.4) {
-          cardProp.style.zoom = 0.4;
-        }
-        render(['CardStyle', 'EditorStyle']);
+      {
+        label: MESSAGE.zoomOut,
+        click: () => {
+          if (cardProp.style.zoom <= 1.0) {
+            cardProp.style.zoom -= 0.2;
+          }
+          else {
+            cardProp.style.zoom -= 0.5;
+          }
+          if (cardProp.style.zoom <= 0.4) {
+            cardProp.style.zoom = 0.4;
+          }
+          render(['CardStyle', 'EditorStyle']);
 
-        saveCard(cardProp);
+          saveCard(cardProp);
+        },
       },
-    },
-    /*
+      /*
     {
       label: MESSAGE.bringToFront,
       click: async () => {
@@ -148,73 +149,76 @@ contextMenu({
       },
     },
     */
-    {
-      label: MESSAGE.sendToBack,
-      click: async () => {
-        const newZ = await ipcRenderer.invoke('send-to-back', cardProp.id);
-        // eslint-disable-next-line require-atomic-updates
-        cardProp.geometry.z = newZ;
-        saveCard(cardProp);
+      {
+        label: MESSAGE.sendToBack,
+        click: async () => {
+          const newZ = await ipcRenderer.invoke('send-to-back', cardProp.id);
+          // eslint-disable-next-line require-atomic-updates
+          cardProp.geometry.z = newZ;
+          saveCard(cardProp);
+        },
       },
-    },
-  ],
-  append: () => [
-    {
-      label: MESSAGE.yellow,
-      click: () => {
-        changeCardColor('#ffffa0');
+    ],
+    append: () => [
+      {
+        label: MESSAGE.yellow,
+        click: () => {
+          changeCardColor('#ffffa0');
+        },
       },
-    },
-    {
-      label: MESSAGE.red,
-      click: () => {
-        changeCardColor('#ffb0b0');
+      {
+        label: MESSAGE.red,
+        click: () => {
+          changeCardColor('#ffb0b0');
+        },
       },
-    },
-    {
-      label: MESSAGE.green,
-      click: () => {
-        changeCardColor('#d0ffd0');
+      {
+        label: MESSAGE.green,
+        click: () => {
+          changeCardColor('#d0ffd0');
+        },
       },
-    },
-    {
-      label: MESSAGE.blue,
-      click: () => {
-        changeCardColor('#d0d0ff');
+      {
+        label: MESSAGE.blue,
+        click: () => {
+          changeCardColor('#d0d0ff');
+        },
       },
-    },
-    {
-      label: MESSAGE.orange,
-      click: () => {
-        changeCardColor('#ffb000');
+      {
+        label: MESSAGE.orange,
+        click: () => {
+          changeCardColor('#ffb000');
+        },
       },
-    },
-    {
-      label: MESSAGE.purple,
-      click: () => {
-        changeCardColor('#ffd0ff');
+      {
+        label: MESSAGE.purple,
+        click: () => {
+          changeCardColor('#ffd0ff');
+        },
       },
-    },
-    {
-      label: MESSAGE.white,
-      click: () => {
-        changeCardColor('#ffffff');
+      {
+        label: MESSAGE.white,
+        click: () => {
+          changeCardColor('#ffffff');
+        },
       },
-    },
-    {
-      label: MESSAGE.gray,
-      click: () => {
-        changeCardColor('#d0d0d0');
+      {
+        label: MESSAGE.gray,
+        click: () => {
+          changeCardColor('#d0d0d0');
+        },
       },
-    },
-    {
-      label: MESSAGE.transparent,
-      click: () => {
-        changeCardColor('#ffffff', 0.0);
+      {
+        label: MESSAGE.transparent,
+        click: () => {
+          changeCardColor('#ffffff', 0.0);
+        },
       },
-    },
-  ],
-});
+    ],
+  });
+};
+
+setContextMenu(remote.getCurrentWindow());
 
 /**
  * Initialize
@@ -370,6 +374,7 @@ const onload = async () => {
     const checkTimer = setInterval(() => {
       if (!webview.isLoading()) {
         clearInterval(checkTimer);
+        setContextMenu(webview);
         resolve();
       }
       else {

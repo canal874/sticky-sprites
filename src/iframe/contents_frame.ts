@@ -28,7 +28,12 @@ window.addEventListener('load', () => {
 
 // window.addEventListener('click', event => {
 window.addEventListener('mouseup', event => {
-  // 'contents' can be clicked when cardEditor.editorType is 'Markup'
+  if (event.button !== 0) {
+    // left click : 0
+    // right click : 2
+    return;
+  }
+
   if (window.getSelection()?.toString() === '') {
     const e: InnerClickEvent = {
       x: event.clientX,
