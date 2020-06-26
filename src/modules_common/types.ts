@@ -34,8 +34,8 @@ export interface ICardEditor {
   startCodeMode(): void;
   endCodeMode(): void;
 
-  getScrollPosition(): { top: number; left: number };
-  setScrollPosition(top: number, height: number): void;
+  getScrollPosition(): { left: number; top: number };
+  setScrollPosition(height: number, top: number): void;
   setZoom(): void;
   setSize(width?: number, height?: number): void;
   setColor(): void;
@@ -75,7 +75,6 @@ export const contentsFrameCommand = [
   'contents-frame-loaded',
   'overwrite-iframe',
   'set-scrollbar-style',
-  'set-scroll-position',
   'zoom',
 ];
 // ContentsFrameCommand is union. e.g) 'overwrite-iframe' | 'click-parent' | ...

@@ -481,6 +481,10 @@ const initializeIPCEvents = () => {
         render();
         saveCard(cardProp);
       }
+
+      const { left, top } = cardEditor.getScrollPosition();
+      const webview = document.getElementById('contentsFrame') as WebviewTag;
+      webview.executeJavaScript(`window.scrollTo(${left}, ${top})`);
     }
   });
 
@@ -527,7 +531,7 @@ const startEditorByClick = async (clickEvent: InnerClickEvent) => {
   const webview = document.getElementById('contentsFrame') as WebviewTag;
   const scrollTop = await webview.executeJavaScript('window.scrollY');
   const scrollLeft = await webview.executeJavaScript('window.scrollX');
-  cardEditor.setScrollPosition(scrollTop, scrollLeft);
+  cardEditor.setScrollPosition(scrollLeft, scrollTop);
 
   const offsetY = document.getElementById('titleBar')!.offsetHeight;
   const leftMouseDown: MouseInputEvent = {

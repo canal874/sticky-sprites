@@ -473,14 +473,14 @@ export class CardEditor implements ICardEditor {
   };
 
   getScrollPosition = () => {
-    const top = CKEDITOR.instances.editor.document.$.scrollingElement!.scrollTop;
     const left = CKEDITOR.instances.editor.document.$.scrollingElement!.scrollLeft;
-    return { top, left };
+    const top = CKEDITOR.instances.editor.document.$.scrollingElement!.scrollTop;
+    return { left, top };
   };
 
-  setScrollPosition = (top: number, left: number) => {
-    CKEDITOR.instances.editor.document.$.scrollingElement!.scrollTop = top;
+  setScrollPosition = (left: number, top: number) => {
     CKEDITOR.instances.editor.document.$.scrollingElement!.scrollLeft = left;
+    CKEDITOR.instances.editor.document.$.scrollingElement!.scrollTop = top;
   };
 
   setZoom = () => {
@@ -576,6 +576,6 @@ export class CardEditor implements ICardEditor {
   };
 
   execAfterMouseDown = (func: Function) => {
-    CKEDITOR.instances.editor.document.once('mousedown', func());
+    CKEDITOR.instances.editor.document.once('mousedown', e => func());
   };
 }

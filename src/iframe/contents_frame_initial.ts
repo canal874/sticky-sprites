@@ -22,41 +22,53 @@ const filterMessage = (msg: ContentsFrameMessage) => {
   return msg;
 };
 
+const overwriteIframe = (arg: string) => {
+  if (arg !== undefined) {
+    document.write(arg);
+    document.close();
+  }
+};
+
+const setScrollbarStyle = (arg: { backgroundRgba: string; uiRgba: string }) => {
+  if (arg !== undefined) {
+    if (document.head) {
+      const style = document.createElement('style');
+      style.innerHTML =
+        'body::-webkit-scrollbar { width: 7px; background-color: ' +
+        arg.backgroundRgba +
+        '}\n' +
+        'body::-webkit-scrollbar-thumb { background-color: ' +
+        arg.uiRgba +
+        '}';
+      document
+        .getElementsByTagName('head')
+        .item(0)!
+        .appendChild(style);
+    }
+  }
+};
+
+const zoom = (arg: string) => {
+  if (arg !== undefined) {
+    if (document.body) {
+      document.body.style.zoom = arg;
+    }
+  }
+};
+
 ipcRenderer.on('message', (event, _msg: ContentsFrameMessage) => {
   const msg: ContentsFrameMessage = filterMessage(_msg);
   switch (msg.command) {
     case 'overwrite-iframe':
-      if (msg.arg !== undefined) {
-        document.write(msg.arg);
-        document.close();
-      }
+      overwriteIframe(msg.arg);
       break;
 
     case 'set-scrollbar-style':
-      if (msg.arg !== undefined) {
-        if (document.head) {
-          const style = document.createElement('style');
-          style.innerHTML =
-            'body::-webkit-scrollbar { width: 7px; background-color: ' +
-            msg.arg.backgroundRgba +
-            '}\n' +
-            'body::-webkit-scrollbar-thumb { background-color: ' +
-            msg.arg.uiRgba +
-            '}';
-          document
-            .getElementsByTagName('head')
-            .item(0)!
-            .appendChild(style);
-        }
-      }
+      setScrollbarStyle(msg.arg);
       break;
 
     case 'zoom':
-      if (msg.arg !== undefined) {
-        if (document.body) {
-          document.body.style.zoom = msg.arg;
-        }
-      }
+      zoom(msg.arg);
       break;
 
     default:
