@@ -278,7 +278,7 @@ const initializeUIEvents = () => {
       if (cardEditor.editorType === 'Markup') {
         cardEditor.hideEditor();
       }
-      const [dataChanged, data] = cardEditor.endEdit();
+      const { dataChanged, data } = cardEditor.endEdit();
       cardProp.data = data;
       render(['TitleBar', 'ContentsData', 'ContentsRect']);
       if (dataChanged && cardProp.data !== '') {
@@ -474,7 +474,7 @@ const initializeIPCEvents = () => {
       if (cardEditor.editorType === 'Markup') {
         cardEditor.hideEditor();
       }
-      const [dataChanged, data] = cardEditor.endEdit();
+      const { dataChanged, data } = cardEditor.endEdit();
       if (dataChanged) {
         cardProp.data = data;
         render();
@@ -506,13 +506,31 @@ const initializeIPCEvents = () => {
   );
 };
 
-const sendMouseInput = async (clickEvent: InnerClickEvent) => {
+const filterContentsFrameMessage = (event: IpcMessageEvent): ContentsFrameMessage => {
+  if (event.channel !== 'message' || !event.args || !event.args[0]) {
+    return { command: '', arg: '' };
+  }
+  const msg: ContentsFrameMessage = event.args[0];
+  if (!contentsFrameCommand.includes(msg.command)) {
+    return { command: '', arg: '' };
+  }
+  return msg;
+};
+
+const startEditorByClick = async (clickEvent: InnerClickEvent) => {
   await cardEditor.showEditor().catch((e: Error) => {
     logger.error(`Error in clicking contents: ${e.message}`);
   });
-  await cardEditor.startEdit();
+
+  // Set scroll position of editor to that of webview
+  const webview = document.getElementById('contentsFrame') as WebviewTag;
+  const scrollTop = await webview.executeJavaScript('window.scrollY');
+  const scrollLeft = await webview.executeJavaScript('window.scrollX');
+  cardEditor.setScrollPosition(scrollTop, scrollLeft);
   const offsetY = document.getElementById('titleBar')!.offsetHeight;
   ipcRenderer.invoke('send-mouse-input', cardProp.id, clickEvent.x, clickEvent.y + offsetY);
+
+  await cardEditor.startEdit();
 };
 const addDroppedImage = (fileDropEvent: FileDropEvent) => {
   /*
@@ -605,20 +623,9 @@ const addDroppedImage = (fileDropEvent: FileDropEvent) => {
 };
 
 const initializeContentsFrameEvents = () => {
-  const getMessage = (event: IpcMessageEvent): ContentsFrameMessage => {
-    if (event.channel !== 'message' || !event.args || !event.args[0]) {
-      return { command: '', arg: '' };
-    }
-    const msg: ContentsFrameMessage = event.args[0];
-    if (!contentsFrameCommand.includes(msg.command)) {
-      return { command: '', arg: '' };
-    }
-    return msg;
-  };
-
   const webview = document.getElementById('contentsFrame')! as WebviewTag;
   webview.addEventListener('ipc-message', event => {
-    const msg: ContentsFrameMessage = getMessage(event);
+    const msg: ContentsFrameMessage = filterContentsFrameMessage(event);
     switch (msg.command) {
       case 'contents-frame-loaded':
         render(['CardStyle']);
@@ -627,7 +634,7 @@ const initializeContentsFrameEvents = () => {
       case 'click-parent':
         // Click request from child frame (webview)
         if (msg.arg !== undefined) {
-          sendMouseInput(JSON.parse(msg.arg) as InnerClickEvent);
+          startEditorByClick(JSON.parse(msg.arg) as InnerClickEvent);
         }
         break;
 

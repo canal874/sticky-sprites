@@ -29,11 +29,13 @@ export interface ICardEditor {
   hideEditor(): void;
 
   startEdit(): Promise<void>;
-  endEdit(): [boolean, string];
+  endEdit(): { dataChanged: boolean; data: string };
   toggleCodeMode(): void;
   startCodeMode(): void;
   endCodeMode(): void;
 
+  getScrollPosition(): { top: number; left: number };
+  setScrollPosition(top: number, height: number): void;
   setZoom(): void;
   setSize(width?: number, height?: number): void;
   setColor(): void;
@@ -66,12 +68,13 @@ export type ContentsFrameCommand =
 // Use iterable union instead of normal union type
 // because ContentsFrameCommand is also used for runtime type check.
 export const contentsFrameCommand = [
-  'overwrite-iframe',
   'click-parent',
-  'contents-frame-loaded',
   'contents-frame-file-dropped',
-  'zoom',
+  'contents-frame-loaded',
+  'overwrite-iframe',
   'set-scrollbar-style',
+  'set-scroll-position',
+  'zoom',
 ];
 // ContentsFrameCommand is union. e.g) 'overwrite-iframe' | 'click-parent' | ...
 // Use ContentsFrameCommand to check type.

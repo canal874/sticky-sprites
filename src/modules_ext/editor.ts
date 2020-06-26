@@ -294,7 +294,7 @@ export class CardEditor implements ICardEditor {
               this._cardProp.geometry.width,
               this._cardProp.geometry.height
             );
-            const [dataChanged, data] = this.endEdit();
+            const { dataChanged, data } = this.endEdit();
             this._cardProp.data = data;
             saveCard(this._cardProp);
             render();
@@ -405,12 +405,8 @@ export class CardEditor implements ICardEditor {
     CKEDITOR.instances.editor.focus();
   };
 
-  endEdit = (): [boolean, string] => {
+  endEdit = (): { dataChanged: boolean; data: string } => {
     this._isEditing = false;
-
-    if (CKEDITOR.instances.editor && CKEDITOR.instances.editor.window) {
-      CKEDITOR.instances.editor.window.$.scrollTo(0, 0);
-    }
 
     let dataChanged = false;
     // Save data to CardProp
@@ -438,7 +434,7 @@ export class CardEditor implements ICardEditor {
     // eslint-disable-next-line no-unused-expressions
     CKEDITOR.instances.editor.getSelection()?.removeAllRanges();
 
-    return [dataChanged, data];
+    return { dataChanged, data };
   };
 
   toggleCodeMode = () => {
@@ -473,6 +469,17 @@ export class CardEditor implements ICardEditor {
     render(['EditorStyle', 'EditorRect']);
 
     CKEDITOR.instances.editor.focus();
+  };
+
+  getScrollPosition = () => {
+    const top = CKEDITOR.instances.editor.document.$.scrollingElement!.scrollTop;
+    const left = CKEDITOR.instances.editor.document.$.scrollingElement!.scrollLeft;
+    return { top, left };
+  };
+
+  setScrollPosition = (top: number, left: number) => {
+    CKEDITOR.instances.editor.document.$.scrollingElement!.scrollTop = top;
+    CKEDITOR.instances.editor.document.$.scrollingElement!.scrollLeft = left;
   };
 
   setZoom = () => {
