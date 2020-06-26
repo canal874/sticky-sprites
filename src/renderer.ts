@@ -390,6 +390,15 @@ const onload = async () => {
         webview.addEventListener('new-window', e => {
           shell.openExternal(e.url);
         });
+
+        // When trying to open URL in webview
+        const defaultSrc = webview.src;
+        webview.addEventListener('will-navigate', e => {
+          if (e.url !== defaultSrc) {
+            shell.openExternal(e.url);
+            window.location.reload();
+          }
+        });
         resolve();
       }
       else {
