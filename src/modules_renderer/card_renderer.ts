@@ -170,11 +170,7 @@ const renderCardStyle = () => {
   };
   webview.send('message', scrollbarStyleMsg);
 
-  const zoomMsg: ContentsFrameMessage = {
-    command: 'zoom',
-    arg: `${cardProp.style.zoom}`,
-  };
-  webview.send('message', zoomMsg);
+  webview.executeJavaScript(`document.body.style.zoom = '${cardProp.style.zoom}'`);
 };
 
 const renderEditorStyle = () => {
