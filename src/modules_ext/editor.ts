@@ -28,7 +28,7 @@ export class CardEditor implements ICardEditor {
 
   private _codeMode = false;
 
-  private _TOOLBAR_HEIGHT = 30;
+  private _TOOLBAR_HEIGHT = 28;
 
   private _startEditorFirstTime = true;
 
@@ -386,6 +386,7 @@ export class CardEditor implements ICardEditor {
       this._startEditorFirstTime = false;
       await this._imeWorkaround();
     }
+
     // Expand card to add toolbar.
     const expandedHeight = this._cardProp.geometry.height + this._TOOLBAR_HEIGHT;
     ipcRenderer.invoke(
@@ -494,8 +495,7 @@ export class CardEditor implements ICardEditor {
     width: number = this._cardProp.geometry.width -
       this._cardCssStyle.border.left -
       this._cardCssStyle.border.right,
-    height: number = this._cardProp.geometry.height +
-      this._TOOLBAR_HEIGHT -
+    height: number = this._cardProp.geometry.height -
       this._cardCssStyle.border.top -
       this._cardCssStyle.border.bottom -
       document.getElementById('titleBar')!.offsetHeight
@@ -516,16 +516,15 @@ export class CardEditor implements ICardEditor {
       logger.error(`Error in setSize: editor is undefined.`);
     }
 
+    const toolbar = document.getElementById('cke_1_bottom');
+    toolbar!.style.width = width + 'px';
+
     const textcolorBtn = document.getElementsByClassName('cke_button__textcolor');
     const bgcolorBtn = document.getElementsByClassName('cke_button__bgcolor');
-    if (textcolorBtn) {
-      (textcolorBtn.item(0) as HTMLElement).style.display =
-        width < 218 || height < 90 ? 'none' : 'block';
-    }
-    if (bgcolorBtn) {
-      (bgcolorBtn.item(0) as HTMLElement).style.display =
-        width < 252 || height < 90 ? 'none' : 'block';
-    }
+    (textcolorBtn!.item(0) as HTMLElement).style.display =
+      width < 218 || height < 90 ? 'none' : 'block';
+    (bgcolorBtn!.item(0) as HTMLElement).style.display =
+      width < 252 || height < 90 ? 'none' : 'block';
   };
 
   setColor = (): void => {
@@ -574,5 +573,9 @@ export class CardEditor implements ICardEditor {
         '}';
       doc.getHead().$.appendChild(style);
     }
+  };
+
+  execAfterMouseDown = (func: Function) => {
+    CKEDITOR.instances.editor.document.once('mousedown', func());
   };
 }

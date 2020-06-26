@@ -39,6 +39,8 @@ export interface ICardEditor {
   setZoom(): void;
   setSize(width?: number, height?: number): void;
   setColor(): void;
+
+  execAfterMouseDown(func: Function): void;
 }
 
 export type CardCssStyle = {

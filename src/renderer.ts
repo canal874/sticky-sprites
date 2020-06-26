@@ -10,6 +10,7 @@ import {
   BrowserWindow,
   IpcMessageEvent,
   ipcRenderer,
+  MouseInputEvent,
   remote,
   shell,
   WebviewTag,
@@ -527,10 +528,16 @@ const startEditorByClick = async (clickEvent: InnerClickEvent) => {
   const scrollTop = await webview.executeJavaScript('window.scrollY');
   const scrollLeft = await webview.executeJavaScript('window.scrollX');
   cardEditor.setScrollPosition(scrollTop, scrollLeft);
-  const offsetY = document.getElementById('titleBar')!.offsetHeight;
-  ipcRenderer.invoke('send-mouse-input', cardProp.id, clickEvent.x, clickEvent.y + offsetY);
 
-  await cardEditor.startEdit();
+  const offsetY = document.getElementById('titleBar')!.offsetHeight;
+  const leftMouseDown: MouseInputEvent = {
+    button: 'left',
+    type: 'mouseDown',
+    x: clickEvent.x,
+    y: clickEvent.y + offsetY,
+  };
+  cardEditor.execAfterMouseDown(cardEditor.startEdit);
+  ipcRenderer.invoke('send-mouse-input', cardProp.id, leftMouseDown);
 };
 const addDroppedImage = (fileDropEvent: FileDropEvent) => {
   /*

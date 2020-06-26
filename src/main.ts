@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { app, dialog, ipcMain } from 'electron';
+import { app, dialog, ipcMain, MouseInputEvent } from 'electron';
 import { selectPreferredLanguage } from 'typed-intl';
 import { logger } from './modules_common/utils';
 import translations from './modules_common/i18n';
@@ -307,15 +307,13 @@ ipcMain.handle('send-to-back', (event, id: string) => {
   return newZ;
 });
 
-ipcMain.handle('send-mouse-input', (event, id: string, x: number, y: number) => {
-  const targetCard = cards.get(id);
-  if (!targetCard) {
-    return;
+ipcMain.handle(
+  'send-mouse-input',
+  (event, id: string, mouseInputEvent: MouseInputEvent) => {
+    const targetCard = cards.get(id);
+    if (!targetCard) {
+      return;
+    }
+    targetCard.window.webContents.sendInputEvent(mouseInputEvent);
   }
-  targetCard.window.webContents.sendInputEvent({
-    type: 'mouseDown',
-    x: x,
-    y: y,
-    button: 'left',
-  });
-});
+);
