@@ -18,6 +18,7 @@ export interface ICardIO {
 export interface ICardEditor {
   readonly editorType: EditorType;
   readonly hasCodeMode: boolean;
+  isCodeMode: boolean;
   isOpened: boolean;
 
   getImageTag(id: string, src: string, width: number, height: number, alt: string): string;

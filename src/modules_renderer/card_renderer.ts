@@ -67,6 +67,8 @@ const setWindowTitle = () => {
 };
 
 const renderTitleBar = () => {
+  document.getElementById('title')!.style.width =
+    cardProp.geometry.width - cardCssStyle.border.left - cardCssStyle.border.right + 'px';
   const closeBtnLeft =
     cardProp.geometry.width -
     cardCssStyle.border.left -
@@ -79,6 +81,20 @@ const renderTitleBar = () => {
   const barwidth = closeBtnLeft - titleBarLeft;
   document.getElementById('titleBar')!.style.left = titleBarLeft + 'px';
   document.getElementById('titleBar')!.style.width = barwidth + 'px';
+
+  if (cardEditor.isOpened) {
+    document.getElementById('codeBtn')!.style.visibility = 'visible';
+    if (cardEditor.isCodeMode) {
+      document.getElementById('codeBtn')!.style.color = '#ff0000';
+    }
+    else {
+      document.getElementById('codeBtn')!.style.color = '#000000';
+    }
+  }
+  else {
+    document.getElementById('codeBtn')!.style.visibility = 'hidden';
+  }
+
   setWindowTitle();
 };
 
@@ -158,9 +174,7 @@ const renderCardStyle = () => {
 
   const uiRgba = convertHexColorToRgba(cardProp.style.uiColor);
 
-  [...document.getElementsByClassName('title-color')].forEach(node => {
-    (node as HTMLElement).style.backgroundColor = uiRgba;
-  });
+  document.getElementById('title')!.style.backgroundColor = uiRgba;
 
   const webview = document.getElementById('contentsFrame') as WebviewTag;
 

@@ -26,8 +26,6 @@ export class CardEditor implements ICardEditor {
    */
   private _ERROR_FAILED_TO_SET_DATA = 'Failed to set data.';
 
-  private _codeMode = false;
-
   private _TOOLBAR_HEIGHT = 28;
 
   private _startEditorFirstTime = true;
@@ -68,6 +66,7 @@ export class CardEditor implements ICardEditor {
   public editorType: EditorType = 'Markup'; // for testing Markup Editor Type
 
   public hasCodeMode = true;
+  public isCodeMode = false;
 
   public isOpened = false;
 
@@ -365,11 +364,11 @@ export class CardEditor implements ICardEditor {
       throw new Error('cke_editor does not exist.');
     }
 
-    render(['EditorRect', 'EditorStyle']);
-
     this._addDragAndDropEvent();
 
     this.isOpened = true;
+
+    render(['TitleBar', 'EditorRect', 'EditorStyle']);
   };
 
   hideEditor = () => {
@@ -425,7 +424,7 @@ export class CardEditor implements ICardEditor {
     setRenderOffsetHeight(0);
 
     // Reset editor color to card color
-    render(['EditorStyle']);
+    render(['TitleBar', 'EditorStyle']);
 
     const toolbar = document.getElementById('cke_1_bottom');
     if (toolbar) {
@@ -439,7 +438,7 @@ export class CardEditor implements ICardEditor {
   };
 
   toggleCodeMode = () => {
-    if (!this._codeMode) {
+    if (!this.isCodeMode) {
       this.startCodeMode();
     }
     else {
@@ -448,9 +447,10 @@ export class CardEditor implements ICardEditor {
   };
 
   startCodeMode = () => {
-    this._codeMode = true;
+    this.isCodeMode = true;
     this.startEdit();
-    document.getElementById('codeBtn')!.style.color = '#ff0000';
+    render(['TitleBar']);
+
     CKEDITOR.instances.editor.setMode('source', () => {});
     CKEDITOR.instances.editor.focus();
 
@@ -458,8 +458,8 @@ export class CardEditor implements ICardEditor {
   };
 
   endCodeMode = async () => {
-    this._codeMode = false;
-    document.getElementById('codeBtn')!.style.color = '#000000';
+    this.isCodeMode = false;
+
     CKEDITOR.instances.editor.setMode('wysiwyg', () => {});
     await this.waitUntilActivationComplete();
 
@@ -467,7 +467,7 @@ export class CardEditor implements ICardEditor {
      * Reset editor color to card color
      * and reset width and height of cke_wysiwyg_frame
      */
-    render(['EditorStyle', 'EditorRect']);
+    render(['TitleBar', 'EditorStyle', 'EditorRect']);
 
     CKEDITOR.instances.editor.focus();
   };

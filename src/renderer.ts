@@ -482,6 +482,10 @@ const initializeIPCEvents = () => {
 
     if (cardEditor.isOpened) {
       if (cardEditor.editorType === 'Markup') {
+        if (cardEditor.isCodeMode) {
+          return;
+        }
+
         cardEditor.hideEditor();
       }
       const { dataChanged, data } = cardEditor.endEdit();
