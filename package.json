@@ -5,7 +5,7 @@
   "description": "Media Stickies",
   "main": "dist/main.js",
   "scripts": {
-    "update-ckeditor": "cd ../ckeditor4/dev/builder/ && build.sh && cd ../../../media-stickies && npm run compile-clean",
+    "update-ckeditor": "rm -r 3rdParty/ckeditor && cd ../ckeditor4/dev/builder/ && build.sh && cp -r ./release/ckeditor/ ../../../media-stickies/3rdParty/ &&  cd ../../../media-stickies && npm run compile-clean",
     "compile-clean": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && cp -r assets dist/ && npm run compile",
     "compile": "npx eslint --fix --ext .ts . && tsc ",
     "start": "tsc && electron-forge start",
