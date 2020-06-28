@@ -110,6 +110,14 @@ export class Card {
       cards.delete(this.id);
     });
 
+    // Open hyperlink on external browser window
+    // by preventing to open it on new electron window
+    // when target='_blank' is set.
+    this.window.webContents.on('new-window', (e, _url) => {
+      e.preventDefault();
+      shell.openExternal(_url);
+    });
+
     this.window.on('focus', this._focusListener);
     this.window.on('blur', this._blurListener);
   }
