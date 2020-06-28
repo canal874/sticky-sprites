@@ -8,14 +8,13 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { ipcRenderer } from 'electron';
-import { CardProp } from '../modules_common/cardprop';
+import { CardProp, DRAG_IMAGE_MARGIN } from '../modules_common/cardprop';
 import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
 import { MESSAGE, render, setRenderOffsetHeight } from '../modules_renderer/card_renderer';
 import {
   alertDialog,
   convertHexColorToRgba,
   darkenHexColor,
-  getImageTag,
   logger,
   sleep,
 } from '../modules_common/utils';
@@ -27,13 +26,7 @@ export class CardEditor implements ICardEditor {
    */
   private _ERROR_FAILED_TO_SET_DATA = 'Failed to set data.';
 
-  private _codeMode = false;
-
-  private _TOOLBAR_HEIGHT = 30;
-
-  // Dragging is shaky when _DRAG_IMAGE_MARGIN is too small, especially just after loading a card.
-  //  private _DRAG_IMAGE_MARGIN = 20;
-  private _DRAG_IMAGE_MARGIN = 50;
+  private _TOOLBAR_HEIGHT = 28;
 
   private _startEditorFirstTime = true;
 
@@ -69,14 +62,25 @@ export class CardEditor implements ICardEditor {
   /**
    * Public
    */
-  public editorType: EditorType = 'WYSIWYG'; // CKEditor should be WYSIWYG Editor Type
-  // public editorType: EditorType = 'Markup'; // for testing Markup Editor Type
+  // public editorType: EditorType = 'WYSIWYG'; // CKEditor should be WYSIWYG Editor Type
+  public editorType: EditorType = 'Markup'; // for testing Markup Editor Type
 
   public hasCodeMode = true;
+  public isCodeMode = false;
 
   public isOpened = false;
 
   private _isEditing = false;
+
+  getImageTag = (
+    id: string,
+    src: string,
+    width: number,
+    height: number,
+    alt: string
+  ): string => {
+    return `<img id="${id}" src="${src}" alt="${alt}" width="${width}" height="${height}" />`;
+  };
 
   adjustEditorSizeFromImage2Plugin = (width: number, height: number) => {
     // Cancel the resizing when the card contains anything other than an image.
@@ -115,14 +119,14 @@ export class CardEditor implements ICardEditor {
     }
     width =
       width +
-      this._DRAG_IMAGE_MARGIN +
+      DRAG_IMAGE_MARGIN +
       this._cardCssStyle.border.left +
       this._cardCssStyle.border.right +
       this._cardCssStyle.padding.left +
       this._cardCssStyle.padding.right;
     height =
       height +
-      this._DRAG_IMAGE_MARGIN +
+      DRAG_IMAGE_MARGIN +
       this._cardCssStyle.border.top +
       this._cardCssStyle.border.bottom +
       this._cardCssStyle.padding.top +
@@ -150,6 +154,18 @@ export class CardEditor implements ICardEditor {
     this._cardCssStyle = _cardCssStyle;
     return new Promise<void>(resolve => {
       CKEDITOR.replace('editor');
+
+      // Set default value of link target to _blank
+      CKEDITOR.on('dialogDefinition', function (ev) {
+        var dialogName = ev.data.name;
+        var dialogDefinition = ev.data.definition;
+        if (dialogName === 'link') {
+          var targetTab = dialogDefinition.getContents('target');
+          var targetField = targetTab.get('linkTargetType');
+          targetField.default = '_blank';
+        }
+      });
+
       CKEDITOR.on('instanceReady', () => {
         // @ts-ignore
         CKEDITOR.plugins.image2.adjustEditorSize = this.adjustEditorSizeFromImage2Plugin;
@@ -232,7 +248,7 @@ export class CardEditor implements ICardEditor {
 
             let newImageWidth =
               this._cardProp.geometry.width -
-              this._DRAG_IMAGE_MARGIN -
+              (this._cardProp.data === '' ? DRAG_IMAGE_MARGIN : 0) -
               this._cardCssStyle.border.left -
               this._cardCssStyle.border.right -
               this._cardCssStyle.padding.left -
@@ -256,15 +272,20 @@ export class CardEditor implements ICardEditor {
               img.setAttribute('height', `${newImageHeight}`);
             }
 
-            this._cardProp.geometry.height =
-              (this._cardProp.data === '' ? 0 : this._cardProp.geometry.height) +
-              newImageHeight +
-              this._DRAG_IMAGE_MARGIN +
-              this._cardCssStyle.border.top +
-              this._cardCssStyle.border.bottom +
-              this._cardCssStyle.padding.top +
-              this._cardCssStyle.padding.bottom +
-              document.getElementById('titleBar')!.offsetHeight;
+            if (this._cardProp.data === '') {
+              this._cardProp.geometry.height =
+                newImageHeight +
+                DRAG_IMAGE_MARGIN +
+                this._cardCssStyle.border.top +
+                this._cardCssStyle.border.bottom +
+                this._cardCssStyle.padding.top +
+                this._cardCssStyle.padding.bottom +
+                document.getElementById('titleBar')!.offsetHeight;
+            }
+            else {
+              this._cardProp.geometry.height =
+                this._cardProp.geometry.height + newImageHeight;
+            }
 
             ipcRenderer.invoke(
               'set-window-size',
@@ -272,14 +293,14 @@ export class CardEditor implements ICardEditor {
               this._cardProp.geometry.width,
               this._cardProp.geometry.height
             );
-            const [dataChanged, data] = this.endEdit();
+            const { dataChanged, data } = this.endEdit();
             this._cardProp.data = data;
             saveCard(this._cardProp);
             render();
             // Workaround for at bug that an image cannot be resizable just after created by drag and drop.
             ipcRenderer.invoke('blurAndFocusWithSuppressFocusEvent', this._cardProp.id);
           };
-          const imgTag = getImageTag(id, file!.path, 1, 1, file!.name);
+          const imgTag = this.getImageTag(id, file!.path, 1, 1, file!.name);
           evt.data.dataValue = imgTag;
           if (this._cardProp.data === '') {
             saveCardColor(this._cardProp, '#ffffff', '#ffffff', 0.0);
@@ -295,24 +316,6 @@ export class CardEditor implements ICardEditor {
     console.debug(`showEditor: ${this._cardProp.id}`);
     if (this.isOpened) {
       return;
-    }
-
-    render(['EditorRect', 'EditorColor']);
-
-    const contents = document.getElementById('contents');
-    if (contents) {
-      contents.style.visibility = 'hidden';
-    }
-    const ckeEditor = document.getElementById('cke_editor');
-    if (ckeEditor) {
-      ckeEditor.style.visibility = 'visible';
-      const toolbar = document.getElementById('cke_1_bottom');
-      if (toolbar) {
-        toolbar.style.visibility = 'hidden';
-      }
-    }
-    else {
-      throw new Error('cke_editor does not exist.');
     }
 
     let contCounter = 0;
@@ -345,11 +348,27 @@ export class CardEditor implements ICardEditor {
       }
     }
 
-    this.setZoom(this._cardProp.style.zoom);
+    const contents = document.getElementById('contents');
+    if (contents) {
+      contents.style.visibility = 'hidden';
+    }
+    const ckeEditor = document.getElementById('cke_editor');
+    if (ckeEditor) {
+      ckeEditor.style.visibility = 'visible';
+      const toolbar = document.getElementById('cke_1_bottom');
+      if (toolbar) {
+        toolbar.style.visibility = 'hidden';
+      }
+    }
+    else {
+      throw new Error('cke_editor does not exist.');
+    }
 
     this._addDragAndDropEvent();
 
     this.isOpened = true;
+
+    render(['TitleBar', 'EditorRect', 'EditorStyle']);
   };
 
   hideEditor = () => {
@@ -360,12 +379,13 @@ export class CardEditor implements ICardEditor {
 
   startEdit = async () => {
     this._isEditing = true;
-    render(['EditorColor']);
+    render(['EditorStyle']);
 
     if (this._startEditorFirstTime) {
       this._startEditorFirstTime = false;
       await this._imeWorkaround();
     }
+
     // Expand card to add toolbar.
     const expandedHeight = this._cardProp.geometry.height + this._TOOLBAR_HEIGHT;
     ipcRenderer.invoke(
@@ -383,12 +403,9 @@ export class CardEditor implements ICardEditor {
 
     await this.waitUntilActivationComplete();
     CKEDITOR.instances.editor.focus();
-    if (this.editorType === 'Markup') {
-      this._moveCursorToBottom();
-    }
   };
 
-  endEdit = (): [boolean, string] => {
+  endEdit = (): { dataChanged: boolean; data: string } => {
     this._isEditing = false;
 
     let dataChanged = false;
@@ -407,7 +424,7 @@ export class CardEditor implements ICardEditor {
     setRenderOffsetHeight(0);
 
     // Reset editor color to card color
-    render(['EditorColor']);
+    render(['TitleBar', 'EditorStyle']);
 
     const toolbar = document.getElementById('cke_1_bottom');
     if (toolbar) {
@@ -417,11 +434,11 @@ export class CardEditor implements ICardEditor {
     // eslint-disable-next-line no-unused-expressions
     CKEDITOR.instances.editor.getSelection()?.removeAllRanges();
 
-    return [dataChanged, data];
+    return { dataChanged, data };
   };
 
   toggleCodeMode = () => {
-    if (!this._codeMode) {
+    if (!this.isCodeMode) {
       this.startCodeMode();
     }
     else {
@@ -430,9 +447,10 @@ export class CardEditor implements ICardEditor {
   };
 
   startCodeMode = () => {
-    this._codeMode = true;
+    this.isCodeMode = true;
     this.startEdit();
-    document.getElementById('codeBtn')!.style.color = '#ff0000';
+    render(['TitleBar']);
+
     CKEDITOR.instances.editor.setMode('source', () => {});
     CKEDITOR.instances.editor.focus();
 
@@ -440,8 +458,8 @@ export class CardEditor implements ICardEditor {
   };
 
   endCodeMode = async () => {
-    this._codeMode = false;
-    document.getElementById('codeBtn')!.style.color = '#000000';
+    this.isCodeMode = false;
+
     CKEDITOR.instances.editor.setMode('wysiwyg', () => {});
     await this.waitUntilActivationComplete();
 
@@ -449,14 +467,27 @@ export class CardEditor implements ICardEditor {
      * Reset editor color to card color
      * and reset width and height of cke_wysiwyg_frame
      */
-    render(['EditorColor', 'EditorRect']);
+    render(['TitleBar', 'EditorStyle', 'EditorRect']);
 
     CKEDITOR.instances.editor.focus();
   };
 
-  setZoom = (scale: number) => {
-    if (scale > 0) {
-      CKEDITOR.instances.editor.document.$.body.style.zoom = `${scale}`;
+  getScrollPosition = () => {
+    const left = CKEDITOR.instances.editor.document.$.scrollingElement!.scrollLeft;
+    const top = CKEDITOR.instances.editor.document.$.scrollingElement!.scrollTop;
+    return { left, top };
+  };
+
+  setScrollPosition = (left: number, top: number) => {
+    CKEDITOR.instances.editor.document.$.scrollingElement!.scrollLeft = left;
+    CKEDITOR.instances.editor.document.$.scrollingElement!.scrollTop = top;
+  };
+
+  setZoom = () => {
+    if (this._cardProp) {
+      if (CKEDITOR.instances.editor.document && CKEDITOR.instances.editor.document.$.body) {
+        CKEDITOR.instances.editor.document.$.body.style.zoom = `${this._cardProp.style.zoom}`;
+      }
     }
   };
 
@@ -464,8 +495,7 @@ export class CardEditor implements ICardEditor {
     width: number = this._cardProp.geometry.width -
       this._cardCssStyle.border.left -
       this._cardCssStyle.border.right,
-    height: number = this._cardProp.geometry.height +
-      this._TOOLBAR_HEIGHT -
+    height: number = this._cardProp.geometry.height -
       this._cardCssStyle.border.top -
       this._cardCssStyle.border.bottom -
       document.getElementById('titleBar')!.offsetHeight
@@ -475,25 +505,26 @@ export class CardEditor implements ICardEditor {
     if (editor) {
       CKEDITOR.instances.editor.resize(width, height);
       const iframe = document.getElementsByClassName('cke_wysiwyg_frame');
-      (iframe.item(0) as HTMLElement).style.width =
-        document.getElementById('cke_editor')!.offsetWidth + 'px';
-      (iframe.item(0) as HTMLElement).style.height =
-        document.getElementById('cke_editor')!.offsetHeight + 'px';
+      if (iframe.item && iframe.item(0)) {
+        (iframe.item(0) as HTMLElement).style.width =
+          document.getElementById('cke_editor')!.offsetWidth + 'px';
+        (iframe.item(0) as HTMLElement).style.height =
+          document.getElementById('cke_editor')!.offsetHeight + 'px';
+      }
     }
     else {
       logger.error(`Error in setSize: editor is undefined.`);
     }
 
+    const toolbar = document.getElementById('cke_1_bottom');
+    toolbar!.style.width = width + 'px';
+
     const textcolorBtn = document.getElementsByClassName('cke_button__textcolor');
     const bgcolorBtn = document.getElementsByClassName('cke_button__bgcolor');
-    if (textcolorBtn) {
-      (textcolorBtn.item(0) as HTMLElement).style.display =
-        width < 218 || height < 90 ? 'none' : 'block';
-    }
-    if (bgcolorBtn) {
-      (bgcolorBtn.item(0) as HTMLElement).style.display =
-        width < 252 || height < 90 ? 'none' : 'block';
-    }
+    (textcolorBtn!.item(0) as HTMLElement).style.display =
+      width < 218 || height < 90 ? 'none' : 'block';
+    (bgcolorBtn!.item(0) as HTMLElement).style.display =
+      width < 252 || height < 90 ? 'none' : 'block';
   };
 
   setColor = (): void => {
@@ -526,8 +557,8 @@ export class CardEditor implements ICardEditor {
       '#cke_1_contents .cke_wysiwyg_frame'
     ) as HTMLElement;
     if (contents) {
-      // contents.style.backgroundColor = backgroundRgba;
-      contents.style.background = `linear-gradient(135deg, ${backgroundRgba} 94%, ${darkerRgba})`;
+      contents.style.backgroundColor = backgroundRgba;
+      // contents.style.background = `linear-gradient(135deg, ${backgroundRgba} 94%, ${darkerRgba})`;
     }
 
     const doc = CKEDITOR.instances.editor.document;
@@ -542,5 +573,9 @@ export class CardEditor implements ICardEditor {
         '}';
       doc.getHead().$.appendChild(style);
     }
+  };
+
+  execAfterMouseDown = (func: Function) => {
+    CKEDITOR.instances.editor.document.once('mousedown', e => func());
   };
 }

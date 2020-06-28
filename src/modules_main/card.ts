@@ -19,16 +19,29 @@ import {
 } from '../modules_common/cardprop';
 import { CardIO } from '../modules_ext/io';
 import { getCurrentDate, logger } from '../modules_common/utils';
-import {
-  getGlobalFocusEventListenerPermission,
-  setGlobalFocusEventListenerPermission,
-} from './global';
 
 /**
  * Const
  */
 const MINIMUM_WINDOW_WIDTH = 180;
 const MINIMUM_WINDOW_HEIGHT = 80;
+
+/**
+ * Focus control
+ */
+let globalFocusListenerPermission = true;
+/**
+ * Set permission to call focus event listener in all renderer processes.
+ */
+export const setGlobalFocusEventListenerPermission = (
+  canExecuteFocusEventListener: boolean
+) => {
+  globalFocusListenerPermission = canExecuteFocusEventListener;
+};
+
+export const getGlobalFocusEventListenerPermission = () => {
+  return globalFocusListenerPermission;
+};
 
 /**
  * Card
@@ -62,6 +75,7 @@ export class Card {
     this.window = new BrowserWindow({
       webPreferences: {
         nodeIntegration: true,
+        webviewTag: true,
       },
       minWidth: MINIMUM_WINDOW_WIDTH,
       minHeight: MINIMUM_WINDOW_HEIGHT,
@@ -76,14 +90,6 @@ export class Card {
       icon: path.join(__dirname, '../assets/media_stickies_grad_icon.ico'),
     });
     this.window.setMaxListeners(20);
-
-    // Open hyperlink on external browser window
-    // by preventing to open it on new electron window
-    // when target='_blank' is set.
-    this.window.webContents.on('new-window', (event, _url) => {
-      event.preventDefault();
-      shell.openExternal(_url);
-    });
 
     // Resized by hand
     // will-resize is only emitted when the window is being resized manually.
@@ -102,6 +108,14 @@ export class Card {
       // in an array if your app supports multi windows, this is the time
       // when you should delete the corresponding element.
       cards.delete(this.id);
+    });
+
+    // Open hyperlink on external browser window
+    // by preventing to open it on new electron window
+    // when target='_blank' is set.
+    this.window.webContents.on('new-window', (e, _url) => {
+      e.preventDefault();
+      shell.openExternal(_url);
     });
 
     this.window.on('focus', this._focusListener);
@@ -243,7 +257,8 @@ export class Card {
     });
   };
 
-  private _focusListener = () => {
+  // @ts-ignore
+  private _focusListener = e => {
     if (this.recaptureGlobalFocusEventAfterLocalFocusEvent) {
       this.recaptureGlobalFocusEventAfterLocalFocusEvent = false;
       setGlobalFocusEventListenerPermission(true);

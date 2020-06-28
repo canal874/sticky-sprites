@@ -6,15 +6,32 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { ipcRenderer, remote, webFrame } from 'electron';
+import {
+  BrowserWindow,
+  IpcMessageEvent,
+  ipcRenderer,
+  MouseInputEvent,
+  remote,
+  shell,
+  WebviewTag,
+} from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import contextMenu from 'electron-context-menu';
 import {
   CardProp,
   CardPropSerializable,
   DEFAULT_CARD_GEOMETRY,
+  DRAG_IMAGE_MARGIN,
 } from './modules_common/cardprop';
-import { CardCssStyle, DialogButton, ICardEditor } from './modules_common/types';
+import {
+  CardCssStyle,
+  contentsFrameCommand,
+  ContentsFrameMessage,
+  FileDropEvent,
+  ICardEditor,
+  InnerClickEvent,
+} from './modules_common/types';
+import { DialogButton } from './modules_common/const';
 import { CardEditor } from './modules_ext/editor';
 import {
   getRenderOffsetHeight,
@@ -24,7 +41,7 @@ import {
   render,
   UI_COLOR_DARKENING_RATE,
 } from './modules_renderer/card_renderer';
-import { darkenHexColor, getImageTag, logger } from './modules_common/utils';
+import { darkenHexColor, logger } from './modules_common/utils';
 import {
   deleteCard,
   saveCard,
@@ -38,6 +55,11 @@ let cardCssStyle: CardCssStyle = {
   padding: { left: 0, right: 0, top: 0, bottom: 0 },
   border: { left: 0, right: 0, top: 0, bottom: 0 },
 };
+
+let isShiftDown = false;
+let isCtrlDown = false;
+let isAltDown = false;
+let isMetaDown = false;
 
 const cardEditor: ICardEditor = new CardEditor();
 
@@ -66,62 +88,65 @@ const queueSaveCommand = () => {
  * Context Menu
  */
 
-const changeCardColor = (backgroundColor: string, opacity = 1.0) => {
-  const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
-  saveCardColor(cardProp, backgroundColor, uiColor, opacity);
-  render(['Decoration', 'EditorColor']);
-};
+const setContextMenu = (win: BrowserWindow | WebviewTag) => {
+  const changeCardColor = (backgroundColor: string, opacity = 1.0) => {
+    const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
+    saveCardColor(cardProp, backgroundColor, uiColor, opacity);
+    render(['CardStyle', 'EditorStyle']);
+  };
 
-contextMenu({
-  window: remote.getCurrentWindow(),
-  showSaveImageAs: true,
-  showInspectElement: false,
-  menu: actions => [
-    actions.searchWithGoogle({}),
-    actions.separator(),
-    actions.cut({}),
-    actions.copy({}),
-    actions.paste({}),
-    actions.separator(),
-    actions.saveImageAs({}),
-    actions.separator(),
-    actions.copyLink({}),
-    actions.separator(),
-  ],
-  prepend: () => [
-    {
-      label: MESSAGE.zoomIn,
-      click: () => {
-        if (cardProp.style.zoom < 1.0) {
-          cardProp.style.zoom += 0.2;
-        }
-        else {
-          cardProp.style.zoom += 0.5;
-        }
-        if (cardProp.style.zoom > 3) {
-          cardProp.style.zoom = 3;
-        }
-        cardEditor.setZoom(cardProp.style.zoom);
-        saveCard(cardProp);
+  contextMenu({
+    window: win,
+    showSaveImageAs: true,
+    showInspectElement: false,
+    menu: actions => [
+      actions.searchWithGoogle({}),
+      actions.separator(),
+      actions.cut({}),
+      actions.copy({}),
+      actions.paste({}),
+      actions.separator(),
+      actions.saveImageAs({}),
+      actions.separator(),
+      actions.copyLink({}),
+      actions.separator(),
+    ],
+    prepend: () => [
+      {
+        label: MESSAGE.zoomIn,
+        click: () => {
+          if (cardProp.style.zoom < 1.0) {
+            cardProp.style.zoom += 0.2;
+          }
+          else {
+            cardProp.style.zoom += 0.5;
+          }
+          if (cardProp.style.zoom > 3) {
+            cardProp.style.zoom = 3;
+          }
+          render(['CardStyle', 'EditorStyle']);
+
+          saveCard(cardProp);
+        },
       },
-    },
-    {
-      label: MESSAGE.zoomOut,
-      click: () => {
-        if (cardProp.style.zoom <= 1.0) {
-          cardProp.style.zoom -= 0.2;
-        }
-        else {
-          cardProp.style.zoom -= 0.5;
-        }
-        if (cardProp.style.zoom <= 0.4) {
-          cardProp.style.zoom = 0.4;
-        }
-        cardEditor.setZoom(cardProp.style.zoom);
-        saveCard(cardProp);
+      {
+        label: MESSAGE.zoomOut,
+        click: () => {
+          if (cardProp.style.zoom <= 1.0) {
+            cardProp.style.zoom -= 0.2;
+          }
+          else {
+            cardProp.style.zoom -= 0.5;
+          }
+          if (cardProp.style.zoom <= 0.4) {
+            cardProp.style.zoom = 0.4;
+          }
+          render(['CardStyle', 'EditorStyle']);
+
+          saveCard(cardProp);
+        },
       },
-    },
-    /*
+      /*
     {
       label: MESSAGE.bringToFront,
       click: async () => {
@@ -132,125 +157,97 @@ contextMenu({
       },
     },
     */
-    {
-      label: MESSAGE.sendToBack,
-      click: async () => {
-        const newZ = await ipcRenderer.invoke('send-to-back', cardProp.id);
-        // eslint-disable-next-line require-atomic-updates
-        cardProp.geometry.z = newZ;
-        saveCard(cardProp);
+      {
+        label: MESSAGE.sendToBack,
+        click: async () => {
+          const newZ = await ipcRenderer.invoke('send-to-back', cardProp.id);
+          // eslint-disable-next-line require-atomic-updates
+          cardProp.geometry.z = newZ;
+          saveCard(cardProp);
+        },
       },
-    },
-  ],
-  append: () => [
-    {
-      label: MESSAGE.yellow,
-      click: () => {
-        changeCardColor('#ffffa0');
+    ],
+    append: () => [
+      {
+        label: MESSAGE.yellow,
+        click: () => {
+          changeCardColor('#ffffa0');
+        },
       },
-    },
-    {
-      label: MESSAGE.red,
-      click: () => {
-        changeCardColor('#ffb0b0');
+      {
+        label: MESSAGE.red,
+        click: () => {
+          changeCardColor('#ffb0b0');
+        },
       },
-    },
-    {
-      label: MESSAGE.green,
-      click: () => {
-        changeCardColor('#d0ffd0');
+      {
+        label: MESSAGE.green,
+        click: () => {
+          changeCardColor('#d0ffd0');
+        },
       },
-    },
-    {
-      label: MESSAGE.blue,
-      click: () => {
-        changeCardColor('#d0d0ff');
+      {
+        label: MESSAGE.blue,
+        click: () => {
+          changeCardColor('#d0d0ff');
+        },
       },
-    },
-    {
-      label: MESSAGE.orange,
-      click: () => {
-        changeCardColor('#ffb000');
+      {
+        label: MESSAGE.orange,
+        click: () => {
+          changeCardColor('#ffb000');
+        },
       },
-    },
-    {
-      label: MESSAGE.purple,
-      click: () => {
-        changeCardColor('#ffd0ff');
+      {
+        label: MESSAGE.purple,
+        click: () => {
+          changeCardColor('#ffd0ff');
+        },
       },
-    },
-    {
-      label: MESSAGE.white,
-      click: () => {
-        changeCardColor('#ffffff');
+      {
+        label: MESSAGE.white,
+        click: () => {
+          changeCardColor('#ffffff');
+        },
       },
-    },
-    {
-      label: MESSAGE.gray,
-      click: () => {
-        changeCardColor('#d0d0d0');
+      {
+        label: MESSAGE.gray,
+        click: () => {
+          changeCardColor('#d0d0d0');
+        },
       },
-    },
-    {
-      label: MESSAGE.transparent,
-      click: () => {
-        changeCardColor('#ffffff', 0.0);
+      {
+        label: MESSAGE.transparent,
+        click: () => {
+          changeCardColor('#ffffff', 0.0);
+        },
       },
-    },
-  ],
-});
+    ],
+  });
+};
+
+setContextMenu(remote.getCurrentWindow());
 
 /**
  * Initialize
  */
 const initializeUIEvents = () => {
-  document.addEventListener('dragover', e => {
-    e.preventDefault();
-    return false;
+  document.addEventListener('keydown', e => {
+    isShiftDown = e.shiftKey;
+    isCtrlDown = e.ctrlKey;
+    isAltDown = e.altKey;
+    isMetaDown = e.metaKey; // Windows key, Command key
   });
 
-  document.addEventListener('drop', e => {
+  document.addEventListener('keyup', e => {
+    isShiftDown = e.shiftKey;
+    isCtrlDown = e.ctrlKey;
+    isAltDown = e.altKey;
+    isMetaDown = e.metaKey; // Windows key, Command key
+  });
+
+  document.addEventListener('dragover', e => {
     e.preventDefault();
-
-    const file = e.dataTransfer?.files[0];
-
-    const dropImg = new Image();
-    if (file) {
-      dropImg.addEventListener('load', async () => {
-        const width = dropImg.naturalWidth;
-        const height = dropImg.naturalHeight;
-
-        let newWidth = cardProp.geometry.width - 15;
-        let newHeight = height;
-        if (newWidth < width) {
-          newHeight = (height * newWidth) / width;
-        }
-        else {
-          newWidth = width;
-        }
-
-        const imgTag = getImageTag(uuidv4(), file!.path, newWidth, newHeight, file!.name);
-        if (cardProp.data === '') {
-          cardProp.data = imgTag;
-          cardProp.geometry.height = newHeight + 15;
-        }
-        else {
-          cardProp.data = cardProp.data + '<br />' + imgTag;
-          cardProp.geometry.height += newHeight + 15;
-        }
-
-        await ipcRenderer.invoke(
-          'set-window-size',
-          cardProp.id,
-          cardProp.geometry.width,
-          cardProp.geometry.height
-        );
-
-        render(['TitleBar', 'Decoration', 'ContentsData']);
-        saveCard(cardProp);
-      });
-      dropImg.src = file.path;
-    }
     return false;
   });
 
@@ -272,17 +269,6 @@ const initializeUIEvents = () => {
   });
 
   // eslint-disable-next-line no-unused-expressions
-  document.getElementById('contents')?.addEventListener('click', async () => {
-    // 'contents' can be clicked when cardEditor.editorType is 'Markup'
-    if (window.getSelection()?.toString() === '') {
-      await cardEditor.showEditor().catch((e: Error) => {
-        logger.error(`Error in clicking contents: ${e.message}`);
-      });
-      cardEditor.startEdit();
-    }
-  });
-
-  // eslint-disable-next-line no-unused-expressions
   document.getElementById('codeBtn')?.addEventListener('click', () => {
     cardEditor.toggleCodeMode();
   });
@@ -293,14 +279,14 @@ const initializeUIEvents = () => {
       if (cardEditor.editorType === 'Markup') {
         cardEditor.hideEditor();
       }
-      const [dataChanged, data] = cardEditor.endEdit();
+      const { dataChanged, data } = cardEditor.endEdit();
       cardProp.data = data;
       render(['TitleBar', 'ContentsData', 'ContentsRect']);
       if (dataChanged && cardProp.data !== '') {
         saveCard(cardProp);
       }
     }
-    if (cardProp.data === '') {
+    if (cardProp.data === '' || isCtrlDown) {
       deleteCard(cardProp);
     }
     else {
@@ -387,9 +373,47 @@ const onload = async () => {
     },
   };
 
+  initializeContentsFrameEvents();
   initializeUIEvents();
 
-  await cardEditor.loadUI(cardCssStyle);
+  const webview = document.getElementById('contentsFrame')! as WebviewTag;
+  const isWebviewLoaded = new Promise((resolve, reject) => {
+    let counter = 0;
+    const checkTimer = setInterval(() => {
+      if (!webview.isLoading()) {
+        clearInterval(checkTimer);
+        setContextMenu(webview);
+
+        // Open hyperlink on external browser window
+        // by preventing to open it on new electron window
+        // when target='_blank' is set.
+        webview.addEventListener('new-window', e => {
+          shell.openExternal(e.url);
+        });
+
+        // When trying to open URL in webview
+        const defaultSrc = webview.src;
+        webview.addEventListener('will-navigate', e => {
+          if (e.url !== defaultSrc) {
+            shell.openExternal(e.url);
+            window.location.reload();
+          }
+        });
+        resolve();
+      }
+      else {
+        counter++;
+        if (counter > 100) {
+          reject(new Error('Failed to load webview'));
+        }
+      }
+    }, 100);
+  });
+
+  await Promise.all([cardEditor.loadUI(cardCssStyle), isWebviewLoaded]).catch(e => {
+    logger.error(e.message);
+  });
+
   // console.debug('(2) loadUI is completed');
   ipcRenderer.send('finish-load', id);
 };
@@ -422,6 +446,12 @@ const initializeIPCEvents = () => {
             console.error(`Error in render-card: ${e.message}`);
           });
       }
+      else {
+        ipcRenderer.invoke('finish-render-card', cardProp.id).catch((e: Error) => {
+          // logger.error does not work in ipcRenderer event.
+          console.error(`Error in render-card: ${e.message}`);
+        });
+      }
     }
   );
 
@@ -433,7 +463,7 @@ const initializeIPCEvents = () => {
     console.debug('card-focused');
 
     cardProp.status = 'Focused';
-    render(['Decoration']);
+    render(['CardStyle']);
 
     if (cardEditor.editorType === 'WYSIWYG') {
       cardEditor.startEdit();
@@ -448,26 +478,34 @@ const initializeIPCEvents = () => {
     console.debug('card-blurred');
 
     cardProp.status = 'Blurred';
-    render(['Decoration']);
+    render(['CardStyle']);
 
     if (cardEditor.isOpened) {
       if (cardEditor.editorType === 'Markup') {
+        if (cardEditor.isCodeMode) {
+          return;
+        }
+
         cardEditor.hideEditor();
       }
-      const [dataChanged, data] = cardEditor.endEdit();
+      const { dataChanged, data } = cardEditor.endEdit();
       if (dataChanged) {
         cardProp.data = data;
         render();
         saveCard(cardProp);
       }
+
+      const { left, top } = cardEditor.getScrollPosition();
+      const webview = document.getElementById('contentsFrame') as WebviewTag;
+      webview.executeJavaScript(`window.scrollTo(${left}, ${top})`);
     }
   });
 
   ipcRenderer.on(
     'resize-by-hand',
     (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
-      cardProp.geometry.width = newBounds.width + getRenderOffsetWidth();
-      cardProp.geometry.height = newBounds.height + getRenderOffsetHeight();
+      cardProp.geometry.width = Math.round(newBounds.width + getRenderOffsetWidth());
+      cardProp.geometry.height = Math.round(newBounds.height + getRenderOffsetHeight());
 
       render(['TitleBar', 'ContentsRect', 'EditorRect']);
 
@@ -478,12 +516,162 @@ const initializeIPCEvents = () => {
   ipcRenderer.on(
     'move-by-hand',
     (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
-      cardProp.geometry.x = newBounds.x;
-      cardProp.geometry.y = newBounds.y;
+      cardProp.geometry.x = Math.round(newBounds.x);
+      cardProp.geometry.y = Math.round(newBounds.y);
 
       queueSaveCommand();
     }
   );
+};
+
+const filterContentsFrameMessage = (event: IpcMessageEvent): ContentsFrameMessage => {
+  if (event.channel !== 'message' || !event.args || !event.args[0]) {
+    return { command: '', arg: '' };
+  }
+  const msg: ContentsFrameMessage = event.args[0];
+  if (!contentsFrameCommand.includes(msg.command)) {
+    return { command: '', arg: '' };
+  }
+  return msg;
+};
+
+const startEditorByClick = async (clickEvent: InnerClickEvent) => {
+  await cardEditor.showEditor().catch((e: Error) => {
+    logger.error(`Error in clicking contents: ${e.message}`);
+  });
+
+  // Set scroll position of editor to that of webview
+  const webview = document.getElementById('contentsFrame') as WebviewTag;
+  const scrollTop = await webview.executeJavaScript('window.scrollY');
+  const scrollLeft = await webview.executeJavaScript('window.scrollX');
+  cardEditor.setScrollPosition(scrollLeft, scrollTop);
+
+  const offsetY = document.getElementById('titleBar')!.offsetHeight;
+  const leftMouseDown: MouseInputEvent = {
+    button: 'left',
+    type: 'mouseDown',
+    x: clickEvent.x,
+    y: clickEvent.y + offsetY,
+  };
+  cardEditor.execAfterMouseDown(cardEditor.startEdit);
+  ipcRenderer.invoke('send-mouse-input', cardProp.id, leftMouseDown);
+};
+const addDroppedImage = (fileDropEvent: FileDropEvent) => {
+  /*
+   * Must sanitize params from webview
+   * - fileDropEvent.path is checked whether it is correct path or not
+   *   by using dropImg.src = fileDropEvent.path;
+   *   Incorrect path cannot be loaded.
+   * - Break 'onXXX=' event format in fileDropEvent.name by replacing '=' with '-'.
+   */
+  fileDropEvent.name = fileDropEvent.name.replace('=', '-');
+
+  const dropImg = new Image();
+
+  dropImg.addEventListener('load', async () => {
+    let imageOnly = false;
+    if (cardProp.data === '') {
+      imageOnly = true;
+    }
+    const width = dropImg.naturalWidth;
+    const height = dropImg.naturalHeight;
+
+    let newImageWidth =
+      cardProp.geometry.width -
+      (imageOnly ? DRAG_IMAGE_MARGIN : 0) -
+      cardCssStyle.border.left -
+      cardCssStyle.border.right -
+      cardCssStyle.padding.left -
+      cardCssStyle.padding.right;
+
+    let newImageHeight = height;
+    if (newImageWidth < width) {
+      newImageHeight = (height * newImageWidth) / width;
+    }
+    else {
+      newImageWidth = width;
+    }
+
+    newImageWidth = Math.floor(newImageWidth);
+    newImageHeight = Math.floor(newImageHeight);
+
+    const imgTag = cardEditor.getImageTag(
+      uuidv4(),
+      fileDropEvent.path,
+      newImageWidth,
+      newImageHeight,
+      fileDropEvent.name
+    );
+
+    if (imageOnly) {
+      cardProp.geometry.height =
+        newImageHeight +
+        DRAG_IMAGE_MARGIN +
+        cardCssStyle.border.top +
+        cardCssStyle.border.bottom +
+        cardCssStyle.padding.top +
+        cardCssStyle.padding.bottom +
+        document.getElementById('titleBar')!.offsetHeight;
+
+      cardProp.data = imgTag;
+    }
+    else {
+      cardProp.geometry.height = cardProp.geometry.height + newImageHeight;
+
+      cardProp.data = cardProp.data + '<br />' + imgTag;
+    }
+
+    await ipcRenderer.invoke(
+      'set-window-size',
+      cardProp.id,
+      cardProp.geometry.width,
+      cardProp.geometry.height
+    );
+
+    if (imageOnly) {
+      saveCardColor(cardProp, '#ffffff', '#ffffff', 0.0);
+    }
+    else {
+      saveCard(cardProp);
+    }
+    render(['TitleBar', 'CardStyle', 'ContentsData', 'ContentsRect']);
+
+    ipcRenderer.invoke('focus', cardProp.id);
+    await cardEditor.showEditor().catch((err: Error) => {
+      logger.error(`Error in loading image: ${err.message}`);
+    });
+    cardEditor.startEdit();
+  });
+
+  dropImg.src = fileDropEvent.path;
+};
+
+const initializeContentsFrameEvents = () => {
+  const webview = document.getElementById('contentsFrame')! as WebviewTag;
+  webview.addEventListener('ipc-message', event => {
+    const msg: ContentsFrameMessage = filterContentsFrameMessage(event);
+    switch (msg.command) {
+      case 'contents-frame-loaded':
+        render(['CardStyle']);
+        break;
+
+      case 'click-parent':
+        // Click request from child frame (webview)
+        if (msg.arg !== undefined) {
+          startEditorByClick(JSON.parse(msg.arg) as InnerClickEvent);
+        }
+        break;
+
+      case 'contents-frame-file-dropped':
+        if (msg.arg !== undefined) {
+          addDroppedImage(JSON.parse(msg.arg) as FileDropEvent);
+        }
+        break;
+
+      default:
+        break;
+    }
+  });
 };
 
 initializeIPCEvents();

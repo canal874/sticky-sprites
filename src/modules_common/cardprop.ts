@@ -8,6 +8,10 @@
 
 import { getCurrentDateAndTime } from './utils';
 
+// Dragging is shaky when _DRAG_IMAGE_MARGIN is too small, especially just after loading a card.
+//  private _DRAG_IMAGE_MARGIN = 20;
+export const DRAG_IMAGE_MARGIN = 50;
+
 export type Geometry = {
   x: number;
   y: number;
@@ -60,7 +64,13 @@ export class CardProp implements CardBase {
       modifiedDate: getCurrentDateAndTime(),
     },
     public status: CardStatus = 'Blurred'
-  ) {}
+  ) {
+    this.geometry.x = Math.round(this.geometry.x);
+    this.geometry.y = Math.round(this.geometry.y);
+    this.geometry.z = Math.round(this.geometry.z);
+    this.geometry.width = Math.round(this.geometry.width);
+    this.geometry.height = Math.round(this.geometry.height);
+  }
 
   static getPlainText = (data: string) => {
     if (data === '') {

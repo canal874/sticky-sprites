@@ -6,11 +6,11 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, WebviewTag } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
-import { CardCssStyle, ICardEditor } from '../modules_common/types';
-import { convertHexColorToRgba } from '../modules_common/utils';
-import { Messages } from '../modules_common/base.msg';
+import { CardCssStyle, ContentsFrameMessage, ICardEditor } from '../modules_common/types';
+import { convertHexColorToRgba, darkenHexColor } from '../modules_common/utils';
+import { Messages } from '../modules_common/i18n';
 
 export const UI_COLOR_DARKENING_RATE = 0.8;
 
@@ -54,11 +54,11 @@ export const initCardRenderer = (
 };
 
 export type CardRenderOptions =
-  | 'Decoration'
   | 'TitleBar'
+  | 'CardStyle'
   | 'ContentsData'
   | 'ContentsRect'
-  | 'EditorColor'
+  | 'EditorStyle'
   | 'EditorRect';
 
 const setWindowTitle = () => {
@@ -67,6 +67,8 @@ const setWindowTitle = () => {
 };
 
 const renderTitleBar = () => {
+  document.getElementById('title')!.style.width =
+    cardProp.geometry.width - cardCssStyle.border.left - cardCssStyle.border.right + 'px';
   const closeBtnLeft =
     cardProp.geometry.width -
     cardCssStyle.border.left -
@@ -79,11 +81,48 @@ const renderTitleBar = () => {
   const barwidth = closeBtnLeft - titleBarLeft;
   document.getElementById('titleBar')!.style.left = titleBarLeft + 'px';
   document.getElementById('titleBar')!.style.width = barwidth + 'px';
+
+  if (cardEditor.isOpened) {
+    document.getElementById('codeBtn')!.style.visibility = 'visible';
+    if (cardEditor.isCodeMode) {
+      document.getElementById('codeBtn')!.style.color = '#ff0000';
+    }
+    else {
+      document.getElementById('codeBtn')!.style.color = '#000000';
+    }
+  }
+  else {
+    document.getElementById('codeBtn')!.style.visibility = 'hidden';
+  }
+
   setWindowTitle();
 };
 
 const renderContentsData = () => {
-  document.getElementById('contents')!.innerHTML = cardProp.data;
+  // Script and CSS loaded from contents_frame.html are remained after document.write().
+  const html = `<!DOCTYPE html>
+  <html>
+    <head>
+      <link href='../css/ckeditor-media-stickies-contents.css' type='text/css' rel='stylesheet' />
+      <script> var exports = {}; </script>
+      <script type='text/javascript' src='contents_frame.js'></script>
+    </head>
+    <body>
+      ${cardProp.data}
+    </body>
+  </html>`;
+
+  const msg: ContentsFrameMessage = {
+    command: 'overwrite-iframe',
+    arg: html,
+  };
+  const webview = document.getElementById('contentsFrame') as WebviewTag;
+  /*
+  if (!webview.isDevToolsOpened()) {
+    webview.openDevTools();
+  }
+  */
+  webview.send('message', msg);
 };
 
 const renderContentsRect = () => {
@@ -106,7 +145,7 @@ const renderContentsRect = () => {
     'px';
 };
 
-const renderCardDecoration = () => {
+const renderCardStyle = () => {
   if (cardProp.status === 'Focused') {
     document.getElementById('card')!.style.border = '3px solid red';
   }
@@ -124,17 +163,35 @@ const renderCardDecoration = () => {
     cardProp.style.backgroundColor,
     cardProp.style.opacity
   );
-  document.getElementById('contents')!.style.backgroundColor = backgroundRgba;
+  // document.getElementById('contents')!.style.backgroundColor = backgroundRgba;
+  const darkerRgba = convertHexColorToRgba(
+    darkenHexColor(cardProp.style.backgroundColor, 0.95),
+    cardProp.style.opacity
+  );
+  document.getElementById(
+    'contents'
+  )!.style.background = `linear-gradient(135deg, ${backgroundRgba} 94%, ${darkerRgba})`;
 
-  const titleRgba = convertHexColorToRgba(cardProp.style.uiColor);
+  const uiRgba = convertHexColorToRgba(cardProp.style.uiColor);
 
-  [...document.getElementsByClassName('title-color')].forEach(node => {
-    (node as HTMLElement).style.backgroundColor = titleRgba;
-  });
+  document.getElementById('title')!.style.backgroundColor = uiRgba;
+
+  const webview = document.getElementById('contentsFrame') as WebviewTag;
+
+  const scrollbarStyleMsg: ContentsFrameMessage = {
+    command: 'set-scrollbar-style',
+    arg: { backgroundRgba: backgroundRgba, uiRgba: uiRgba },
+  };
+  webview.send('message', scrollbarStyleMsg);
+
+  webview.executeJavaScript(
+    `if(document.body) document.body.style.zoom = '${cardProp.style.zoom}'`
+  );
 };
 
-const renderEditorColor = () => {
+const renderEditorStyle = () => {
   cardEditor.setColor();
+  cardEditor.setZoom();
 };
 
 const renderEditorRect = () => {
@@ -152,8 +209,8 @@ export const render = (
     'TitleBar',
     'ContentsData',
     'ContentsRect',
-    'Decoration',
-    'EditorColor',
+    'CardStyle',
+    'EditorStyle',
     'EditorRect',
   ]
 ) => {
@@ -161,8 +218,8 @@ export const render = (
     if (opt === 'TitleBar') renderTitleBar();
     else if (opt === 'ContentsData') renderContentsData();
     else if (opt === 'ContentsRect') renderContentsRect();
-    else if (opt === 'Decoration') renderCardDecoration();
-    else if (opt === 'EditorColor') renderEditorColor();
+    else if (opt === 'CardStyle') renderCardStyle();
+    else if (opt === 'EditorStyle') renderEditorStyle();
     else if (opt === 'EditorRect') renderEditorRect();
   }
 };

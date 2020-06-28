@@ -1,17 +1,17 @@
 {
   "name": "media-stickies",
   "productName": "Media Stickies",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Media Stickies",
   "main": "dist/main.js",
   "scripts": {
-    "compile-clean": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && cp -r assets dist/ && npx eslint --fix --ext .ts .  && tsc",
-    "compile": "npx eslint --fix --ext .ts . && tsc",
-    "compile-quick": "tsc",
+    "update-ckeditor": "rm -r 3rdParty/ckeditor && cd ../ckeditor4/dev/builder/ && build.sh && cp -r ./release/ckeditor/ ../../../media-stickies/3rdParty/ &&  cd ../../../media-stickies && npm run compile-clean",
+    "compile-clean": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && cp -r assets dist/ && npm run compile",
+    "compile": "npx eslint --fix --ext .ts . && tsc ",
     "start": "tsc && electron-forge start",
-    "package": "npx eslint --fix --ext .ts . && electron-forge package",
-    "make": "rm -r dist && cp -r html dist && cp -r 3rdParty/* dist/ && cp -r assets dist/ && npx eslint --fix --ext .ts . && tsc && electron-forge make",
-    "publish": "npx eslint --fix --ext .ts . && electron-forge publish",
+    "package": "npm run compile && electron-forge package",
+    "make": "npm run compile-clean && electron-forge make",
+    "publish": "npm run compile-clean && electron-forge publish",
     "lint": "eslint --ext .ts ."
   },
   "keywords": [],
@@ -65,6 +65,7 @@
     "eslint": "^6.8.0",
     "eslint-config-standardize": "^0.6.1",
     "eslint-plugin-prettierx": "^0.12.0",
+    "rexreplace": "^6.0.1",
     "typescript": "^3.8.3"
   },
   "dependencies": {

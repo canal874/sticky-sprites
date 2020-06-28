@@ -18,7 +18,10 @@ export interface ICardIO {
 export interface ICardEditor {
   readonly editorType: EditorType;
   readonly hasCodeMode: boolean;
+  isCodeMode: boolean;
   isOpened: boolean;
+
+  getImageTag(id: string, src: string, width: number, height: number, alt: string): string;
 
   loadUI(cardCssStyle: CardCssStyle): Promise<void>; // A Promise resolves when required initialization is finished.
   setCard(prop: CardProp): void; // Loading a card after loadUI().
@@ -26,15 +29,19 @@ export interface ICardEditor {
   showEditor(): Promise<void>;
   hideEditor(): void;
 
-  startEdit(): void;
-  endEdit(): [boolean, string];
+  startEdit(): Promise<void>;
+  endEdit(): { dataChanged: boolean; data: string };
   toggleCodeMode(): void;
   startCodeMode(): void;
   endCodeMode(): void;
 
-  setZoom(scale: number): void;
+  getScrollPosition(): { left: number; top: number };
+  setScrollPosition(height: number, top: number): void;
+  setZoom(): void;
   setSize(width?: number, height?: number): void;
   setColor(): void;
+
+  execAfterMouseDown(func: Function): void;
 }
 
 export type CardCssStyle = {
@@ -54,8 +61,40 @@ export type CardCssStyle = {
 
 export type EditorType = 'WYSIWYG' | 'Markup';
 
-export const DialogButton = {
-  Error: -1,
-  Default: 0,
-  Cancel: 1,
+/*
+export type ContentsFrameCommand =
+  | 'overwrite-iframe'
+  | 'click-parent'
+  | 'contents-frame-loaded'
+  | 'contents-frame-file-dropped';
+*/
+// Use iterable union instead of normal union type
+// because ContentsFrameCommand is also used for runtime type check.
+export const contentsFrameCommand = [
+  'click-parent',
+  'contents-frame-file-dropped',
+  'contents-frame-loaded',
+  'overwrite-iframe',
+  'set-scrollbar-style',
+  'zoom',
+];
+// ContentsFrameCommand is union. e.g) 'overwrite-iframe' | 'click-parent' | ...
+// Use ContentsFrameCommand to check type.
+// Use below to iterate ContentsFrameCommands:
+//   for (const cmd of contentsFrameCommand) { ... }
+type ContentsFrameCommand = typeof contentsFrameCommand[number];
+
+export type InnerClickEvent = {
+  x: number;
+  y: number;
+};
+
+export type FileDropEvent = {
+  name: string;
+  path: string;
+};
+
+export type ContentsFrameMessage = {
+  command: ContentsFrameCommand;
+  arg: any;
 };
