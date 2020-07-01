@@ -58,7 +58,7 @@ group Promise.all(Card.render()[])
         BrowserWindow -> ICardEditor: new
         activate ICardEditor
 
-        group Promise.all([loadUI(),isWebviewLoaded])    
+        group Promise.all([loadUI(),waitWebviewLoading()])    
         BrowserWindow ->> ICardEditor: loadUI():Promise
           rnote Right BrowserWindow: Check if editor is loaded
           activate BrowserWindow #6060f0
@@ -70,7 +70,7 @@ group Promise.all(Card.render()[])
             BrowserWindow <-- ICardEditor: resolve()
           deactivate BrowserWindow
 
-        BrowserWindow ->> Webview: isWebviewLoaded: Promise\n(Checking isLoading())
+        BrowserWindow ->> Webview: waitWebviewLoading(): Promise\n(Checking isLoading())
           rnote Right BrowserWindow: Check if webview is loaded
           activate BrowserWindow #6060f0
         BrowserWindow <-- BrowserWindow: resolve()      
