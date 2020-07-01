@@ -636,6 +636,13 @@ const initializeContentsFrameEvents = () => {
 
   setContextMenu(webview);
 
+  webview.addEventListener('did-finish-load', e => {
+    // cardProp is empty before the card is initialized.
+    if (!cardProp.isEmpty) {
+      render(['ContentsData']);
+    }
+  });
+
   // Open hyperlink on external browser window
   // by preventing to open it on new electron window
   // when target='_blank' is set.

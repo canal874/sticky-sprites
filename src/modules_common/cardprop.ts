@@ -54,6 +54,7 @@ export const DEFAULT_CARD_STYLE: CardStyle = {
 };
 
 export class CardProp implements CardBase {
+  public isEmpty = false;
   constructor (
     public id: string = '',
     public data: string = '',
@@ -70,6 +71,9 @@ export class CardProp implements CardBase {
     this.geometry.z = Math.round(this.geometry.z);
     this.geometry.width = Math.round(this.geometry.width);
     this.geometry.height = Math.round(this.geometry.height);
+    if (id === '') {
+      this.isEmpty = true;
+    }
   }
 
   static getPlainText = (data: string) => {
