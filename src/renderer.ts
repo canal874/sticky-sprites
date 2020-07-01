@@ -318,6 +318,25 @@ const initializeUIEvents = () => {
   });
 };
 
+const waitWebviewLoading = () => {
+  return new Promise((resolve, reject) => {
+    const webview = document.getElementById('contentsFrame')! as WebviewTag;
+    let counter = 0;
+    const checkTimer = setInterval(() => {
+      if (!webview.isLoading()) {
+        clearInterval(checkTimer);
+        resolve();
+      }
+      else {
+        counter++;
+        if (counter > 100) {
+          reject(new Error('Failed to load webview'));
+        }
+      }
+    }, 100);
+  });
+};
+
 const onload = async () => {
   window.removeEventListener('load', onload, false);
 
@@ -376,41 +395,7 @@ const onload = async () => {
   initializeContentsFrameEvents();
   initializeUIEvents();
 
-  const webview = document.getElementById('contentsFrame')! as WebviewTag;
-  const isWebviewLoaded = new Promise((resolve, reject) => {
-    let counter = 0;
-    const checkTimer = setInterval(() => {
-      if (!webview.isLoading()) {
-        clearInterval(checkTimer);
-        setContextMenu(webview);
-
-        // Open hyperlink on external browser window
-        // by preventing to open it on new electron window
-        // when target='_blank' is set.
-        webview.addEventListener('new-window', e => {
-          shell.openExternal(e.url);
-        });
-
-        // When trying to open URL in webview
-        const defaultSrc = webview.src;
-        webview.addEventListener('will-navigate', e => {
-          if (e.url !== defaultSrc) {
-            shell.openExternal(e.url);
-            window.location.reload();
-          }
-        });
-        resolve();
-      }
-      else {
-        counter++;
-        if (counter > 100) {
-          reject(new Error('Failed to load webview'));
-        }
-      }
-    }, 100);
-  });
-
-  await Promise.all([cardEditor.loadUI(cardCssStyle), isWebviewLoaded]).catch(e => {
+  await Promise.all([cardEditor.loadUI(cardCssStyle), waitWebviewLoading()]).catch(e => {
     logger.error(e.message);
   });
 
@@ -648,6 +633,25 @@ const addDroppedImage = (fileDropEvent: FileDropEvent) => {
 
 const initializeContentsFrameEvents = () => {
   const webview = document.getElementById('contentsFrame')! as WebviewTag;
+
+  setContextMenu(webview);
+
+  // Open hyperlink on external browser window
+  // by preventing to open it on new electron window
+  // when target='_blank' is set.
+  webview.addEventListener('new-window', e => {
+    shell.openExternal(e.url);
+  });
+
+  // When trying to open URL in webview
+  const defaultSrc = webview.src;
+  webview.addEventListener('will-navigate', e => {
+    if (e.url !== defaultSrc) {
+      shell.openExternal(e.url);
+      webview.reload();
+    }
+  });
+
   webview.addEventListener('ipc-message', event => {
     const msg: ContentsFrameMessage = filterContentsFrameMessage(event);
     switch (msg.command) {
