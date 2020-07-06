@@ -349,8 +349,8 @@ const waitWebviewLoading = () => {
 const onload = async () => {
   window.removeEventListener('load', onload, false);
 
-  const url = window.location.search;
-  const arr = url.slice(1).split('&');
+  const loc = window.location.search;
+  const arr = loc.slice(1).split('&');
   const params: { [key: string]: string } = {};
   for (var i = 0; i < arr.length; i++) {
     const pair = arr[i].split('=');
@@ -415,7 +415,7 @@ const onload = async () => {
   });
 */
   console.debug('(2) loadUI is completed');
-  ipcRenderer.send('finish-load', id);
+  ipcRenderer.send('finish-load-' + id);
 };
 
 const initializeIPCEvents = () => {
