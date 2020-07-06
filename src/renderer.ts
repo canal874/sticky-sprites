@@ -337,6 +337,23 @@ const waitWebviewLoading = () => {
   });
 };
 
+const onready = () => {
+  // case 3)
+  const url = window.location.search;
+  const arr = url.slice(1).split('&');
+  const params: { [key: string]: string } = {};
+  for (var i = 0; i < arr.length; i++) {
+    const pair = arr[i].split('=');
+    params[pair[0]] = pair[1];
+  }
+  const id = params.id;
+  if (!id) {
+    console.error('id parameter is not given in URL');
+    return;
+  }
+  ipcRenderer.send('ready-' + id);
+};
+
 const onload = async () => {
   window.removeEventListener('load', onload, false);
 
@@ -392,6 +409,8 @@ const onload = async () => {
     },
   };
 
+  // case 2) ipcRenderer.send('finish-load', id);
+
   initializeContentsFrameEvents();
   initializeUIEvents();
 
@@ -399,8 +418,10 @@ const onload = async () => {
     logger.error(e.message);
   });
 
+  ipcRenderer.send('finish-load-' + id);
+  // case 1)
+  // ipcRenderer.send('finish-load', id);
   // console.debug('(2) loadUI is completed');
-  ipcRenderer.send('finish-load', id);
 };
 
 const initializeIPCEvents = () => {
@@ -686,4 +707,5 @@ const initializeContentsFrameEvents = () => {
 };
 
 initializeIPCEvents();
+window.document.addEventListener('DOMContentLoaded', onready, false);
 window.addEventListener('load', onload, false);

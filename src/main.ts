@@ -79,9 +79,14 @@ ipcMain.handle('finish-render-card', (event, id: string) => {
 ipcMain.handle('create-card', async (event, propTemplate: CardPropSerializable) => {
   const card = new Card('', propTemplate);
   cards.set(card.id, card);
-  await card.render().catch((e: Error) => {
-    logger.error(`Error in createCard(): ${e.message}`);
+  await card.loadData().catch((e: Error) => {
+    logger.error(`Error in loadData() of createCard(): ${e.message}`);
   });
+  await card.loadHTML().catch((e: Error) => {
+    logger.error(`Error in loadHTML() of createCard(): ${e.message}`);
+  });
+  card.renderCard(card.prop);
+
   return card.id;
 });
 
@@ -117,35 +122,59 @@ app.on('ready', async () => {
       return [];
     });
 
-  const renderers = [];
+  const loaders = [];
   for (const card of cardArray) {
     cards.set(card.id, card);
-    renderers.push(
-      card.render().catch((e: Error) => {
+    loaders.push(
+      card.loadData().catch((e: Error) => {
         logger.error(`Error while loading card in ready event: ${e.message}`);
       })
     );
   }
-  Promise.all(renderers)
-    .then(() => {
-      logger.debug('All cards are rendered.');
-      const backToFront = [...cards.keys()].sort((a, b) => {
-        if (cards.get(a)!.prop.geometry.z < cards.get(b)!.prop.geometry.z) {
-          return -1;
-        }
-        else if (cards.get(a)!.prop.geometry.z > cards.get(b)!.prop.geometry.z) {
-          return 1;
-        }
-        return 0;
-      });
+  await Promise.all(loaders);
 
-      for (const key of backToFront) {
-        cards.get(key)!.window.moveTop();
+  for (const card of cardArray) {
+    // eslint-disable-next-line no-await-in-loop
+    await card.loadHTML();
+  }
+
+  await new Promise(resolve => {
+    const checkTimer = setInterval(() => {
+      let completed = true;
+      for (const card of cardArray) {
+        if (!card.loadCompleted) {
+          completed = false;
+          break;
+        }
       }
-    })
-    .catch((e: Error) => {
-      logger.error(`Error while rendering cards in ready event: ${e.message}`);
-    });
+      if (completed) {
+        clearInterval(checkTimer);
+        resolve();
+      }
+    }, 200);
+  });
+
+  const renderer = [];
+  for (const card of cardArray) {
+    renderer.push(card.renderCard(card.prop));
+  }
+  await Promise.all(renderer).catch((e: Error) => {
+    logger.error(`Error while rendering cards in ready event: ${e.message}`);
+  });
+  const backToFront = [...cards.keys()].sort((a, b) => {
+    if (cards.get(a)!.prop.geometry.z < cards.get(b)!.prop.geometry.z) {
+      return -1;
+    }
+    else if (cards.get(a)!.prop.geometry.z > cards.get(b)!.prop.geometry.z) {
+      return 1;
+    }
+    return 0;
+  });
+
+  for (const key of backToFront) {
+    cards.get(key)!.window.moveTop();
+  }
+  logger.debug(`Completed to load ${renderer.length} cards`);
 });
 
 /**

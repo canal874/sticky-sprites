@@ -62,6 +62,7 @@ export class Card {
   public suppressBlurEventOnce = false;
   public recaptureGlobalFocusEventAfterLocalFocusEvent = false;
 
+  public loadCompleted = false;
   public renderingCompleted = false;
 
   public loadOrCreateCardData: () => Promise<CardProp>;
@@ -122,19 +123,11 @@ export class Card {
     this.window.on('blur', this._blurListener);
   }
 
-  public render = async () => {
-    const [, , _prop] = await Promise.all([
-      this._readyToShow(),
-      this._loadHTML(),
-      this.loadOrCreateCardData(),
-    ]).catch((e: Error) => {
-      throw new Error(`Cannot load card: ${this.id}: ${e.message}`);
-    });
-    this.prop = _prop;
-    await this._renderCard(_prop);
+  public loadData = async () => {
+    this.prop = await this.loadOrCreateCardData();
   };
 
-  private _renderCard = (_prop: CardProp) => {
+  public renderCard = (_prop: CardProp) => {
     return new Promise(resolve => {
       this.window.setSize(_prop.geometry.width, _prop.geometry.height);
       this.window.setPosition(_prop.geometry.x, _prop.geometry.y);
@@ -167,21 +160,26 @@ export class Card {
     }
   };
 
-  private _loadHTML: () => Promise<void> = () => {
+  public loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
-      const finishLoadListener = (event: Electron.IpcMainEvent, fromId: string) => {
-        if (fromId === this.id) {
-          // logger.debug('loadHTML  ' + fromId);
+      const finishLoadListener = (event: Electron.IpcMainEvent) => {
+        // logger.debug('loadHTML  ' + fromId);
 
-          // Don't use 'did-finish-load' event.
-          // loadHTML resolves after loading HTML and processing required script are finished.
-          //     this.window.webContents.on('did-finish-load', () => {
-          ipcMain.off('finish-load', finishLoadListener);
-          ipcMain.on('finish-load', this._finishReloadListener);
-          resolve();
-        }
+        // Don't use 'did-finish-load' event.
+        // loadHTML resolves after loading HTML and processing required script are finished.
+        //     this.window.webContents.on('did-finish-load', () => {
+        ipcMain.off('finish-load-' + this.id, finishLoadListener);
+        ipcMain.on('finish-load', this._finishReloadListener);
+        this.loadCompleted = true;
       };
-      ipcMain.on('finish-load', finishLoadListener);
+      ipcMain.on('finish-load-' + this.id, finishLoadListener);
+
+      const readyLoadListener = (event: Electron.IpcMainEvent) => {
+        ipcMain.off('ready-' + this.id, readyLoadListener);
+        resolve();
+      };
+      ipcMain.on('ready-' + this.id, readyLoadListener);
+
       this.window.webContents.on(
         'did-fail-load',
         (event, errorCode, errorDescription, validatedURL) => {
