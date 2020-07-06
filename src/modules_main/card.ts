@@ -86,10 +86,9 @@ export class Card {
 
       maximizable: false,
       fullscreenable: false,
-
       icon: path.join(__dirname, '../assets/media_stickies_grad_icon.ico'),
     });
-    this.window.setMaxListeners(20);
+    this.window.setMaxListeners(200);
 
     // Resized by hand
     // will-resize is only emitted when the window is being resized manually.
@@ -123,23 +122,27 @@ export class Card {
   }
 
   public render = async () => {
-    const [, , _prop] = await Promise.all([
+    this.prop = await this.loadOrCreateCardData();
+    /*    const [, _prop] = await Promise.all([
       this._readyToShow(),
-      this._loadHTML(),
+      // this._loadHTML(),
       this.loadOrCreateCardData(),
     ]).catch((e: Error) => {
       throw new Error(`Cannot load card: ${this.id}: ${e.message}`);
     });
     this.prop = _prop;
-    await this._renderCard(_prop);
+    //    await this._renderCard(_prop);
+    */
   };
 
-  private _renderCard = (_prop: CardProp) => {
+  public renderCard = (_prop: CardProp) => {
+    //  private _renderCard = (_prop: CardProp) => {
     return new Promise(resolve => {
       this.window.setSize(_prop.geometry.width, _prop.geometry.height);
       this.window.setPosition(_prop.geometry.x, _prop.geometry.y);
       // logger.debug(`renderCard in main: ${JSON.stringify(_prop.toObject())}`);
       logger.debug(`renderCard in main [${_prop.id}] ${_prop.data.substr(0, 40)}`);
+
       this.window.showInactive();
       this.window.webContents.send('render-card', _prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
       const checkTimer = setInterval(() => {
@@ -167,11 +170,12 @@ export class Card {
     }
   };
 
-  private _loadHTML: () => Promise<void> = () => {
+  public loadHTML: () => Promise<void> = () => {
+    //  private _loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
       const finishLoadListener = (event: Electron.IpcMainEvent, fromId: string) => {
         if (fromId === this.id) {
-          // logger.debug('loadHTML  ' + fromId);
+          logger.debug('loadHTML  ' + fromId);
 
           // Don't use 'did-finish-load' event.
           // loadHTML resolves after loading HTML and processing required script are finished.
@@ -185,9 +189,11 @@ export class Card {
       this.window.webContents.on(
         'did-fail-load',
         (event, errorCode, errorDescription, validatedURL) => {
+          logger.error('loadHTML ERROR: ' + this.id + ', ' + errorDescription);
           reject(new Error(`Error in loadHTML: ${validatedURL} ${errorDescription}`));
         }
       );
+      logger.debug('loadHTML start: ' + this.id);
       this.window.loadURL(
         url.format({
           pathname: path.join(__dirname, '../index.html'),
@@ -248,7 +254,7 @@ export class Card {
     return new Promise((resolve, reject) => {
       CardIO.readCardData(this.id)
         .then((_prop: CardProp) => {
-          // logger.debug('loadCardData  ' + this.id);
+          logger.debug('loadCardData  ' + this.id);
           resolve(_prop);
         })
         .catch((e: Error) => {

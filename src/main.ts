@@ -15,7 +15,8 @@ import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 import { CardIO } from './modules_ext/io';
 import { Card, cards, setGlobalFocusEventListenerPermission } from './modules_main/card';
 
-// process.on('unhandledRejection', console.dir);
+process.on('unhandledRejection', console.dir);
+process.on('uncaughtException', console.dir);
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -24,7 +25,7 @@ if (require('electron-squirrel-startup')) {
 }
 
 // Increase max listeners
-ipcMain.setMaxListeners(1000);
+ipcMain.setMaxListeners(10000);
 
 /**
  * i18n
@@ -126,6 +127,20 @@ app.on('ready', async () => {
       })
     );
   }
+  // eslint-disable-next-line promise/catch-or-return
+  Promise.all(renderers).then(async () => {
+    for (const card of cardArray) {
+      // eslint-disable-next-line no-await-in-loop,promise/no-nesting
+      await card.loadHTML().catch((e: Error) => {
+        logger.error(`Error in loadHTML: ${e.message}`);
+      });
+    }
+    for (const card of cardArray) {
+      card.renderCard(card.prop);
+    }
+  });
+
+  /*
   Promise.all(renderers)
     .then(() => {
       logger.debug('All cards are rendered.');
@@ -146,6 +161,7 @@ app.on('ready', async () => {
     .catch((e: Error) => {
       logger.error(`Error while rendering cards in ready event: ${e.message}`);
     });
+    */
 });
 
 /**

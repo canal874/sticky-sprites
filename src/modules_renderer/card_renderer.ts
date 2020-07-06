@@ -122,7 +122,10 @@ const renderContentsData = () => {
     webview.openDevTools();
   }
   */
-  webview.send('message', msg);
+  console.debug('send overwrite-iframe message');
+  webview.send('webview-message', msg).catch((e: Error) => {
+    console.error(e.message);
+  });
 };
 
 const renderContentsRect = () => {
@@ -182,11 +185,13 @@ const renderCardStyle = () => {
     command: 'set-scrollbar-style',
     arg: { backgroundRgba: backgroundRgba, uiRgba: uiRgba },
   };
+  /*  
   webview.send('message', scrollbarStyleMsg);
 
   webview.executeJavaScript(
     `if(document.body) document.body.style.zoom = '${cardProp.style.zoom}'`
   );
+*/
 };
 
 const renderEditorStyle = () => {

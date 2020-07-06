@@ -41,7 +41,7 @@ import {
   render,
   UI_COLOR_DARKENING_RATE,
 } from './modules_renderer/card_renderer';
-import { darkenHexColor, logger } from './modules_common/utils';
+import { darkenHexColor, logger, sleep } from './modules_common/utils';
 import {
   deleteCard,
   saveCard,
@@ -320,20 +320,29 @@ const initializeUIEvents = () => {
 
 const waitWebviewLoading = () => {
   return new Promise((resolve, reject) => {
-    const webview = document.getElementById('contentsFrame')! as WebviewTag;
     let counter = 0;
-    const checkTimer = setInterval(() => {
-      if (!webview.isLoading()) {
-        clearInterval(checkTimer);
-        resolve();
-      }
-      else {
-        counter++;
-        if (counter > 100) {
-          reject(new Error('Failed to load webview'));
+    // Don't use dom-ready here to check completion of loading webview contents
+    // because dom-ready event of webview has been often completed when parent window is loaded.
+    console.debug('waitWebviewLoading...');
+    const webview = document.getElementById('contentsFrame') as WebviewTag;
+    if (webview) {
+      const checkTimer = setInterval(() => {
+        if (!webview.isLoading()) {
+          clearInterval(checkTimer);
+          resolve();
         }
-      }
-    }, 100);
+        else {
+          console.debug('webview isLoading() ...');
+          counter++;
+          if (counter > 100) {
+            reject(new Error('Failed to load webview'));
+          }
+        }
+      }, 100);
+    }
+    else {
+      console.error('webview is undefined');
+    }
   });
 };
 
@@ -392,14 +401,20 @@ const onload = async () => {
     },
   };
 
+  console.debug('Renderer is loaded.');
+
   initializeContentsFrameEvents();
   initializeUIEvents();
 
-  await Promise.all([cardEditor.loadUI(cardCssStyle), waitWebviewLoading()]).catch(e => {
-    logger.error(e.message);
+  await cardEditor.loadUI(cardCssStyle).catch(e => {
+    console.error(e.message);
   });
-
-  // console.debug('(2) loadUI is completed');
+  /*
+  await waitWebviewLoading().catch(e => {
+    console.error(e.message);
+  });
+*/
+  console.debug('(2) loadUI is completed');
   ipcRenderer.send('finish-load', id);
 };
 
@@ -410,6 +425,8 @@ const initializeIPCEvents = () => {
   ipcRenderer.on(
     'render-card',
     (event: Electron.IpcRendererEvent, _prop: CardPropSerializable) => {
+      console.log('Receive cardprop');
+
       cardProp = CardProp.fromObject(_prop);
 
       initCardRenderer(cardProp, cardCssStyle, cardEditor);
@@ -482,7 +499,7 @@ const initializeIPCEvents = () => {
 
       const { left, top } = cardEditor.getScrollPosition();
       const webview = document.getElementById('contentsFrame') as WebviewTag;
-      webview.executeJavaScript(`window.scrollTo(${left}, ${top})`);
+      //      webview.executeJavaScript(`window.scrollTo(${left}, ${top})`);
     }
   });
 
@@ -527,9 +544,9 @@ const startEditorByClick = async (clickEvent: InnerClickEvent) => {
 
   // Set scroll position of editor to that of webview
   const webview = document.getElementById('contentsFrame') as WebviewTag;
-  const scrollTop = await webview.executeJavaScript('window.scrollY');
-  const scrollLeft = await webview.executeJavaScript('window.scrollX');
-  cardEditor.setScrollPosition(scrollLeft, scrollTop);
+  //  const scrollTop = await webview.executeJavaScript('window.scrollY');
+  //  const scrollLeft = await webview.executeJavaScript('window.scrollX');
+  //  cardEditor.setScrollPosition(scrollLeft, scrollTop);
 
   const offsetY = document.getElementById('titleBar')!.offsetHeight;
   const leftMouseDown: MouseInputEvent = {
@@ -638,9 +655,30 @@ const initializeContentsFrameEvents = () => {
 
   webview.addEventListener('did-finish-load', e => {
     // cardProp is empty before the card is initialized.
+    console.debug('webview finishes loading: isCardPropEmpty? ' + cardProp.isEmpty);
     if (!cardProp.isEmpty) {
       render(['ContentsData']);
     }
+  });
+
+  // webview does not invoke preload-error, but try it.
+  webview.addEventListener('preload-error', e => {
+    console.debug('webview preload-error');
+  });
+
+  webview.addEventListener('crashed', e => {
+    console.debug('webview crashed');
+  });
+  webview.addEventListener('ipc-message', e => {
+    console.log('ipc-message: ' + e.channel);
+  });
+
+  webview.addEventListener('did-fail-load', e => {
+    console.error('webview fails to load data');
+  });
+
+  webview.addEventListener('console-message', e => {
+    console.log('webview logged a message:', e.message);
   });
 
   // Open hyperlink on external browser window

@@ -28,7 +28,7 @@ const overwriteIframe = (arg: string) => {
     document.close();
   }
 };
-
+/*
 const setScrollbarStyle = (arg: { backgroundRgba: string; uiRgba: string }) => {
   if (arg !== undefined) {
     if (document.head) {
@@ -47,7 +47,8 @@ const setScrollbarStyle = (arg: { backgroundRgba: string; uiRgba: string }) => {
     }
   }
 };
-
+*/
+/*
 const zoom = (arg: string) => {
   if (arg !== undefined) {
     if (document.body) {
@@ -55,14 +56,16 @@ const zoom = (arg: string) => {
     }
   }
 };
+*/
 
-ipcRenderer.on('message', (event, _msg: ContentsFrameMessage) => {
+ipcRenderer.on('webview-message', (event, _msg: ContentsFrameMessage) => {
   const msg: ContentsFrameMessage = filterMessage(_msg);
+  console.log(msg.command + ': ' + msg.arg);
   switch (msg.command) {
     case 'overwrite-iframe':
       overwriteIframe(msg.arg);
       break;
-
+    /*
     case 'set-scrollbar-style':
       setScrollbarStyle(msg.arg);
       break;
@@ -70,7 +73,7 @@ ipcRenderer.on('message', (event, _msg: ContentsFrameMessage) => {
     case 'zoom':
       zoom(msg.arg);
       break;
-
+*/
     default:
       break;
   }
@@ -84,3 +87,9 @@ window.webviewPostMessage = (msg: ContentsFrameMessage) => {
     ipcRenderer.sendToHost('message', msg);
   }
 };
+
+/*
+window.addEventListener('load', () => {
+  console.log('webview window.onload');
+});
+*/
