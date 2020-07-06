@@ -173,23 +173,21 @@ export class Card {
   public loadHTML: () => Promise<void> = () => {
     //  private _loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
-      const finishLoadListener = (event: Electron.IpcMainEvent, fromId: string) => {
-        if (fromId === this.id) {
-          logger.debug('loadHTML  ' + fromId);
+      const finishLoadListener = (event: Electron.IpcMainEvent) => {
+        logger.debug('loadHTML: ' + this.id);
 
-          // Don't use 'did-finish-load' event.
-          // loadHTML resolves after loading HTML and processing required script are finished.
-          //     this.window.webContents.on('did-finish-load', () => {
-          ipcMain.off('finish-load', finishLoadListener);
-          ipcMain.on('finish-load', this._finishReloadListener);
-          resolve();
-        }
+        // Don't use 'did-finish-load' event.
+        // loadHTML resolves after loading HTML and processing required script are finished.
+        //     this.window.webContents.on('did-finish-load', () => {
+        ipcMain.off('finish-load-' + this.id, finishLoadListener);
+        //          ipcMain.on('finish-load', this._finishReloadListener);
+        resolve();
       };
-      ipcMain.on('finish-load', finishLoadListener);
+      ipcMain.on('finish-load-' + this.id, finishLoadListener);
+
       this.window.webContents.on(
         'did-fail-load',
         (event, errorCode, errorDescription, validatedURL) => {
-          logger.error('loadHTML ERROR: ' + this.id + ', ' + errorDescription);
           reject(new Error(`Error in loadHTML: ${validatedURL} ${errorDescription}`));
         }
       );
