@@ -27,38 +27,40 @@ loop Create Cards with IDs
   activate BrowserWindow
 end
 
-group Promise.all(Card.render()[])
-  main ->> Card: Card.render():Promise
+group Promise.all([Card.loadData()])
+  main ->> Card: Card.loadData():Promise
   activate main #6060f0  
-  group Promise.all([_readyToShow(),loadOrCreateCardData(),_loadHTML()])    
-    |||
-    rnote right Card: Check ready-to-show
-    Card ->> Card: _readyToShow():Promise
-    activate Card  #6060f0
-    Card ->> Card: window.once('ready-to-show')
-    Card <-- Card: resolve()
-    deactivate Card
-    |||
-    rnote Right Card: Load CardProp        
-    Card ->> Card: loadOreCreateCardData():Promise
-    activate Card  #6060f0
-    Card ->> ICardIO: readCardData
-    Card <<-- ICardIO: CardProp
-    Card <-- Card: resolve()
-    deactivate Card
-    |||
-    rnote Right Card: Load HTML skelton
-    Card ->> Card: _loadHTML():Promise
-    activate Card  #6060f0
-    Card ->> BrowserWindow: loadURL
-      BrowserWindow ->> BrowserWindow: onload
-        activate BrowserWindow #f0f0f0
-        BrowserWindow ->> CKEDITOR: Load ckeditor.js
-        activate CKEDITOR
-        BrowserWindow -> ICardEditor: new
-        activate ICardEditor
+  rnote Right Card: Load CardProp        
+  Card ->> Card: loadOreCreateCardData():Promise
+  activate Card  #6060f0
+  Card ->> ICardIO: readCardData
+  Card <<-- ICardIO: CardProp
+  Card <-- Card: resolve()
+  deactivate Card
+  |||  
+end
 
-        group Promise.all([loadUI(),waitWebviewLoading()])    
+loop loadHTML()
+  main ->> Card: Card.loadHTML():Promise
+  rnote Right Card: Load HTML skelton
+  Card ->> Card: loadHTML():Promise
+  activate Card  #6060f0
+  Card ->> BrowserWindow: loadURL
+    BrowserWindow ->> BrowserWindow: DOMContentLoaded
+    Card <-- BrowserWindow: ready
+    deactivate Card
+  main <-- Card: resolve()    
+  |||
+end
+          
+    BrowserWindow ->> BrowserWindow: onload
+      activate BrowserWindow #f0f0f0
+      BrowserWindow ->> CKEDITOR: Load ckeditor.js
+      activate CKEDITOR
+      BrowserWindow -> ICardEditor: new
+      activate ICardEditor
+
+      group Promise.all([loadUI(),waitWebviewLoading()])    
         BrowserWindow ->> ICardEditor: loadUI():Promise
           rnote Right BrowserWindow: Check if editor is loaded
           activate BrowserWindow #6060f0
@@ -76,16 +78,12 @@ group Promise.all(Card.render()[])
         BrowserWindow <-- BrowserWindow: resolve()      
         activate Webview
         deactivate BrowserWindow
-        end
+      end
 
-        Card <-- BrowserWindow: finish-load
-        deactivate BrowserWindow
-    Card <-- Card: resolve()
-    deactivate Card
-    |||
-  end
+      Card <-- BrowserWindow: finish-load
+      deactivate BrowserWindow
 
-  group _renderCard
+group Promise.all[Card.renderCard()])
     hnote over Card: Call setSize()\nwith loaded CardProp
     hnote over Card: Call setPotision()\nwith loaded CardProp
     hnote over Card: Call showInactive()
@@ -104,6 +102,6 @@ group Promise.all(Card.render()[])
   end
   main <-- Card: resolve()
   deactivate main
-end 
+
 hnote over main: Sort Cards by Z order
 @enduml
