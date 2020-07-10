@@ -99,30 +99,34 @@ const renderTitleBar = () => {
 };
 
 const renderContentsData = () => {
-  // Script and CSS loaded from contents_frame.html are remained after document.write().
-  const html = `<!DOCTYPE html>
+  return new Promise((resolve, reject) => {
+    //    console.debug('renderContentsData');
+
+    // Script and CSS loaded from contents_frame.html are remained after document.write().
+    const html = `<!DOCTYPE html>
   <html>
     <head>
-      <link href='../css/ckeditor-media-stickies-contents.css' type='text/css' rel='stylesheet' />
+      <link href='./css/ckeditor-media-stickies-contents.css' type='text/css' rel='stylesheet' />
       <script> var exports = {}; </script>
-      <script type='text/javascript' src='contents_frame.js'></script>
+      <script type='text/javascript' src='./iframe/contents_frame.js'></script>
     </head>
     <body>
       ${cardProp.data}
     </body>
   </html>`;
-
-  const msg: ContentsFrameMessage = {
-    command: 'overwrite-iframe',
-    arg: html,
-  };
-  const webview = document.getElementById('contentsFrame') as WebviewTag;
-  /*
-  if (!webview.isDevToolsOpened()) {
-    webview.openDevTools();
-  }
-  */
-  webview.send('message', msg);
+    try {
+      const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+      iframe.contentWindow!.document.write(html);
+      iframe.contentWindow!.document.close();
+      const checkLoading = () => {
+        iframe.removeEventListener('load', checkLoading);
+        resolve();
+      };
+      iframe.addEventListener('load', checkLoading);
+    } catch (e) {
+      reject(e);
+    }
+  });
 };
 
 const renderContentsRect = () => {
@@ -176,17 +180,21 @@ const renderCardStyle = () => {
 
   document.getElementById('title')!.style.backgroundColor = uiRgba;
 
-  const webview = document.getElementById('contentsFrame') as WebviewTag;
+  const iframeDoc = (document.getElementById('contentsFrame') as HTMLIFrameElement)
+    .contentWindow?.document;
+  if (iframeDoc) {
+    const style = iframeDoc.createElement('style');
+    style.innerHTML =
+      'body::-webkit-scrollbar { width: 7px; background-color: ' +
+      backgroundRgba +
+      '}\n' +
+      'body::-webkit-scrollbar-thumb { background-color: ' +
+      uiRgba +
+      '}';
+    iframeDoc.head.appendChild(style);
 
-  const scrollbarStyleMsg: ContentsFrameMessage = {
-    command: 'set-scrollbar-style',
-    arg: { backgroundRgba: backgroundRgba, uiRgba: uiRgba },
-  };
-  webview.send('message', scrollbarStyleMsg);
-
-  webview.executeJavaScript(
-    `if(document.body) document.body.style.zoom = '${cardProp.style.zoom}'`
-  );
+    iframeDoc.body.style.zoom = `${cardProp.style.zoom}`;
+  }
 };
 
 const renderEditorStyle = () => {
@@ -204,7 +212,7 @@ export const setTitleMessage = (msg: string) => {
   }
 };
 
-export const render = (
+export const render = async (
   options: CardRenderOptions[] = [
     'TitleBar',
     'ContentsData',
@@ -214,12 +222,29 @@ export const render = (
     'EditorRect',
   ]
 ) => {
+  /**
+   * NOTE: CardStyle depends on completion of ContentsData
+   */
+  if (options.includes('ContentsData')) {
+    options = options.filter(opt => opt !== 'ContentsData');
+    await renderContentsData();
+  }
+
   for (const opt of options) {
-    if (opt === 'TitleBar') renderTitleBar();
-    else if (opt === 'ContentsData') renderContentsData();
-    else if (opt === 'ContentsRect') renderContentsRect();
-    else if (opt === 'CardStyle') renderCardStyle();
-    else if (opt === 'EditorStyle') renderEditorStyle();
-    else if (opt === 'EditorRect') renderEditorRect();
+    if (opt === 'TitleBar') {
+      renderTitleBar();
+    }
+    else if (opt === 'ContentsRect') {
+      renderContentsRect();
+    }
+    else if (opt === 'CardStyle') {
+      renderCardStyle();
+    }
+    else if (opt === 'EditorStyle') {
+      renderEditorStyle();
+    }
+    else if (opt === 'EditorRect') {
+      renderEditorRect();
+    }
   }
 };

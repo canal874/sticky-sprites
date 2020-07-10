@@ -88,7 +88,7 @@ const queueSaveCommand = () => {
  * Context Menu
  */
 
-const setContextMenu = (win: BrowserWindow | WebviewTag) => {
+const setContextMenu = (win: BrowserWindow) => {
   const changeCardColor = (backgroundColor: string, opacity = 1.0) => {
     const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
     saveCardColor(cardProp, backgroundColor, uiColor, opacity);
@@ -318,40 +318,54 @@ const initializeUIEvents = () => {
   });
 };
 
-const waitWebviewLoading = () => {
+const waitIframeInitializing = () => {
   return new Promise((resolve, reject) => {
-    const webview = document.getElementById('contentsFrame')! as WebviewTag;
-    let counter = 0;
-    const checkTimer = setInterval(() => {
-      if (!webview.isLoading()) {
-        clearInterval(checkTimer);
+    const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+
+    const initializingReceived = (event: MessageEvent) => {
+      const msg: ContentsFrameMessage = filterContentsFrameMessage(event);
+      if (msg.command === 'contents-frame-initialized') {
+        clearInterval(iframeLoadTimer);
+        window.removeEventListener('message', initializingReceived);
         resolve();
       }
-      else {
-        counter++;
-        if (counter > 100) {
-          reject(new Error('Failed to load webview'));
-        }
+    };
+    window.addEventListener('message', initializingReceived);
+    let counter = 0;
+    const iframeLoadTimer = setInterval(() => {
+      const msg: ContentsFrameMessage = { command: 'check-initializing', arg: '' };
+      iframe.contentWindow!.postMessage(msg, '*');
+      if (++counter > 100) {
+        clearInterval(iframeLoadTimer);
+        reject(new Error('Cannot load iframe in waitIframeInitializing()'));
       }
     }, 100);
   });
 };
 
-const onready = () => {
-  // case 3)
-  const url = window.location.search;
-  const arr = url.slice(1).split('&');
-  const params: { [key: string]: string } = {};
-  for (var i = 0; i < arr.length; i++) {
-    const pair = arr[i].split('=');
-    params[pair[0]] = pair[1];
-  }
-  const id = params.id;
-  if (!id) {
-    console.error('id parameter is not given in URL');
-    return;
-  }
-  ipcRenderer.send('ready-' + id);
+const initializeContentsFrameEvents = () => {
+  const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+
+  window.addEventListener('message', (event: MessageEvent) => {
+    const msg: ContentsFrameMessage = filterContentsFrameMessage(event);
+    switch (msg.command) {
+      case 'click-parent':
+        // Click request from child frame
+        if (msg.arg !== undefined) {
+          startEditorByClick(JSON.parse(msg.arg) as InnerClickEvent);
+        }
+        break;
+
+      case 'contents-frame-file-dropped':
+        if (msg.arg !== undefined) {
+          addDroppedImage(JSON.parse(msg.arg) as FileDropEvent);
+        }
+        break;
+
+      default:
+        break;
+    }
+  });
 };
 
 const onload = async () => {
@@ -409,18 +423,18 @@ const onload = async () => {
     },
   };
 
-  // case 2) ipcRenderer.send('finish-load', id);
-
-  initializeContentsFrameEvents();
   initializeUIEvents();
 
-  await Promise.all([cardEditor.loadUI(cardCssStyle), waitWebviewLoading()]).catch(e => {
-    logger.error(e.message);
-  });
+  await Promise.all([cardEditor.loadUI(cardCssStyle), waitIframeInitializing()]).catch(
+    e => {
+      logger.error(e.message);
+    }
+  );
+
+  initializeContentsFrameEvents();
 
   ipcRenderer.send('finish-load-' + id);
-  // case 1)
-  // ipcRenderer.send('finish-load', id);
+
   // console.debug('(2) loadUI is completed');
 };
 
@@ -439,7 +453,17 @@ const initializeIPCEvents = () => {
 
       document.getElementById('card')!.style.visibility = 'visible';
 
-      render();
+      render()
+        .then(() => {
+          const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+          // Listen load event for reload()
+          iframe.addEventListener('load', e => {
+            render(['ContentsData', 'CardStyle']);
+          });
+        })
+        .catch(e => {
+          console.error(`Error in render-card: ${e.message}`);
+        });
 
       if (cardEditor.editorType === 'WYSIWYG') {
         cardEditor
@@ -502,8 +526,8 @@ const initializeIPCEvents = () => {
       }
 
       const { left, top } = cardEditor.getScrollPosition();
-      const webview = document.getElementById('contentsFrame') as WebviewTag;
-      webview.executeJavaScript(`window.scrollTo(${left}, ${top})`);
+      const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+      iframe.contentWindow!.scrollTo(left, top);
     }
   });
 
@@ -530,11 +554,8 @@ const initializeIPCEvents = () => {
   );
 };
 
-const filterContentsFrameMessage = (event: IpcMessageEvent): ContentsFrameMessage => {
-  if (event.channel !== 'message' || !event.args || !event.args[0]) {
-    return { command: '', arg: '' };
-  }
-  const msg: ContentsFrameMessage = event.args[0];
+const filterContentsFrameMessage = (event: MessageEvent): ContentsFrameMessage => {
+  const msg: ContentsFrameMessage = event.data;
   if (!contentsFrameCommand.includes(msg.command)) {
     return { command: '', arg: '' };
   }
@@ -546,10 +567,10 @@ const startEditorByClick = async (clickEvent: InnerClickEvent) => {
     logger.error(`Error in clicking contents: ${e.message}`);
   });
 
-  // Set scroll position of editor to that of webview
-  const webview = document.getElementById('contentsFrame') as WebviewTag;
-  const scrollTop = await webview.executeJavaScript('window.scrollY');
-  const scrollLeft = await webview.executeJavaScript('window.scrollX');
+  // Set scroll position of editor to that of iframe
+  const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+  const scrollTop = iframe.contentWindow!.scrollY;
+  const scrollLeft = iframe.contentWindow!.scrollX;
   cardEditor.setScrollPosition(scrollLeft, scrollTop);
 
   const offsetY = document.getElementById('titleBar')!.offsetHeight;
@@ -564,7 +585,7 @@ const startEditorByClick = async (clickEvent: InnerClickEvent) => {
 };
 const addDroppedImage = (fileDropEvent: FileDropEvent) => {
   /*
-   * Must sanitize params from webview
+   * Must sanitize params from iframe
    * - fileDropEvent.path is checked whether it is correct path or not
    *   by using dropImg.src = fileDropEvent.path;
    *   Incorrect path cannot be loaded.
@@ -652,60 +673,9 @@ const addDroppedImage = (fileDropEvent: FileDropEvent) => {
   dropImg.src = fileDropEvent.path;
 };
 
-const initializeContentsFrameEvents = () => {
-  const webview = document.getElementById('contentsFrame')! as WebviewTag;
-
-  setContextMenu(webview);
-
-  webview.addEventListener('did-finish-load', e => {
-    // cardProp is empty before the card is initialized.
-    if (!cardProp.isEmpty) {
-      render(['ContentsData']);
-    }
-  });
-
-  // Open hyperlink on external browser window
-  // by preventing to open it on new electron window
-  // when target='_blank' is set.
-  webview.addEventListener('new-window', e => {
-    shell.openExternal(e.url);
-  });
-
-  // When trying to open URL in webview
-  const defaultSrc = webview.src;
-  webview.addEventListener('will-navigate', e => {
-    if (e.url !== defaultSrc) {
-      shell.openExternal(e.url);
-      webview.reload();
-    }
-  });
-
-  webview.addEventListener('ipc-message', event => {
-    const msg: ContentsFrameMessage = filterContentsFrameMessage(event);
-    switch (msg.command) {
-      case 'contents-frame-loaded':
-        render(['CardStyle']);
-        break;
-
-      case 'click-parent':
-        // Click request from child frame (webview)
-        if (msg.arg !== undefined) {
-          startEditorByClick(JSON.parse(msg.arg) as InnerClickEvent);
-        }
-        break;
-
-      case 'contents-frame-file-dropped':
-        if (msg.arg !== undefined) {
-          addDroppedImage(JSON.parse(msg.arg) as FileDropEvent);
-        }
-        break;
-
-      default:
-        break;
-    }
-  });
-};
-
 initializeIPCEvents();
-window.document.addEventListener('DOMContentLoaded', onready, false);
 window.addEventListener('load', onload, false);
+window.addEventListener('beforeunload', e => {
+  e.preventDefault();
+  e.returnValue = '';
+});

@@ -15,17 +15,6 @@ import {
   InnerClickEvent,
 } from '../modules_common/types';
 
-window.addEventListener('load', () => {
-  const msg: ContentsFrameMessage = {
-    command: 'contents-frame-loaded',
-    arg: '',
-  };
-  // Message to parent frame
-  // window.webviewPostMessage() is defined in preloaded script
-  // @ts-ignore
-  window.webviewPostMessage(msg);
-});
-
 // window.addEventListener('click', event => {
 window.addEventListener('mouseup', event => {
   if (event.button !== 0) {
@@ -43,10 +32,8 @@ window.addEventListener('mouseup', event => {
       command: 'click-parent',
       arg: JSON.stringify(e),
     };
-    // Message to parent frame
-    // window.webviewPostMessage() is defined in preloaded script
-    // @ts-ignore
-    window.webviewPostMessage(msg);
+
+    window.parent.postMessage(msg, '*');
   }
 });
 
@@ -74,9 +61,6 @@ document.addEventListener('drop', event => {
       command: 'contents-frame-file-dropped',
       arg: JSON.stringify(e),
     };
-    // Message to parent frame
-    // window.webviewPostMessage() is defined in preloaded script
-    // @ts-ignore
-    window.webviewPostMessage(msg);
+    window.parent.postMessage(msg, '*');
   }
 });

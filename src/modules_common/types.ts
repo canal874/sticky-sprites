@@ -73,10 +73,8 @@ export type ContentsFrameCommand =
 export const contentsFrameCommand = [
   'click-parent',
   'contents-frame-file-dropped',
-  'contents-frame-loaded',
-  'overwrite-iframe',
-  'set-scrollbar-style',
-  'zoom',
+  'check-initializing',
+  'contents-frame-initialized',
 ];
 // ContentsFrameCommand is union. e.g) 'overwrite-iframe' | 'click-parent' | ...
 // Use ContentsFrameCommand to check type.

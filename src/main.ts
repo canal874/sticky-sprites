@@ -76,17 +76,10 @@ ipcMain.handle('finish-render-card', (event, id: string) => {
   }
 });
 
-ipcMain.handle('create-card', async (event, propTemplate: CardPropSerializable) => {
+ipcMain.handle('create-card', (event, propTemplate: CardPropSerializable) => {
   const card = new Card('', propTemplate);
   cards.set(card.id, card);
-  await card.loadData().catch((e: Error) => {
-    logger.error(`Error in loadData() of createCard(): ${e.message}`);
-  });
-  await card.loadHTML().catch((e: Error) => {
-    logger.error(`Error in loadHTML() of createCard(): ${e.message}`);
-  });
-  card.renderCard(card.prop);
-
+  card.render();
   return card.id;
 });
 
@@ -122,45 +115,16 @@ app.on('ready', async () => {
       return [];
     });
 
-  const loaders = [];
+  const renderers = [];
   for (const card of cardArray) {
     cards.set(card.id, card);
-    loaders.push(
-      card.loadData().catch((e: Error) => {
-        logger.error(`Error while loading card in ready event: ${e.message}`);
-      })
-    );
-  }
-  await Promise.all(loaders);
-
-  for (const card of cardArray) {
-    // eslint-disable-next-line no-await-in-loop
-    await card.loadHTML();
+    renderers.push(card.render());
   }
 
-  await new Promise(resolve => {
-    const checkTimer = setInterval(() => {
-      let completed = true;
-      for (const card of cardArray) {
-        if (!card.loadCompleted) {
-          completed = false;
-          break;
-        }
-      }
-      if (completed) {
-        clearInterval(checkTimer);
-        resolve();
-      }
-    }, 200);
-  });
-
-  const renderer = [];
-  for (const card of cardArray) {
-    renderer.push(card.renderCard(card.prop));
-  }
-  await Promise.all(renderer).catch((e: Error) => {
+  await Promise.all(renderers).catch((e: Error) => {
     logger.error(`Error while rendering cards in ready event: ${e.message}`);
   });
+
   const backToFront = [...cards.keys()].sort((a, b) => {
     if (cards.get(a)!.prop.geometry.z < cards.get(b)!.prop.geometry.z) {
       return -1;
@@ -174,7 +138,7 @@ app.on('ready', async () => {
   for (const key of backToFront) {
     cards.get(key)!.window.moveTop();
   }
-  logger.debug(`Completed to load ${renderer.length} cards`);
+  logger.debug(`Completed to load ${renderers.length} cards`);
 });
 
 /**
