@@ -144,15 +144,6 @@ export class Card {
     });
   };
 
-  private _readyToShow: () => Promise<void> = () => {
-    return new Promise(resolve => {
-      this.window.once('ready-to-show', () => {
-        // logger.debug('readyToShow ' + this.id);
-        resolve();
-      });
-    });
-  };
-
   private _finishReloadListener = (event: Electron.IpcMainEvent, fromId: string) => {
     if (fromId === this.id) {
       console.log(`reloaded in main: ${this.prop.id}`);
