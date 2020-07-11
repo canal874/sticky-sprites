@@ -105,7 +105,7 @@ export class CardEditor implements ICardEditor {
         count++;
       }
       else {
-        console.log(i + '[T]' + node.textContent);
+        // console.log(i + '[T]' + node.textContent);
         count++;
       }
       if (count >= 2) {
@@ -313,7 +313,6 @@ export class CardEditor implements ICardEditor {
   };
 
   showEditor = async (): Promise<void> => {
-    console.debug(`showEditor: ${this._cardProp.id}`);
     if (this.isOpened) {
       return;
     }
@@ -341,7 +340,7 @@ export class CardEditor implements ICardEditor {
         alertDialog(this._cardProp.id, MESSAGE.pleaseRestartErrorInOpeningCard);
       }
       if (cont) {
-        console.debug(`re-trying setData for ${this._cardProp.id}`);
+        // console.debug(`re-trying setData for ${this._cardProp.id}`);
       }
       else {
         break;

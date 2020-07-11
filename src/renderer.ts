@@ -490,8 +490,6 @@ const initializeIPCEvents = () => {
   });
 
   ipcRenderer.on('card-focused', async () => {
-    console.debug('card-focused');
-
     cardProp.status = 'Focused';
     render(['CardStyle']);
 
@@ -505,8 +503,6 @@ const initializeIPCEvents = () => {
   });
 
   ipcRenderer.on('card-blurred', () => {
-    console.debug('card-blurred');
-
     cardProp.status = 'Blurred';
     render(['CardStyle']);
 
