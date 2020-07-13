@@ -15,7 +15,6 @@ import {
   alertDialog,
   convertHexColorToRgba,
   darkenHexColor,
-  logger,
   sleep,
 } from '../modules_common/utils';
 import { saveCard, saveCardColor } from '../modules_renderer/save';
@@ -337,7 +336,7 @@ export class CardEditor implements ICardEditor {
         cont = false;
         // logger.error does not work in ipcRenderer event.
         console.error(`Error in showEditor ${this._cardProp.id}: too many setData errors`);
-        alertDialog(this._cardProp.id, MESSAGE.pleaseRestartErrorInOpeningCard);
+        alertDialog(this._cardProp.id, MESSAGE.pleaseRestartErrorInOpeningEditor);
       }
       if (cont) {
         // console.debug(`re-trying setData for ${this._cardProp.id}`);
@@ -512,7 +511,7 @@ export class CardEditor implements ICardEditor {
       }
     }
     else {
-      logger.error(`Error in setSize: editor is undefined.`);
+      console.error(`Error in setSize: editor is undefined.`);
     }
 
     const toolbar = document.getElementById('cke_1_bottom');

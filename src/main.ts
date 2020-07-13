@@ -8,12 +8,16 @@
 
 import { app, dialog, ipcMain, MouseInputEvent } from 'electron';
 import { selectPreferredLanguage } from 'typed-intl';
-import { logger } from './modules_common/utils';
+import { v4 as uuidv4 } from 'uuid';
+import { logger } from './modules_common/logger';
 import translations from './modules_common/i18n';
 import { DialogButton } from './modules_common/const';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 import { CardIO } from './modules_ext/io';
 import { Card, cards, setGlobalFocusEventListenerPermission } from './modules_main/card';
+
+// Most secure option
+// app.enableSandbox();
 
 // process.on('unhandledRejection', console.dir);
 
@@ -76,11 +80,12 @@ ipcMain.handle('finish-render-card', (event, id: string) => {
   }
 });
 
-ipcMain.handle('create-card', (event, propTemplate: CardPropSerializable) => {
-  const card = new Card('', propTemplate);
-  cards.set(card.id, card);
+ipcMain.handle('create-card', (event, propObject: CardPropSerializable) => {
+  const prop = CardProp.fromObject(propObject);
+  const card = new Card('New', prop);
+  cards.set(card.prop.id, card);
   card.render();
-  return card.id;
+  return card.prop.id;
 });
 
 /**
@@ -99,12 +104,12 @@ app.on('ready', async () => {
       const cardArr = [];
       if (arr.length === 0) {
         // Create a new card
-        const card = new Card();
+        const card = new Card('New');
         cardArr.push(card);
       }
       else {
         for (const id of arr) {
-          const card = new Card(id);
+          const card = new Card('Load', id);
           cardArr.push(card);
         }
       }
@@ -117,7 +122,7 @@ app.on('ready', async () => {
 
   const renderers = [];
   for (const card of cardArray) {
-    cards.set(card.id, card);
+    cards.set(card.prop.id, card);
     renderers.push(card.render());
   }
 
@@ -238,6 +243,10 @@ ipcMain.handle('set-window-size', (event, id: string, width: number, height: num
   const card = cards.get(id);
   // eslint-disable-next-line no-unused-expressions
   card?.window.setSize(width, height);
+});
+
+ipcMain.handle('get-uuid', () => {
+  return uuidv4();
 });
 
 ipcMain.handle('bring-to-front', (event, id: string, rearrange = false) => {

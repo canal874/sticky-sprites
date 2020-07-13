@@ -6,33 +6,19 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import log4js from 'log4js';
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
 import { ipcRenderer } from 'electron';
-
-dayjs.extend(utc);
-
-export const logger = log4js.getLogger();
-logger.level = 'all';
-// logger.level = 'error';
 
 export const sleep = (msec: number) =>
   new Promise<void>(resolve => setTimeout(resolve, msec));
 
 export const getCurrentDateAndTime = (): string => {
-  // @ts-ignore
-  return dayjs.utc().format('YYYY-MM-DD HH:mm:ss');
-};
-
-export const getCurrentDate = (): string => {
-  // @ts-ignore
-  return dayjs.utc().format('YYYY-MM-DD');
+  // Returns UTC date with 'YYYY-MM-DD HH:mm:ss' format
+  return new Date().toISOString().replace(/^(.+?)T(.+?)\..+?$/, '$1 $2');
 };
 
 export const darkenHexColor = (colorHEX: string, darkRate: number): string => {
   if (darkRate > 1 || darkRate < 0) {
-    logger.error(`Invalid darkRate: ${darkRate}`);
+    console.error(`Invalid darkRate: ${darkRate}`);
     return '#000000';
   }
   const res = colorHEX.match(/#(\w\w)(\w\w)(\w\w)/);
@@ -40,14 +26,14 @@ export const darkenHexColor = (colorHEX: string, darkRate: number): string => {
   let green = parseInt(RegExp.$2, 16);
   let blue = parseInt(RegExp.$3, 16);
   if (res === null || isNaN(red) || isNaN(blue) || isNaN(blue)) {
-    logger.error(`Invalid HEX color format: ${colorHEX}`);
+    console.error(`Invalid HEX color format: ${colorHEX}`);
     return '#000000';
   }
   red = Math.round(red * darkRate);
   green = Math.round(green * darkRate);
   blue = Math.round(blue * darkRate);
   if (red > 255 || green > 255 || red > 255) {
-    logger.error(`Invalid HEX value: ${colorHEX}`);
+    console.error(`Invalid HEX value: ${colorHEX}`);
     return '#000000';
   }
 
@@ -65,11 +51,11 @@ export const convertHexColorToRgba = (colorHEX: string, opacity = 1.0): string =
   const green = parseInt(RegExp.$2, 16);
   const blue = parseInt(RegExp.$3, 16);
   if (res === null || isNaN(red) || isNaN(blue) || isNaN(blue)) {
-    logger.error(`Invalid HEX color format: ${colorHEX}`);
+    console.error(`Invalid HEX color format: ${colorHEX}`);
     return 'rgba(255,255,255,1.0)';
   }
   if (red > 255 || green > 255 || red > 255) {
-    logger.error(`Invalid HEX value: ${colorHEX}`);
+    console.error(`Invalid HEX value: ${colorHEX}`);
     return '#000000';
   }
 

@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { ipcRenderer, WebviewTag } from 'electron';
+import { ipcRenderer } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, ContentsFrameMessage, ICardEditor } from '../modules_common/types';
 import { convertHexColorToRgba, darkenHexColor } from '../modules_common/utils';

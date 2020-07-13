@@ -9,7 +9,7 @@
 import url from 'url';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import {
   CardDate,
   CardProp,
@@ -18,7 +18,9 @@ import {
   Geometry,
 } from '../modules_common/cardprop';
 import { CardIO } from '../modules_ext/io';
-import { getCurrentDate, logger } from '../modules_common/utils';
+import { getCurrentDateAndTime } from '../modules_common/utils';
+import { logger } from '../modules_common/logger';
+import { CardInitializeType } from '../modules_common/types';
 
 /**
  * Const
@@ -49,13 +51,13 @@ export const getGlobalFocusEventListenerPermission = () => {
  */
 const generateNewCardId = (): string => {
   // YYYY-MM-DD-UUID4
-  return `${getCurrentDate()}-${uuidv4()}`;
+  return `${getCurrentDateAndTime().replace(/^(.+?)\s.+?$/, '$1')}-${uuidv4()}`;
 };
 
 export const cards: Map<string, Card> = new Map<string, Card>();
 
 export class Card {
-  public prop!: CardProp; // ! is Definite assignment assertion
+  public prop: CardProp; // ! is Definite assignment assertion
   public window: BrowserWindow;
 
   public suppressFocusEventOnce = false;
@@ -64,18 +66,55 @@ export class Card {
 
   public renderingCompleted = false;
 
-  private _loadOrCreateCardData: () => Promise<CardProp>;
-  constructor (public id: string = '', public propTemplate?: CardPropSerializable) {
-    this._loadOrCreateCardData = this._loadCardData;
-    if (this.id === '') {
-      this.id = generateNewCardId();
-      this._loadOrCreateCardData = this._createCardData;
+  private _loadOrCreateCardData: () => Promise<void>;
+
+  constructor (public cardInitializeType: CardInitializeType, arg?: CardProp | string) {
+    if (cardInitializeType === 'New') {
+      this._loadOrCreateCardData = () => {
+        return Promise.resolve();
+      };
+      if (arg === undefined) {
+        // Create card with default properties
+        this.prop = new CardProp(generateNewCardId());
+      }
+      else if (arg instanceof CardProp) {
+        // Create card with specified CardProp
+        if (arg.id === '') {
+          arg.id = generateNewCardId();
+        }
+        this.prop = arg;
+      }
+      else {
+        throw new TypeError('Second parameter must be CardProp when creating new card.');
+      }
+    }
+    else {
+      // cardInitializeType === 'Load'
+      // Load Card
+      if (typeof arg !== 'string') {
+        throw new TypeError('Second parameter must be id string when loading the card.');
+      }
+      const id = arg;
+      this.prop = new CardProp(id);
+
+      this._loadOrCreateCardData = () => {
+        return new Promise((resolve, reject) => {
+          CardIO.readCardData(id, this.prop)
+            .then(() => {
+              // logger.debug('loadCardData  ' + arg);
+              resolve();
+            })
+            .catch((e: Error) => {
+              reject(new Error(`Error in loadCardData: ${e.message}`));
+            });
+        });
+      };
     }
 
     this.window = new BrowserWindow({
       webPreferences: {
-        nodeIntegration: true,
-        webviewTag: true,
+        preload: path.join(__dirname, '../modules_renderer/preload.js'),
+        //        contextIsolation: true,
       },
       minWidth: MINIMUM_WINDOW_WIDTH,
       minHeight: MINIMUM_WINDOW_HEIGHT,
@@ -107,7 +146,7 @@ export class Card {
       // Dereference the window object, usually you would store windows
       // in an array if your app supports multi windows, this is the time
       // when you should delete the corresponding element.
-      cards.delete(this.id);
+      cards.delete(this.prop.id);
     });
 
     // Open hyperlink on external browser window
@@ -124,8 +163,7 @@ export class Card {
 
   public render = () => {
     return Promise.all([this._loadOrCreateCardData(), this._loadHTML()])
-      .then(([_prop]) => {
-        this.prop = _prop;
+      .then(() => {
         this._renderCard(this.prop);
       })
       .catch(e => {
@@ -163,11 +201,11 @@ export class Card {
         // Don't use 'did-finish-load' event.
         // loadHTML resolves after loading HTML and processing required script are finished.
         //     this.window.webContents.on('did-finish-load', () => {
-        ipcMain.off('finish-load-' + this.id, finishLoadListener);
+        ipcMain.off('finish-load-' + this.prop.id, finishLoadListener);
         ipcMain.on('finish-load-', this._finishReloadListener);
         resolve();
       };
-      ipcMain.on('finish-load-' + this.id, finishLoadListener);
+      ipcMain.on('finish-load-' + this.prop.id, finishLoadListener);
 
       this.window.webContents.on(
         'did-fail-load',
@@ -181,66 +219,10 @@ export class Card {
           protocol: 'file:',
           slashes: true,
           query: {
-            id: this.id,
+            id: this.prop.id,
           },
         })
       );
-    });
-  };
-
-  // eslint-disable-next-line complexity
-  private _createCardData: () => Promise<CardProp> = () => {
-    if (this.propTemplate) {
-      const _prop = this.propTemplate;
-      const geometry: Geometry | undefined =
-        _prop.x === undefined ||
-        _prop.y === undefined ||
-        _prop.z === undefined ||
-        _prop.width === undefined ||
-        _prop.height === undefined
-          ? undefined
-          : {
-            x: _prop.x,
-            y: _prop.y,
-            z: _prop.z,
-            width: _prop.width,
-            height: _prop.height,
-          };
-      const style: CardStyle | undefined =
-        _prop.uiColor === undefined ||
-        _prop.backgroundColor === undefined ||
-        _prop.opacity === undefined ||
-        _prop.zoom === undefined
-          ? undefined
-          : {
-            uiColor: _prop.uiColor,
-            backgroundColor: _prop.backgroundColor,
-            opacity: _prop.opacity,
-            zoom: _prop.zoom,
-          };
-      const date: CardDate | undefined =
-        _prop.createdDate === undefined || _prop.modifiedDate === undefined
-          ? undefined
-          : {
-            createdDate: _prop.createdDate,
-            modifiedDate: _prop.modifiedDate,
-          };
-      return Promise.resolve(new CardProp(this.id, _prop.data, geometry, style, date));
-    }
-
-    return Promise.resolve(new CardProp(this.id));
-  };
-
-  private _loadCardData: () => Promise<CardProp> = () => {
-    return new Promise((resolve, reject) => {
-      CardIO.readCardData(this.id)
-        .then((_prop: CardProp) => {
-          // logger.debug('loadCardData  ' + this.id);
-          resolve(_prop);
-        })
-        .catch((e: Error) => {
-          reject(new Error(`Error in loadCardData: ${e.message}`));
-        });
     });
   };
 
@@ -251,25 +233,25 @@ export class Card {
       setGlobalFocusEventListenerPermission(true);
     }
     if (this.suppressFocusEventOnce) {
-      logger.debug(`skip focus event listener ${this.id}`);
+      logger.debug(`skip focus event listener ${this.prop.id}`);
       this.suppressFocusEventOnce = false;
     }
     else if (!getGlobalFocusEventListenerPermission()) {
-      logger.debug(`focus event listener is suppressed ${this.id}`);
+      logger.debug(`focus event listener is suppressed ${this.prop.id}`);
     }
     else {
-      logger.debug(`focus ${this.id}`);
+      logger.debug(`focus ${this.prop.id}`);
       this.window.webContents.send('card-focused');
     }
   };
 
   private _blurListener = () => {
     if (this.suppressBlurEventOnce) {
-      logger.debug(`skip blur event listener ${this.id}`);
+      logger.debug(`skip blur event listener ${this.prop.id}`);
       this.suppressBlurEventOnce = false;
     }
     else {
-      logger.debug(`blur ${this.id}`);
+      logger.debug(`blur ${this.prop.id}`);
       this.window.webContents.send('card-blurred');
     }
   };

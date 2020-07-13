@@ -8,21 +8,18 @@
 
 import {
   BrowserWindow,
-  IpcMessageEvent,
+  contextBridge,
   ipcRenderer,
   MouseInputEvent,
   remote,
-  shell,
-  WebviewTag,
 } from 'electron';
-import { v4 as uuidv4 } from 'uuid';
 import contextMenu from 'electron-context-menu';
 import {
   CardProp,
   CardPropSerializable,
   DEFAULT_CARD_GEOMETRY,
   DRAG_IMAGE_MARGIN,
-} from './modules_common/cardprop';
+} from '../modules_common/cardprop';
 import {
   CardCssStyle,
   contentsFrameCommand,
@@ -30,9 +27,9 @@ import {
   FileDropEvent,
   ICardEditor,
   InnerClickEvent,
-} from './modules_common/types';
-import { DialogButton } from './modules_common/const';
-import { CardEditor } from './modules_ext/editor';
+} from '../modules_common/types';
+import { DialogButton } from '../modules_common/const';
+import { CardEditor } from '../modules_ext/editor';
 import {
   getRenderOffsetHeight,
   getRenderOffsetWidth,
@@ -40,14 +37,9 @@ import {
   MESSAGE,
   render,
   UI_COLOR_DARKENING_RATE,
-} from './modules_renderer/card_renderer';
-import { darkenHexColor, logger } from './modules_common/utils';
-import {
-  deleteCard,
-  saveCard,
-  saveCardColor,
-  waitUnfinishedTasks,
-} from './modules_renderer/save';
+} from './card_renderer';
+import { darkenHexColor } from '../modules_common/utils';
+import { deleteCard, saveCard, saveCardColor, waitUnfinishedTasks } from './save';
 
 let cardProp: CardProp = new CardProp('');
 
@@ -55,6 +47,8 @@ let cardCssStyle: CardCssStyle = {
   padding: { left: 0, right: 0, top: 0, bottom: 0 },
   border: { left: 0, right: 0, top: 0, bottom: 0 },
 };
+
+let canClose = false;
 
 let isShiftDown = false;
 let isCtrlDown = false;
@@ -65,8 +59,9 @@ const cardEditor: ICardEditor = new CardEditor();
 
 const close = async () => {
   await waitUnfinishedTasks(cardProp.id).catch((e: Error) => {
-    logger.debug(e.message);
+    console.error(e.message);
   });
+  canClose = true;
   window.close();
 };
 
@@ -312,7 +307,7 @@ const initializeUIEvents = () => {
           }
         })
         .catch((e: Error) => {
-          logger.debug(e.message);
+          console.error(e.message);
         });
     }
   });
@@ -427,7 +422,7 @@ const onload = async () => {
 
   await Promise.all([cardEditor.loadUI(cardCssStyle), waitIframeInitializing()]).catch(
     e => {
-      logger.error(e.message);
+      console.error(e.message);
     }
   );
 
@@ -560,7 +555,7 @@ const filterContentsFrameMessage = (event: MessageEvent): ContentsFrameMessage =
 
 const startEditorByClick = async (clickEvent: InnerClickEvent) => {
   await cardEditor.showEditor().catch((e: Error) => {
-    logger.error(`Error in clicking contents: ${e.message}`);
+    console.error(`Error in clicking contents: ${e.message}`);
   });
 
   // Set scroll position of editor to that of iframe
@@ -579,7 +574,8 @@ const startEditorByClick = async (clickEvent: InnerClickEvent) => {
   cardEditor.execAfterMouseDown(cardEditor.startEdit);
   ipcRenderer.invoke('send-mouse-input', cardProp.id, leftMouseDown);
 };
-const addDroppedImage = (fileDropEvent: FileDropEvent) => {
+const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
+  const uuid: string = await ipcRenderer.invoke('get-uuid');
   /*
    * Must sanitize params from iframe
    * - fileDropEvent.path is checked whether it is correct path or not
@@ -619,7 +615,7 @@ const addDroppedImage = (fileDropEvent: FileDropEvent) => {
     newImageHeight = Math.floor(newImageHeight);
 
     const imgTag = cardEditor.getImageTag(
-      uuidv4(),
+      uuid,
       fileDropEvent.path,
       newImageWidth,
       newImageHeight,
@@ -661,7 +657,7 @@ const addDroppedImage = (fileDropEvent: FileDropEvent) => {
 
     ipcRenderer.invoke('focus', cardProp.id);
     await cardEditor.showEditor().catch((err: Error) => {
-      logger.error(`Error in loading image: ${err.message}`);
+      console.error(`Error in loading image: ${err.message}`);
     });
     cardEditor.startEdit();
   });
@@ -672,6 +668,8 @@ const addDroppedImage = (fileDropEvent: FileDropEvent) => {
 initializeIPCEvents();
 window.addEventListener('load', onload, false);
 window.addEventListener('beforeunload', e => {
-  e.preventDefault();
-  e.returnValue = '';
+  if (!canClose) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
 });

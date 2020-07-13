@@ -8,9 +8,16 @@
 
 import { CardProp } from './cardprop';
 
+/**
+ * CardInitializeType
+ *  - 'Load': Load Card with a specified id
+ *  - 'New': Create new Card with specified CardProp
+ */
+export type CardInitializeType = 'Load' | 'New';
+
 export interface ICardIO {
   getCardIdList(): Promise<string[]>;
-  readCardData(id: string): Promise<CardProp>;
+  readCardData(id: string, prop: CardProp): Promise<void>;
   writeOrCreateCardData(prop: CardProp): Promise<string>;
   deleteCardData(id: string): Promise<string>;
 }

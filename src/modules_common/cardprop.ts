@@ -7,7 +7,6 @@
  */
 
 import { getCurrentDateAndTime } from './utils';
-
 // Dragging is shaky when _DRAG_IMAGE_MARGIN is too small, especially just after loading a card.
 //  private _DRAG_IMAGE_MARGIN = 20;
 export const DRAG_IMAGE_MARGIN = 50;
@@ -54,25 +53,62 @@ export const DEFAULT_CARD_STYLE: CardStyle = {
 };
 
 export class CardProp implements CardBase {
-  public isEmpty = false;
+  public id = '';
+  public data = '';
+  public geometry: Geometry = DEFAULT_CARD_GEOMETRY;
+  public style: CardStyle = DEFAULT_CARD_STYLE;
+  public date: CardDate = {
+    createdDate: getCurrentDateAndTime(),
+    modifiedDate: getCurrentDateAndTime(),
+  };
+
+  public status: CardStatus = 'Blurred';
+  // eslint-disable-next-line complexity
   constructor (
-    public id: string = '',
-    public data: string = '',
-    public geometry: Geometry = DEFAULT_CARD_GEOMETRY,
-    public style: CardStyle = DEFAULT_CARD_STYLE,
-    public date: CardDate = {
-      createdDate: getCurrentDateAndTime(),
-      modifiedDate: getCurrentDateAndTime(),
-    },
-    public status: CardStatus = 'Blurred'
+    _id?: string,
+    _data?: string,
+    _geometry?: Geometry,
+    _style?: CardStyle,
+    _date?: CardDate
   ) {
+    if (_id !== undefined) {
+      this.id = _id;
+    }
+
+    if (_data !== undefined) {
+      this.data = _data;
+    }
+
+    if (
+      _geometry !== undefined &&
+      _geometry.x !== undefined &&
+      _geometry.y !== undefined &&
+      _geometry.z !== undefined
+    ) {
+      this.geometry = _geometry;
+    }
     this.geometry.x = Math.round(this.geometry.x);
     this.geometry.y = Math.round(this.geometry.y);
     this.geometry.z = Math.round(this.geometry.z);
     this.geometry.width = Math.round(this.geometry.width);
     this.geometry.height = Math.round(this.geometry.height);
-    if (id === '') {
-      this.isEmpty = true;
+
+    if (
+      _style !== undefined &&
+      _style.backgroundColor !== undefined &&
+      _style.opacity !== undefined &&
+      _style.uiColor !== undefined &&
+      _style.zoom !== undefined
+    ) {
+      this.style = _style;
+    }
+
+    if (
+      _date !== undefined &&
+      _date.createdDate !== undefined &&
+      _date.modifiedDate !== undefined
+    ) {
+      this.date = _date;
     }
   }
 
