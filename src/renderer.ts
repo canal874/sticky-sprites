@@ -406,7 +406,7 @@ const startEditorByClick = async (clickEvent: InnerClickEvent) => {
 
   const offsetY = document.getElementById('titleBar')!.offsetHeight;
   cardEditor.execAfterMouseDown(cardEditor.startEdit);
-  window.api.sendLeftMouseDOwn(cardProp.id, clickEvent.x, clickEvent.y + offsetY);
+  window.api.sendLeftMouseDown(cardProp.id, clickEvent.x, clickEvent.y + offsetY);
 };
 const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
   const uuid: string = await window.api.getUuid();

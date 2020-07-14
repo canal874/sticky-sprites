@@ -33,7 +33,7 @@ interface WindowWithAPI extends Window {
     onRenderCard: (listener: Function) => void;
     onResizeByHand: (listener: Function) => void;
     saveCard: (cardPropSerializable: CardPropSerializable) => Promise<void>;
-    sendLeftMouseDOwn: (id: string, x: number, y: number) => Promise<void>;
+    sendLeftMouseDown: (id: string, x: number, y: number) => Promise<void>;
     setWindowSize: (id: string, width: number, height: number) => Promise<void>;
     setTitle: (id: string, title: string) => Promise<void>;
   };
