@@ -6,11 +6,11 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { ipcRenderer } from 'electron';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
-import { MESSAGE, setTitleMessage } from './card_renderer';
+import { setTitleMessage } from './card_renderer';
 import { getCurrentDateAndTime } from '../modules_common/utils';
 import { DialogButton } from '../modules_common/const';
+import window from './window';
 
 type task = {
   prop: CardPropSerializable;
@@ -28,8 +28,8 @@ export const waitUnfinishedTasks = (id: string) => {
           resolve();
         }
         else if (timeoutCounter >= 10) {
-          await ipcRenderer
-            .invoke('confirm-dialog', id, ['Ok', 'Cancel'], MESSAGE.confirmWaitMore)
+          await window.api
+            .confirmDialog(id, ['btnOK', 'btnCancel'], 'confirmWaitMore')
             .then((res: number) => {
               if (res === DialogButton.Default) {
                 // OK
@@ -70,12 +70,12 @@ const execTask = async () => {
 
     // Execute the first task
     if (task.type === 'Save') {
-      await ipcRenderer.invoke('save-card', task.prop).catch(() => {
+      await window.api.saveCard(task.prop).catch(() => {
         // TODO: Handle save error.
       });
     }
     else if (task.type === 'Delete') {
-      await ipcRenderer.invoke('delete-card', task.prop.id).catch(() => {
+      await window.api.deleteCard(task.prop.id).catch(() => {
         // TODO: Handle save error.
       });
     }

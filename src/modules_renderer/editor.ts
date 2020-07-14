@@ -6,18 +6,13 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { v4 as uuidv4 } from 'uuid';
-import { ipcRenderer } from 'electron';
 import { CardProp, DRAG_IMAGE_MARGIN } from '../modules_common/cardprop';
 import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
-import { MESSAGE, render, setRenderOffsetHeight } from '../modules_renderer/card_renderer';
-import {
-  alertDialog,
-  convertHexColorToRgba,
-  darkenHexColor,
-  sleep,
-} from '../modules_common/utils';
-import { saveCard, saveCardColor } from '../modules_renderer/save';
+import { render, setRenderOffsetHeight } from './card_renderer';
+import { sleep } from '../modules_common/utils';
+import { convertHexColorToRgba, darkenHexColor } from '../modules_common/color';
+import { saveCard, saveCardColor } from './save';
+import window from './window';
 
 export class CardEditor implements ICardEditor {
   /**
@@ -141,7 +136,7 @@ export class CardEditor implements ICardEditor {
       return;
     }
 
-    ipcRenderer.invoke('set-window-size', this._cardProp.id, width, height);
+    window.api.setWindowSize(this._cardProp.id, width, height);
 
     this._cardProp.geometry.width = width;
     this._cardProp.geometry.height = height;
@@ -212,7 +207,7 @@ export class CardEditor implements ICardEditor {
      * Expected behavior is that IME always work inline on CKEditor.
      * A silly workaround is to blur and focus this browser window.
      */
-    await ipcRenderer.invoke('blurAndFocusWithSuppressEvents', this._cardProp.id);
+    await window.api.blurAndFocusWithSuppressEvents(this._cardProp.id);
   };
 
   private _setData = (): Promise<void> => {
@@ -233,8 +228,8 @@ export class CardEditor implements ICardEditor {
   private _addDragAndDropEvent = () => {
     // Don't use drop event : CKEDITOR.instances['editor'].on('drop', async evt => {});
     // Paste event is automatically occurred after drop.
-    CKEDITOR.instances.editor.on('paste', evt => {
-      const id = uuidv4();
+    CKEDITOR.instances.editor.on('paste', async evt => {
+      const id: string = await window.api.getUuid();
       const dataTransfer = evt.data.dataTransfer;
       if (dataTransfer.$.files) {
         const file = dataTransfer.$.files[0];
@@ -286,8 +281,7 @@ export class CardEditor implements ICardEditor {
                 this._cardProp.geometry.height + newImageHeight;
             }
 
-            ipcRenderer.invoke(
-              'set-window-size',
+            window.api.setWindowSize(
               this._cardProp.id,
               this._cardProp.geometry.width,
               this._cardProp.geometry.height
@@ -297,7 +291,7 @@ export class CardEditor implements ICardEditor {
             saveCard(this._cardProp);
             render();
             // Workaround for at bug that an image cannot be resizable just after created by drag and drop.
-            ipcRenderer.invoke('blurAndFocusWithSuppressFocusEvent', this._cardProp.id);
+            window.api.blurAndFocusWithSuppressFocusEvents(this._cardProp.id);
           };
           const imgTag = this.getImageTag(id, file!.path, 1, 1, file!.name);
           evt.data.dataValue = imgTag;
@@ -336,7 +330,7 @@ export class CardEditor implements ICardEditor {
         cont = false;
         // logger.error does not work in ipcRenderer event.
         console.error(`Error in showEditor ${this._cardProp.id}: too many setData errors`);
-        alertDialog(this._cardProp.id, MESSAGE.pleaseRestartErrorInOpeningEditor);
+        window.api.alertDialog(this._cardProp.id, 'pleaseRestartErrorInOpeningEditor');
       }
       if (cont) {
         // console.debug(`re-trying setData for ${this._cardProp.id}`);
@@ -386,8 +380,7 @@ export class CardEditor implements ICardEditor {
 
     // Expand card to add toolbar.
     const expandedHeight = this._cardProp.geometry.height + this._TOOLBAR_HEIGHT;
-    ipcRenderer.invoke(
-      'set-window-size',
+    window.api.setWindowSize(
       this._cardProp.id,
       this._cardProp.geometry.width,
       expandedHeight
@@ -413,8 +406,7 @@ export class CardEditor implements ICardEditor {
       dataChanged = true;
     }
 
-    ipcRenderer.invoke(
-      'set-window-size',
+    window.api.setWindowSize(
       this._cardProp.id,
       this._cardProp.geometry.width,
       this._cardProp.geometry.height

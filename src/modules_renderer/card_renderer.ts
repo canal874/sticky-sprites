@@ -6,13 +6,10 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { ipcRenderer } from 'electron';
 import { CardProp } from '../modules_common/cardprop';
-import { CardCssStyle, ContentsFrameMessage, ICardEditor } from '../modules_common/types';
-import { convertHexColorToRgba, darkenHexColor } from '../modules_common/utils';
-import { Messages } from '../modules_common/i18n';
-
-export const UI_COLOR_DARKENING_RATE = 0.8;
+import { CardCssStyle, ICardEditor } from '../modules_common/types';
+import { convertHexColorToRgba, darkenHexColor } from '../modules_common/color';
+import window from './window';
 
 let cardCssStyle: CardCssStyle;
 let cardProp: CardProp;
@@ -20,15 +17,6 @@ let cardEditor: ICardEditor;
 
 let renderOffsetHeight = 0; // Offset of card height from actual window height;
 let renderOffsetWidth = 0; // Offset of card height from actual window width;
-
-// eslint-disable-next-line import/no-mutable-exports
-export let MESSAGE: Messages;
-ipcRenderer
-  .invoke('get-messages')
-  .then(res => {
-    MESSAGE = res;
-  })
-  .catch(e => {});
 
 export const getRenderOffsetWidth = () => {
   return renderOffsetWidth;
@@ -62,8 +50,7 @@ export type CardRenderOptions =
   | 'EditorRect';
 
 const setWindowTitle = () => {
-  const title = cardProp.data === '' ? MESSAGE.newCard : cardProp.data;
-  ipcRenderer.invoke('set-title', cardProp.id, CardProp.getPlainText(title));
+  window.api.setTitle(cardProp.id, CardProp.getPlainText(cardProp.data));
 };
 
 const renderTitleBar = () => {
@@ -94,7 +81,9 @@ const renderTitleBar = () => {
   else {
     document.getElementById('codeBtn')!.style.visibility = 'hidden';
   }
-
+  /**
+   * TODO: Update title when cardProp.data changes
+   */
   setWindowTitle();
 };
 

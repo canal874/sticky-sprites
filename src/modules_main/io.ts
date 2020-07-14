@@ -13,7 +13,7 @@ import path from 'path';
 import PouchDB from 'pouchdb';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
-import { logger } from '../modules_common/logger';
+import { logger } from './logger';
 
 // '../../../../../../media_stickies_data' is default path when using asar created by squirrels.windows.
 // './media_stickies_data' is default path when starting from command line (npm start).

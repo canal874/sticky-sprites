@@ -1,5 +1,3 @@
-import { translate } from 'typed-intl';
-
 export interface Messages {
   zoomIn: string;
   zoomOut: string;
@@ -10,6 +8,7 @@ export interface Messages {
   confirmWaitMore: string;
   pleaseRestartErrorInOpeningEditor: string;
   btnCloseCard: string;
+  btnOK: string;
   btnCancel: string;
   white: string;
   yellow: string;
@@ -22,7 +21,9 @@ export interface Messages {
   transparent: string;
 }
 
-const English: Messages = {
+export type MessageLabel = keyof Messages;
+
+export const English: Messages = {
   zoomIn: 'Zoom In',
   zoomOut: 'Zoom Out',
   bringToFront: 'Bring to Front',
@@ -35,6 +36,7 @@ const English: Messages = {
   pleaseRestartErrorInOpeningEditor:
     'The card cannot be edited.\nPlease close this app and any other apps, and then open this app again.',
   btnCloseCard: 'Close',
+  btnOK: 'OK',
   btnCancel: 'Cancel',
   white: 'white',
   yellow: 'yellow',
@@ -47,7 +49,7 @@ const English: Messages = {
   transparent: 'transparent',
 };
 
-const Japanese: Messages = {
+export const Japanese: Messages = {
   zoomIn: '拡大',
   zoomOut: '縮小',
   bringToFront: '最前面へ',
@@ -60,6 +62,7 @@ const Japanese: Messages = {
   pleaseRestartErrorInOpeningEditor:
     'カードを編集できません。\n本アプリと他のアプリを全て閉じた後、本アプリをもう一度開いてください。',
   btnCloseCard: '閉じる',
+  btnOK: 'はい',
   btnCancel: 'キャンセル',
   white: '白',
   yellow: '黄',
@@ -71,5 +74,3 @@ const Japanese: Messages = {
   gray: 'グレー',
   transparent: '透明',
 };
-
-export default translate(English).supporting('ja', Japanese);
