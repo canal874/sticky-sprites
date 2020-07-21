@@ -6,13 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import {
-  BrowserWindow,
-  contextBridge,
-  ipcRenderer,
-  MouseInputEvent,
-  remote,
-} from 'electron';
+import { contextBridge, ipcRenderer, MouseInputEvent } from 'electron';
 
 contextBridge.exposeInMainWorld('api', {
   alertDialog: (id: string, message: string) => {
@@ -48,16 +42,6 @@ contextBridge.exposeInMainWorld('api', {
   getUuid: () => {
     return ipcRenderer.invoke('get-uuid');
   },
-  onCardBlurred: (listener: Function) => ipcRenderer.on('card-blurred', () => listener()),
-  onCardClose: (listener: Function) => ipcRenderer.on('card-close', () => listener()),
-  onCardFocused: (listener: Function) => ipcRenderer.on('card-focused', () => listener()),
-  onMoveByHand: (listener: Function) => ipcRenderer.on('move-by-hand', () => listener()),
-  onRenderCard: (listener: Function) =>
-    ipcRenderer.on('render-card', (event: Electron.IpcRendererEvent, _prop: any) =>
-      listener(_prop)
-    ),
-  onResizeByHand: (listener: Function) =>
-    ipcRenderer.on('resize-by-hand', () => listener()),
   saveCard: (cardPropSerializable: Record<string, any>) => {
     return ipcRenderer.invoke('save-card', cardPropSerializable);
   },
@@ -77,3 +61,26 @@ contextBridge.exposeInMainWorld('api', {
     return ipcRenderer.invoke('set-title', id, title);
   },
 });
+
+ipcRenderer.on('card-blurred', () =>
+  window.postMessage({ command: 'card-blurred' }, 'file://')
+);
+ipcRenderer.on('card-close', () =>
+  window.postMessage({ command: 'card-close' }, 'file://')
+);
+ipcRenderer.on('card-focused', () =>
+  window.postMessage({ command: 'card-focused' }, 'file://')
+);
+ipcRenderer.on(
+  'move-by-hand',
+  (event: Electron.IpcRendererEvent, _bounds: Electron.Rectangle) =>
+    window.postMessage({ command: 'move-by-hand', bounds: _bounds }, 'file://')
+);
+ipcRenderer.on('render-card', (event: Electron.IpcRendererEvent, _prop: any) =>
+  window.postMessage({ command: 'render-card', prop: _prop }, 'file://')
+);
+ipcRenderer.on(
+  'resize-by-hand',
+  (event: Electron.IpcRendererEvent, _bounds: Electron.Rectangle) =>
+    window.postMessage({ command: 'resize-by-hand', bounds: _bounds }, 'file://')
+);

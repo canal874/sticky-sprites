@@ -278,111 +278,129 @@ const onload = async () => {
   window.api.finishLoad(id);
 };
 
-const initializeIPCEvents = () => {
-  // ipc (inter-process communication)
+window.addEventListener('message', event => {
+  if (event.source !== window || !event.data.command) return;
+  switch (event.data.command) {
+    case 'card-blurred':
+      onCardBlurred();
+      break;
+    case 'card-close':
+      onCardClose();
+      break;
+    case 'card-focused':
+      onCardFocused();
+      break;
+    case 'move-by-hand':
+      onMoveByHand(event.data.bounds);
+      break;
+    case 'render-card':
+      onRenderCard(event.data.prop);
+      break;
+    case 'resize-by-hand':
+      onResizeByHand(event.data.bounds);
+      break;
+    default:
+      break;
+  }
+});
 
-  // Render card data
-  window.api.onRenderCard((_prop: CardPropSerializable) => {
-    cardProp = CardProp.fromObject(_prop);
+const onCardClose = () => {
+  close();
+};
 
-    initCardRenderer(cardProp, cardCssStyle, cardEditor);
+const onCardFocused = async () => {
+  cardProp.status = 'Focused';
+  render(['CardStyle']);
 
-    cardEditor.setCard(cardProp);
+  if (cardEditor.editorType === 'WYSIWYG') {
+    cardEditor.startEdit();
+  }
+  const newZ = await window.api.bringToFront(cardProp.id);
+  // eslint-disable-next-line require-atomic-updates
+  cardProp.geometry.z = newZ;
+  saveCard(cardProp);
+};
 
-    document.getElementById('card')!.style.visibility = 'visible';
+const onCardBlurred = () => {
+  cardProp.status = 'Blurred';
+  render(['CardStyle']);
 
-    render()
-      .then(() => {
-        const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
-        // Listen load event for reload()
-        iframe.addEventListener('load', e => {
-          render(['ContentsData', 'CardStyle']);
-        });
-      })
-      .catch(e => {
-        console.error(`Error in render-card: ${e.message}`);
-      });
+  if (cardEditor.isOpened) {
+    if (cardEditor.editorType === 'Markup') {
+      if (cardEditor.isCodeMode) {
+        return;
+      }
 
-    if (cardEditor.editorType === 'WYSIWYG') {
-      cardEditor
-        .showEditor()
-        .then(() => {
-          window.api.finishRenderCard(cardProp.id);
-        })
-        .catch((e: Error) => {
-          // logger.error does not work in ipcRenderer event.
-          console.error(`Error in render-card: ${e.message}`);
-        });
+      cardEditor.hideEditor();
     }
-    else {
-      window.api.finishRenderCard(cardProp.id).catch((e: Error) => {
+    const { dataChanged, data } = cardEditor.endEdit();
+    if (dataChanged) {
+      cardProp.data = data;
+      render();
+      saveCard(cardProp);
+    }
+
+    const { left, top } = cardEditor.getScrollPosition();
+    const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+    iframe.contentWindow!.scrollTo(left, top);
+  }
+};
+
+const onResizeByHand = (newBounds: Electron.Rectangle) => {
+  cardProp.geometry.width = Math.round(newBounds.width + getRenderOffsetWidth());
+  cardProp.geometry.height = Math.round(newBounds.height + getRenderOffsetHeight());
+
+  render(['TitleBar', 'ContentsRect', 'EditorRect']);
+
+  queueSaveCommand();
+};
+
+const onMoveByHand = (newBounds: Electron.Rectangle) => {
+  cardProp.geometry.x = Math.round(newBounds.x);
+  cardProp.geometry.y = Math.round(newBounds.y);
+
+  queueSaveCommand();
+};
+
+// Render card data
+const onRenderCard = (_prop: CardPropSerializable) => {
+  cardProp = CardProp.fromObject(_prop);
+
+  initCardRenderer(cardProp, cardCssStyle, cardEditor);
+
+  cardEditor.setCard(cardProp);
+
+  document.getElementById('card')!.style.visibility = 'visible';
+
+  render()
+    .then(() => {
+      const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+      // Listen load event for reload()
+      iframe.addEventListener('load', e => {
+        render(['ContentsData', 'CardStyle']);
+      });
+    })
+    .catch(e => {
+      console.error(`Error in render-card: ${e.message}`);
+    });
+
+  if (cardEditor.editorType === 'WYSIWYG') {
+    cardEditor
+      .showEditor()
+      .then(() => {
+        window.api.finishRenderCard(cardProp.id);
+      })
+      .catch((e: Error) => {
         // logger.error does not work in ipcRenderer event.
         console.error(`Error in render-card: ${e.message}`);
       });
-    }
-  });
-
-  window.api.onCardClose(() => {
-    close();
-  });
-
-  window.api.onCardFocused(async () => {
-    cardProp.status = 'Focused';
-    render(['CardStyle']);
-
-    if (cardEditor.editorType === 'WYSIWYG') {
-      cardEditor.startEdit();
-    }
-    const newZ = await window.api.bringToFront(cardProp.id);
-    // eslint-disable-next-line require-atomic-updates
-    cardProp.geometry.z = newZ;
-    saveCard(cardProp);
-  });
-
-  window.api.onCardBlurred(() => {
-    cardProp.status = 'Blurred';
-    render(['CardStyle']);
-
-    if (cardEditor.isOpened) {
-      if (cardEditor.editorType === 'Markup') {
-        if (cardEditor.isCodeMode) {
-          return;
-        }
-
-        cardEditor.hideEditor();
-      }
-      const { dataChanged, data } = cardEditor.endEdit();
-      if (dataChanged) {
-        cardProp.data = data;
-        render();
-        saveCard(cardProp);
-      }
-
-      const { left, top } = cardEditor.getScrollPosition();
-      const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
-      iframe.contentWindow!.scrollTo(left, top);
-    }
-  });
-
-  window.api.onResizeByHand(
-    (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
-      cardProp.geometry.width = Math.round(newBounds.width + getRenderOffsetWidth());
-      cardProp.geometry.height = Math.round(newBounds.height + getRenderOffsetHeight());
-
-      render(['TitleBar', 'ContentsRect', 'EditorRect']);
-
-      queueSaveCommand();
-    }
-  );
-
-  window.api.onMoveByHand(
-    (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
-      cardProp.geometry.x = Math.round(newBounds.x);
-      cardProp.geometry.y = Math.round(newBounds.y);
-
-      queueSaveCommand();
-    }
-  );
+  }
+  else {
+    window.api.finishRenderCard(cardProp.id).catch((e: Error) => {
+      // logger.error does not work in ipcRenderer event.
+      console.error(`Error in render-card: ${e.message}`);
+    });
+  }
 };
 
 const filterContentsFrameMessage = (event: MessageEvent): ContentsFrameMessage => {
@@ -408,6 +426,7 @@ const startEditorByClick = async (clickEvent: InnerClickEvent) => {
   cardEditor.execAfterMouseDown(cardEditor.startEdit);
   window.api.sendLeftMouseDown(cardProp.id, clickEvent.x, clickEvent.y + offsetY);
 };
+
 const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
   const uuid: string = await window.api.getUuid();
   /*
@@ -498,7 +517,6 @@ const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
   dropImg.src = fileDropEvent.path;
 };
 
-initializeIPCEvents();
 window.addEventListener('load', onload, false);
 window.addEventListener('beforeunload', e => {
   if (!canClose) {
