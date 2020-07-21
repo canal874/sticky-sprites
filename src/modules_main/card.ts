@@ -9,26 +9,20 @@
 import url from 'url';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { BrowserWindow, ipcMain, shell } from 'electron';
 import contextMenu from 'electron-context-menu';
-import {
-  CardDate,
-  CardProp,
-  CardPropSerializable,
-  CardStyle,
-  Geometry,
-} from '../modules_common/cardprop';
+import { CardProp } from '../modules_common/cardprop';
 import { CardIO } from './io';
 import { getCurrentDateAndTime } from '../modules_common/utils';
-import { darkenHexColor } from '../modules_common/color';
 import { logger } from './logger';
 import { CardInitializeType } from '../modules_common/types';
+import { MESSAGE } from '../modules_common/i18n';
+
 /**
  * Const
  */
 const MINIMUM_WINDOW_WIDTH = 180;
 const MINIMUM_WINDOW_HEIGHT = 80;
-const UI_COLOR_DARKENING_RATE = 0.8;
 
 /**
  * Focus control
@@ -63,13 +57,6 @@ export const cards: Map<string, Card> = new Map<string, Card>();
  */
 
 const setContextMenu = (win: BrowserWindow) => {
-  /*
-  const changeCardColor = (backgroundColor: string, opacity = 1.0) => {
-    const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
-    saveCardColor(cardProp, backgroundColor, uiColor, opacity);
-    render(['CardStyle', 'EditorStyle']);
-  };
-
   contextMenu({
     window: win,
     showSaveImageAs: true,
@@ -88,108 +75,81 @@ const setContextMenu = (win: BrowserWindow) => {
     ],
     prepend: () => [
       {
-        label: MESSAGE.zoomIn,
+        label: MESSAGE('zoomIn'),
         click: () => {
-          if (cardProp.style.zoom < 1.0) {
-            cardProp.style.zoom += 0.2;
-          }
-          else {
-            cardProp.style.zoom += 0.5;
-          }
-          if (cardProp.style.zoom > 3) {
-            cardProp.style.zoom = 3;
-          }
-          render(['CardStyle', 'EditorStyle']);
-
-          saveCard(cardProp);
+          win.webContents.send('zoom-in');
         },
       },
       {
-        label: MESSAGE.zoomOut,
+        label: MESSAGE('zoomOut'),
         click: () => {
-          if (cardProp.style.zoom <= 1.0) {
-            cardProp.style.zoom -= 0.2;
-          }
-          else {
-            cardProp.style.zoom -= 0.5;
-          }
-          if (cardProp.style.zoom <= 0.4) {
-            cardProp.style.zoom = 0.4;
-          }
-          render(['CardStyle', 'EditorStyle']);
-
-          saveCard(cardProp);
+          win.webContents.send('zoom-out');
         },
       },
-
       {
-        label: MESSAGE.sendToBack,
-        click: async () => {
-          const newZ = await ipcRenderer.invoke('send-to-back', cardProp.id);
-          // eslint-disable-next-line require-atomic-updates
-          cardProp.geometry.z = newZ;
-          saveCard(cardProp);
+        label: MESSAGE('sendToBack'),
+        click: () => {
+          win.webContents.send('send-to-back');
         },
       },
     ],
     append: () => [
       {
-        label: MESSAGE.yellow,
+        label: MESSAGE('yellow'),
         click: () => {
-          changeCardColor('#ffffa0');
+          win.webContents.send('change-card-color', '#ffffa0');
         },
       },
       {
-        label: MESSAGE.red,
+        label: MESSAGE('red'),
         click: () => {
-          changeCardColor('#ffb0b0');
+          win.webContents.send('change-card-color', '#ffb0b0');
         },
       },
       {
-        label: MESSAGE.green,
+        label: MESSAGE('green'),
         click: () => {
-          changeCardColor('#d0ffd0');
+          win.webContents.send('change-card-color', '#d0ffd0');
         },
       },
       {
-        label: MESSAGE.blue,
+        label: MESSAGE('blue'),
         click: () => {
-          changeCardColor('#d0d0ff');
+          win.webContents.send('change-card-color', '#d0d0ff');
         },
       },
       {
-        label: MESSAGE.orange,
+        label: MESSAGE('orange'),
         click: () => {
-          changeCardColor('#ffb000');
+          win.webContents.send('change-card-color', '#ffb000');
         },
       },
       {
-        label: MESSAGE.purple,
+        label: MESSAGE('purple'),
         click: () => {
-          changeCardColor('#ffd0ff');
+          win.webContents.send('change-card-color', '#ffd0ff');
         },
       },
       {
-        label: MESSAGE.white,
+        label: MESSAGE('white'),
         click: () => {
-          changeCardColor('#ffffff');
+          win.webContents.send('change-card-color', '#ffffff');
         },
       },
       {
-        label: MESSAGE.gray,
+        label: MESSAGE('gray'),
         click: () => {
-          changeCardColor('#d0d0d0');
+          win.webContents.send('change-card-color', '#d0d0d0');
         },
       },
       {
-        label: MESSAGE.transparent,
+        label: MESSAGE('transparent'),
         click: () => {
-          changeCardColor('#ffffff', 0.0);
+          win.webContents.send('change-card-color', '#ffffff', 0.0);
         },
       },
     ],
   });
-  */
 };
 
 export class Card {

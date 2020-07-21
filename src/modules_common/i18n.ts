@@ -74,3 +74,11 @@ export const Japanese: Messages = {
   gray: 'グレー',
   transparent: '透明',
 };
+
+let currentMessages: Messages = English;
+export const setCurrentMessages = (current: Messages) => {
+  currentMessages = current;
+};
+export const MESSAGE = (label: MessageLabel) => {
+  return currentMessages[label];
+};

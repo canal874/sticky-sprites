@@ -26,16 +26,11 @@ interface WindowWithAPI extends Window {
     finishRenderCard: (id: string) => Promise<void>;
     focus: (id: string) => Promise<void>;
     getUuid: () => Promise<string>;
-    onCardBlurred: (listener: Function) => void;
-    onCardClose: (listener: Function) => void;
-    onCardFocused: (listener: Function) => void;
-    onMoveByHand: (listener: Function) => void;
-    onRenderCard: (listener: Function) => void;
-    onResizeByHand: (listener: Function) => void;
     saveCard: (cardPropSerializable: CardPropSerializable) => Promise<void>;
     sendLeftMouseDown: (id: string, x: number, y: number) => Promise<void>;
     setWindowSize: (id: string, width: number, height: number) => Promise<void>;
     setTitle: (id: string, title: string) => Promise<void>;
+    sendToBack: (id: string) => Promise<number>;
   };
 }
 declare const window: WindowWithAPI;

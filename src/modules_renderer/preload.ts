@@ -54,6 +54,9 @@ contextBridge.exposeInMainWorld('api', {
     };
     return ipcRenderer.invoke('send-mouse-input', id, leftMouseDown);
   },
+  sendToBack: (id: string) => {
+    return ipcRenderer.invoke('send-to-back', id);
+  },
   setWindowSize: (id: string, width: number, height: number) => {
     return ipcRenderer.invoke('set-window-size', id, width, height);
   },
@@ -72,6 +75,19 @@ ipcRenderer.on('card-focused', () =>
   window.postMessage({ command: 'card-focused' }, 'file://')
 );
 ipcRenderer.on(
+  'change-card-color',
+  (event: Electron.IpcRendererEvent, _backgroundColor: string, _opacity: number) =>
+    window.postMessage(
+      {
+        command: 'change-card-color',
+        backgroundColor: _backgroundColor,
+        opacity: _opacity,
+      },
+      'file://'
+    )
+);
+
+ipcRenderer.on(
   'move-by-hand',
   (event: Electron.IpcRendererEvent, _bounds: Electron.Rectangle) =>
     window.postMessage({ command: 'move-by-hand', bounds: _bounds }, 'file://')
@@ -83,4 +99,12 @@ ipcRenderer.on(
   'resize-by-hand',
   (event: Electron.IpcRendererEvent, _bounds: Electron.Rectangle) =>
     window.postMessage({ command: 'resize-by-hand', bounds: _bounds }, 'file://')
+);
+
+ipcRenderer.on('zoom-in', () => window.postMessage({ command: 'zoom-in' }, 'file://'));
+
+ipcRenderer.on('zoom-out', () => window.postMessage({ command: 'zoom-out' }, 'file://'));
+
+ipcRenderer.on('send-to-back', () =>
+  window.postMessage({ command: 'send-to-back' }, 'file://')
 );

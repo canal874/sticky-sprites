@@ -12,7 +12,13 @@ import { selectPreferredLanguage, translate } from 'typed-intl';
 import { CardIO } from './modules_main/io';
 import { DialogButton } from './modules_common/const';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
-import { English, Japanese, MessageLabel, Messages } from './modules_common/i18n';
+import {
+  English,
+  Japanese,
+  MESSAGE,
+  MessageLabel,
+  setCurrentMessages,
+} from './modules_common/i18n';
 import { Card, cards, setGlobalFocusEventListenerPermission } from './modules_main/card';
 import { logger } from './modules_main/logger';
 
@@ -35,7 +41,6 @@ ipcMain.setMaxListeners(1000);
  */
 
 const translations = translate(English).supporting('ja', Japanese);
-let MESSAGE: Messages = English;
 
 /**
  * Card I/O
@@ -97,7 +102,7 @@ app.on('ready', async () => {
   // locale can be got after 'ready'
   logger.debug('locale: ' + app.getLocale());
   selectPreferredLanguage(['en', 'ja'], [app.getLocale(), 'en']);
-  MESSAGE = translations.messages();
+  setCurrentMessages(translations.messages());
 
   // load cards
   const cardArray: Card[] = await CardIO.getCardIdList()
@@ -222,7 +227,7 @@ ipcMain.handle('alert-dialog', (event, id: string, label: MessageLabel) => {
   dialog.showMessageBoxSync(card.window, {
     type: 'question',
     buttons: ['OK'],
-    message: MESSAGE[label],
+    message: MESSAGE(label),
   });
 });
 
@@ -233,13 +238,13 @@ ipcMain.handle(
     if (!card) {
       return;
     }
-    const buttons: string[] = buttonLabels.map(buttonLabel => MESSAGE[buttonLabel]);
+    const buttons: string[] = buttonLabels.map(buttonLabel => MESSAGE(buttonLabel));
     return dialog.showMessageBoxSync(card.window, {
       type: 'question',
       buttons: buttons,
       defaultId: DialogButton.Default,
       cancelId: DialogButton.Cancel,
-      message: MESSAGE[label],
+      message: MESSAGE(label),
     });
   }
 );

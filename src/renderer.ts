@@ -37,6 +37,8 @@ import {
 } from './modules_renderer/save';
 import window from './modules_renderer/window';
 
+const UI_COLOR_DARKENING_RATE = 0.8;
+
 let cardProp: CardProp = new CardProp('');
 
 let cardCssStyle: CardCssStyle = {
@@ -278,6 +280,7 @@ const onload = async () => {
   window.api.finishLoad(id);
 };
 
+// eslint-disable-next-line complexity
 window.addEventListener('message', event => {
   if (event.source !== window || !event.data.command) return;
   switch (event.data.command) {
@@ -290,6 +293,9 @@ window.addEventListener('message', event => {
     case 'card-focused':
       onCardFocused();
       break;
+    case 'change-card-color':
+      onChangeCardColor(event.data.backgroundColor, event.data.opacity);
+      break;
     case 'move-by-hand':
       onMoveByHand(event.data.bounds);
       break;
@@ -298,6 +304,15 @@ window.addEventListener('message', event => {
       break;
     case 'resize-by-hand':
       onResizeByHand(event.data.bounds);
+      break;
+    case 'send-to-back':
+      onSendToBack();
+      break;
+    case 'zoom-in':
+      onZoomIn();
+      break;
+    case 'zoom-out':
+      onZoomOut();
       break;
     default:
       break;
@@ -344,6 +359,12 @@ const onCardBlurred = () => {
     const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
     iframe.contentWindow!.scrollTo(left, top);
   }
+};
+
+const onChangeCardColor = (backgroundColor: string, opacity = 1.0) => {
+  const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
+  saveCardColor(cardProp, backgroundColor, uiColor, opacity);
+  render(['CardStyle', 'EditorStyle']);
 };
 
 const onResizeByHand = (newBounds: Electron.Rectangle) => {
@@ -401,6 +422,43 @@ const onRenderCard = (_prop: CardPropSerializable) => {
       console.error(`Error in render-card: ${e.message}`);
     });
   }
+};
+
+const onSendToBack = async () => {
+  const newZ = await window.api.sendToBack(cardProp.id);
+  // eslint-disable-next-line require-atomic-updates
+  cardProp.geometry.z = newZ;
+  saveCard(cardProp);
+};
+
+const onZoomIn = () => {
+  if (cardProp.style.zoom < 1.0) {
+    cardProp.style.zoom += 0.2;
+  }
+  else {
+    cardProp.style.zoom += 0.5;
+  }
+  if (cardProp.style.zoom > 3) {
+    cardProp.style.zoom = 3;
+  }
+  render(['CardStyle', 'EditorStyle']);
+
+  saveCard(cardProp);
+};
+
+const onZoomOut = () => {
+  if (cardProp.style.zoom <= 1.0) {
+    cardProp.style.zoom -= 0.2;
+  }
+  else {
+    cardProp.style.zoom -= 0.5;
+  }
+  if (cardProp.style.zoom <= 0.4) {
+    cardProp.style.zoom = 0.4;
+  }
+  render(['CardStyle', 'EditorStyle']);
+
+  saveCard(cardProp);
 };
 
 const filterContentsFrameMessage = (event: MessageEvent): ContentsFrameMessage => {
