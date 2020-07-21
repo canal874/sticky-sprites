@@ -1,5 +1,5 @@
 /**
- * @license MediaSticky
+ * @license Media Stickies
  * Copyright (c) Hidekazu Kubota
  *
  * This source code is licensed under the Mozilla Public License Version 2.0
@@ -8,9 +8,16 @@
 
 import { CardProp } from './cardprop';
 
+/**
+ * CardInitializeType
+ *  - 'Load': Load Card with a specified id
+ *  - 'New': Create new Card with specified CardProp
+ */
+export type CardInitializeType = 'Load' | 'New';
+
 export interface ICardIO {
   getCardIdList(): Promise<string[]>;
-  readCardData(id: string): Promise<CardProp>;
+  readCardData(id: string, prop: CardProp): Promise<void>;
   writeOrCreateCardData(prop: CardProp): Promise<string>;
   deleteCardData(id: string): Promise<string>;
 }
@@ -73,10 +80,8 @@ export type ContentsFrameCommand =
 export const contentsFrameCommand = [
   'click-parent',
   'contents-frame-file-dropped',
-  'contents-frame-loaded',
-  'overwrite-iframe',
-  'set-scrollbar-style',
-  'zoom',
+  'check-initializing',
+  'contents-frame-initialized',
 ];
 // ContentsFrameCommand is union. e.g) 'overwrite-iframe' | 'click-parent' | ...
 // Use ContentsFrameCommand to check type.

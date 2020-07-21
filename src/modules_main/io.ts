@@ -1,5 +1,5 @@
 /**
- * @license MediaSticky
+ * @license Media Stickies
  * Copyright (c) Hidekazu Kubota
  *
  * This source code is licensed under the Mozilla Public License Version 2.0
@@ -13,7 +13,7 @@ import path from 'path';
 import PouchDB from 'pouchdb';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
-import { logger, sleep } from '../modules_common/utils';
+import { logger } from './logger';
 
 // '../../../../../../media_stickies_data' is default path when using asar created by squirrels.windows.
 // './media_stickies_data' is default path when starting from command line (npm start).
@@ -62,7 +62,7 @@ class CardIOClass implements ICardIO {
     });
   };
 
-  public readCardData = (id: string): Promise<CardProp> => {
+  public readCardData = (id: string, prop: CardProp): Promise<void> => {
     // for debug
     // await sleep(60000);
 
@@ -89,29 +89,26 @@ class CardIOClass implements ICardIO {
             }
           }
 
-          resolve(
-            new CardProp(
-              id,
-              propsRequired.data,
-              {
-                x: propsRequired.x,
-                y: propsRequired.y,
-                z: propsRequired.z,
-                width: propsRequired.width,
-                height: propsRequired.height,
-              },
-              {
-                uiColor: propsRequired.uiColor,
-                backgroundColor: propsRequired.backgroundColor,
-                opacity: propsRequired.opacity,
-                zoom: propsRequired.zoom,
-              },
-              {
-                createdDate: propsRequired.createdDate,
-                modifiedDate: propsRequired.modifiedDate,
-              }
-            )
-          );
+          prop.data = propsRequired.data;
+          prop.geometry = {
+            x: propsRequired.x,
+            y: propsRequired.y,
+            z: propsRequired.z,
+            width: propsRequired.width,
+            height: propsRequired.height,
+          };
+          prop.style = {
+            uiColor: propsRequired.uiColor,
+            backgroundColor: propsRequired.backgroundColor,
+            opacity: propsRequired.opacity,
+            zoom: propsRequired.zoom,
+          };
+          prop.date = {
+            createdDate: propsRequired.createdDate,
+            modifiedDate: propsRequired.modifiedDate,
+          };
+
+          resolve();
         })
         .catch(e => {
           reject(e);
@@ -142,6 +139,7 @@ class CardIOClass implements ICardIO {
     return cardsDB
       .put(propObj)
       .then(res => {
+        logger.debug(`Saved: ${res.id}`);
         return res.id;
       })
       .catch(e => {

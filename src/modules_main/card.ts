@@ -1,5 +1,5 @@
 /**
- * @license MediaSticky
+ * @license Media Stickies
  * Copyright (c) Hidekazu Kubota
  *
  * This source code is licensed under the Mozilla Public License Version 2.0
@@ -10,15 +10,13 @@ import url from 'url';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { BrowserWindow, ipcMain, shell } from 'electron';
-import {
-  CardDate,
-  CardProp,
-  CardPropSerializable,
-  CardStyle,
-  Geometry,
-} from '../modules_common/cardprop';
-import { CardIO } from '../modules_ext/io';
-import { getCurrentDate, logger } from '../modules_common/utils';
+import contextMenu from 'electron-context-menu';
+import { CardProp } from '../modules_common/cardprop';
+import { CardIO } from './io';
+import { getCurrentDateAndTime } from '../modules_common/utils';
+import { logger } from './logger';
+import { CardInitializeType } from '../modules_common/types';
+import { MESSAGE } from '../modules_common/i18n';
 
 /**
  * Const
@@ -49,13 +47,113 @@ export const getGlobalFocusEventListenerPermission = () => {
  */
 const generateNewCardId = (): string => {
   // YYYY-MM-DD-UUID4
-  return `${getCurrentDate()}-${uuidv4()}`;
+  return `${getCurrentDateAndTime().replace(/^(.+?)\s.+?$/, '$1')}-${uuidv4()}`;
 };
 
 export const cards: Map<string, Card> = new Map<string, Card>();
 
+/**
+ * Context Menu
+ */
+
+const setContextMenu = (win: BrowserWindow) => {
+  contextMenu({
+    window: win,
+    showSaveImageAs: true,
+    showInspectElement: false,
+    menu: actions => [
+      actions.searchWithGoogle({}),
+      actions.separator(),
+      actions.cut({}),
+      actions.copy({}),
+      actions.paste({}),
+      actions.separator(),
+      actions.saveImageAs({}),
+      actions.separator(),
+      actions.copyLink({}),
+      actions.separator(),
+    ],
+    prepend: () => [
+      {
+        label: MESSAGE('zoomIn'),
+        click: () => {
+          win.webContents.send('zoom-in');
+        },
+      },
+      {
+        label: MESSAGE('zoomOut'),
+        click: () => {
+          win.webContents.send('zoom-out');
+        },
+      },
+      {
+        label: MESSAGE('sendToBack'),
+        click: () => {
+          win.webContents.send('send-to-back');
+        },
+      },
+    ],
+    append: () => [
+      {
+        label: MESSAGE('yellow'),
+        click: () => {
+          win.webContents.send('change-card-color', '#ffffa0');
+        },
+      },
+      {
+        label: MESSAGE('red'),
+        click: () => {
+          win.webContents.send('change-card-color', '#ffb0b0');
+        },
+      },
+      {
+        label: MESSAGE('green'),
+        click: () => {
+          win.webContents.send('change-card-color', '#d0ffd0');
+        },
+      },
+      {
+        label: MESSAGE('blue'),
+        click: () => {
+          win.webContents.send('change-card-color', '#d0d0ff');
+        },
+      },
+      {
+        label: MESSAGE('orange'),
+        click: () => {
+          win.webContents.send('change-card-color', '#ffb000');
+        },
+      },
+      {
+        label: MESSAGE('purple'),
+        click: () => {
+          win.webContents.send('change-card-color', '#ffd0ff');
+        },
+      },
+      {
+        label: MESSAGE('white'),
+        click: () => {
+          win.webContents.send('change-card-color', '#ffffff');
+        },
+      },
+      {
+        label: MESSAGE('gray'),
+        click: () => {
+          win.webContents.send('change-card-color', '#d0d0d0');
+        },
+      },
+      {
+        label: MESSAGE('transparent'),
+        click: () => {
+          win.webContents.send('change-card-color', '#ffffff', 0.0);
+        },
+      },
+    ],
+  });
+};
+
 export class Card {
-  public prop!: CardProp; // ! is Definite assignment assertion
+  public prop: CardProp; // ! is Definite assignment assertion
   public window: BrowserWindow;
 
   public suppressFocusEventOnce = false;
@@ -64,18 +162,55 @@ export class Card {
 
   public renderingCompleted = false;
 
-  public loadOrCreateCardData: () => Promise<CardProp>;
-  constructor (public id: string = '', public propTemplate?: CardPropSerializable) {
-    this.loadOrCreateCardData = this._loadCardData;
-    if (this.id === '') {
-      this.id = generateNewCardId();
-      this.loadOrCreateCardData = this._createCardData;
+  private _loadOrCreateCardData: () => Promise<void>;
+
+  constructor (public cardInitializeType: CardInitializeType, arg?: CardProp | string) {
+    if (cardInitializeType === 'New') {
+      this._loadOrCreateCardData = () => {
+        return Promise.resolve();
+      };
+      if (arg === undefined) {
+        // Create card with default properties
+        this.prop = new CardProp(generateNewCardId());
+      }
+      else if (arg instanceof CardProp) {
+        // Create card with specified CardProp
+        if (arg.id === '') {
+          arg.id = generateNewCardId();
+        }
+        this.prop = arg;
+      }
+      else {
+        throw new TypeError('Second parameter must be CardProp when creating new card.');
+      }
+    }
+    else {
+      // cardInitializeType === 'Load'
+      // Load Card
+      if (typeof arg !== 'string') {
+        throw new TypeError('Second parameter must be id string when loading the card.');
+      }
+      const id = arg;
+      this.prop = new CardProp(id);
+
+      this._loadOrCreateCardData = () => {
+        return new Promise((resolve, reject) => {
+          CardIO.readCardData(id, this.prop)
+            .then(() => {
+              // logger.debug('loadCardData  ' + arg);
+              resolve();
+            })
+            .catch((e: Error) => {
+              reject(new Error(`Error in loadCardData: ${e.message}`));
+            });
+        });
+      };
     }
 
     this.window = new BrowserWindow({
       webPreferences: {
-        nodeIntegration: true,
-        webviewTag: true,
+        preload: path.join(__dirname, '../modules_renderer/preload.js'),
+        contextIsolation: true,
       },
       minWidth: MINIMUM_WINDOW_WIDTH,
       minHeight: MINIMUM_WINDOW_HEIGHT,
@@ -90,6 +225,8 @@ export class Card {
       icon: path.join(__dirname, '../assets/media_stickies_grad_icon.ico'),
     });
     this.window.setMaxListeners(20);
+
+    // this.window.webContents.openDevTools();
 
     // Resized by hand
     // will-resize is only emitted when the window is being resized manually.
@@ -107,7 +244,7 @@ export class Card {
       // Dereference the window object, usually you would store windows
       // in an array if your app supports multi windows, this is the time
       // when you should delete the corresponding element.
-      cards.delete(this.id);
+      cards.delete(this.prop.id);
     });
 
     // Open hyperlink on external browser window
@@ -120,25 +257,24 @@ export class Card {
 
     this.window.on('focus', this._focusListener);
     this.window.on('blur', this._blurListener);
+
+    setContextMenu(this.window);
   }
 
-  public render = async () => {
-    const [, , _prop] = await Promise.all([
-      this._readyToShow(),
-      this._loadHTML(),
-      this.loadOrCreateCardData(),
-    ]).catch((e: Error) => {
-      throw new Error(`Cannot load card: ${this.id}: ${e.message}`);
-    });
-    this.prop = _prop;
-    await this._renderCard(_prop);
+  public render = () => {
+    return Promise.all([this._loadOrCreateCardData(), this._loadHTML()])
+      .then(() => {
+        this._renderCard(this.prop);
+      })
+      .catch(e => {
+        throw new Error(`Error in render(): ${e.message}`);
+      });
   };
 
-  private _renderCard = (_prop: CardProp) => {
+  _renderCard = (_prop: CardProp) => {
     return new Promise(resolve => {
       this.window.setSize(_prop.geometry.width, _prop.geometry.height);
       this.window.setPosition(_prop.geometry.x, _prop.geometry.y);
-      // logger.debug(`renderCard in main: ${JSON.stringify(_prop.toObject())}`);
       logger.debug(`renderCard in main [${_prop.id}] ${_prop.data.substr(0, 40)}`);
       this.window.showInactive();
       this.window.webContents.send('render-card', _prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
@@ -151,37 +287,24 @@ export class Card {
     });
   };
 
-  private _readyToShow: () => Promise<void> = () => {
-    return new Promise(resolve => {
-      this.window.once('ready-to-show', () => {
-        // logger.debug('readyToShow ' + this.id);
-        resolve();
-      });
-    });
-  };
-
-  private _finishReloadListener = (event: Electron.IpcMainEvent, fromId: string) => {
-    if (fromId === this.id) {
-      console.log(`reloaded in main: ${this.prop.id}`);
-      this.window.webContents.send('render-card', this.prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
-    }
+  private _finishReloadListener = (event: Electron.IpcMainInvokeEvent) => {
+    console.log(`reloaded in main: ${this.prop.id}`);
+    this.window.webContents.send('render-card', this.prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
   };
 
   private _loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
-      const finishLoadListener = (event: Electron.IpcMainEvent, fromId: string) => {
-        if (fromId === this.id) {
-          // logger.debug('loadHTML  ' + fromId);
+      const finishLoadListener = (event: Electron.IpcMainInvokeEvent) => {
+        logger.debug('loadHTML  ' + this.prop.id);
 
-          // Don't use 'did-finish-load' event.
-          // loadHTML resolves after loading HTML and processing required script are finished.
-          //     this.window.webContents.on('did-finish-load', () => {
-          ipcMain.off('finish-load', finishLoadListener);
-          ipcMain.on('finish-load', this._finishReloadListener);
-          resolve();
-        }
+        // Don't use 'did-finish-load' event.
+        // loadHTML resolves after loading HTML and processing required script are finished.
+        //     this.window.webContents.on('did-finish-load', () => {
+        ipcMain.handle('finish-load-' + this.prop.id, this._finishReloadListener);
+        resolve();
       };
-      ipcMain.on('finish-load', finishLoadListener);
+      ipcMain.handleOnce('finish-load-' + this.prop.id, finishLoadListener);
+
       this.window.webContents.on(
         'did-fail-load',
         (event, errorCode, errorDescription, validatedURL) => {
@@ -194,66 +317,10 @@ export class Card {
           protocol: 'file:',
           slashes: true,
           query: {
-            id: this.id,
+            id: this.prop.id,
           },
         })
       );
-    });
-  };
-
-  // eslint-disable-next-line complexity
-  private _createCardData: () => Promise<CardProp> = () => {
-    if (this.propTemplate) {
-      const _prop = this.propTemplate;
-      const geometry: Geometry | undefined =
-        _prop.x === undefined ||
-        _prop.y === undefined ||
-        _prop.z === undefined ||
-        _prop.width === undefined ||
-        _prop.height === undefined
-          ? undefined
-          : {
-            x: _prop.x,
-            y: _prop.y,
-            z: _prop.z,
-            width: _prop.width,
-            height: _prop.height,
-          };
-      const style: CardStyle | undefined =
-        _prop.uiColor === undefined ||
-        _prop.backgroundColor === undefined ||
-        _prop.opacity === undefined ||
-        _prop.zoom === undefined
-          ? undefined
-          : {
-            uiColor: _prop.uiColor,
-            backgroundColor: _prop.backgroundColor,
-            opacity: _prop.opacity,
-            zoom: _prop.zoom,
-          };
-      const date: CardDate | undefined =
-        _prop.createdDate === undefined || _prop.modifiedDate === undefined
-          ? undefined
-          : {
-            createdDate: _prop.createdDate,
-            modifiedDate: _prop.modifiedDate,
-          };
-      return Promise.resolve(new CardProp(this.id, _prop.data, geometry, style, date));
-    }
-
-    return Promise.resolve(new CardProp(this.id));
-  };
-
-  private _loadCardData: () => Promise<CardProp> = () => {
-    return new Promise((resolve, reject) => {
-      CardIO.readCardData(this.id)
-        .then((_prop: CardProp) => {
-          // logger.debug('loadCardData  ' + this.id);
-          resolve(_prop);
-        })
-        .catch((e: Error) => {
-          reject(new Error(`Error in loadCardData: ${e.message}`));
-        });
     });
   };
 
@@ -264,25 +331,25 @@ export class Card {
       setGlobalFocusEventListenerPermission(true);
     }
     if (this.suppressFocusEventOnce) {
-      logger.debug(`skip focus event listener ${this.id}`);
+      logger.debug(`skip focus event listener ${this.prop.id}`);
       this.suppressFocusEventOnce = false;
     }
     else if (!getGlobalFocusEventListenerPermission()) {
-      logger.debug(`focus event listener is suppressed ${this.id}`);
+      logger.debug(`focus event listener is suppressed ${this.prop.id}`);
     }
     else {
-      logger.debug(`focus ${this.id}`);
+      logger.debug(`focus ${this.prop.id}`);
       this.window.webContents.send('card-focused');
     }
   };
 
   private _blurListener = () => {
     if (this.suppressBlurEventOnce) {
-      logger.debug(`skip blur event listener ${this.id}`);
+      logger.debug(`skip blur event listener ${this.prop.id}`);
       this.suppressBlurEventOnce = false;
     }
     else {
-      logger.debug(`blur ${this.id}`);
+      logger.debug(`blur ${this.prop.id}`);
       this.window.webContents.send('card-blurred');
     }
   };
