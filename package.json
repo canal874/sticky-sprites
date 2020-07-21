@@ -1,7 +1,7 @@
 {
   "name": "media-stickies",
   "productName": "Media Stickies",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Media Stickies",
   "main": "dist/main.js",
   "scripts": {
