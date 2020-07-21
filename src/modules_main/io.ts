@@ -139,6 +139,7 @@ class CardIOClass implements ICardIO {
     return cardsDB
       .put(propObj)
       .then(res => {
+        logger.debug(`Saved: ${res.id}`);
         return res.id;
       })
       .catch(e => {
