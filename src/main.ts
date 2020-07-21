@@ -1,19 +1,29 @@
 /**
- * @license MediaSticky
+ * @license Media Stickies
  * Copyright (c) Hidekazu Kubota
  *
  * This source code is licensed under the Mozilla Public License Version 2.0
  * found in the LICENSE file in the root directory of this source tree.
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import { app, dialog, ipcMain, MouseInputEvent } from 'electron';
-import { selectPreferredLanguage } from 'typed-intl';
-import { logger } from './modules_common/utils';
-import translations from './modules_common/i18n';
+import { selectPreferredLanguage, translate } from 'typed-intl';
+import { CardIO } from './modules_main/io';
 import { DialogButton } from './modules_common/const';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
-import { CardIO } from './modules_ext/io';
+import {
+  English,
+  Japanese,
+  MESSAGE,
+  MessageLabel,
+  setCurrentMessages,
+} from './modules_common/i18n';
 import { Card, cards, setGlobalFocusEventListenerPermission } from './modules_main/card';
+import { logger } from './modules_main/logger';
+
+// Most secure option
+app.enableSandbox();
 
 // process.on('unhandledRejection', console.dir);
 
@@ -29,10 +39,9 @@ ipcMain.setMaxListeners(1000);
 /**
  * i18n
  */
-export const i18n = translations;
-ipcMain.handle('get-messages', () => {
-  return i18n.messages();
-});
+
+const translations = translate(English).supporting('ja', Japanese);
+
 /**
  * Card I/O
  */
@@ -76,18 +85,12 @@ ipcMain.handle('finish-render-card', (event, id: string) => {
   }
 });
 
-ipcMain.handle('create-card', async (event, propTemplate: CardPropSerializable) => {
-  const card = new Card('', propTemplate);
-  cards.set(card.id, card);
-  await card.loadData().catch((e: Error) => {
-    logger.error(`Error in loadData() of createCard(): ${e.message}`);
-  });
-  await card.loadHTML().catch((e: Error) => {
-    logger.error(`Error in loadHTML() of createCard(): ${e.message}`);
-  });
-  card.renderCard(card.prop);
-
-  return card.id;
+ipcMain.handle('create-card', (event, propObject: CardPropSerializable) => {
+  const prop = CardProp.fromObject(propObject);
+  const card = new Card('New', prop);
+  cards.set(card.prop.id, card);
+  card.render();
+  return card.prop.id;
 });
 
 /**
@@ -99,6 +102,7 @@ app.on('ready', async () => {
   // locale can be got after 'ready'
   logger.debug('locale: ' + app.getLocale());
   selectPreferredLanguage(['en', 'ja'], [app.getLocale(), 'en']);
+  setCurrentMessages(translations.messages());
 
   // load cards
   const cardArray: Card[] = await CardIO.getCardIdList()
@@ -106,12 +110,12 @@ app.on('ready', async () => {
       const cardArr = [];
       if (arr.length === 0) {
         // Create a new card
-        const card = new Card();
+        const card = new Card('New');
         cardArr.push(card);
       }
       else {
         for (const id of arr) {
-          const card = new Card(id);
+          const card = new Card('Load', id);
           cardArr.push(card);
         }
       }
@@ -122,45 +126,16 @@ app.on('ready', async () => {
       return [];
     });
 
-  const loaders = [];
+  const renderers = [];
   for (const card of cardArray) {
-    cards.set(card.id, card);
-    loaders.push(
-      card.loadData().catch((e: Error) => {
-        logger.error(`Error while loading card in ready event: ${e.message}`);
-      })
-    );
-  }
-  await Promise.all(loaders);
-
-  for (const card of cardArray) {
-    // eslint-disable-next-line no-await-in-loop
-    await card.loadHTML();
+    cards.set(card.prop.id, card);
+    renderers.push(card.render());
   }
 
-  await new Promise(resolve => {
-    const checkTimer = setInterval(() => {
-      let completed = true;
-      for (const card of cardArray) {
-        if (!card.loadCompleted) {
-          completed = false;
-          break;
-        }
-      }
-      if (completed) {
-        clearInterval(checkTimer);
-        resolve();
-      }
-    }, 200);
-  });
-
-  const renderer = [];
-  for (const card of cardArray) {
-    renderer.push(card.renderCard(card.prop));
-  }
-  await Promise.all(renderer).catch((e: Error) => {
+  await Promise.all(renderers).catch((e: Error) => {
     logger.error(`Error while rendering cards in ready event: ${e.message}`);
   });
+
   const backToFront = [...cards.keys()].sort((a, b) => {
     if (cards.get(a)!.prop.geometry.z < cards.get(b)!.prop.geometry.z) {
       return -1;
@@ -174,7 +149,7 @@ app.on('ready', async () => {
   for (const key of backToFront) {
     cards.get(key)!.window.moveTop();
   }
-  logger.debug(`Completed to load ${renderer.length} cards`);
+  logger.debug(`Completed to load ${renderers.length} cards`);
 });
 
 /**
@@ -188,7 +163,7 @@ app.on('window-all-closed', () => {
  * Utils
  */
 
-ipcMain.handle('blurAndFocusWithSuppressEvents', (event, id: string) => {
+ipcMain.handle('blur-and-focus-with-suppress-events', (event, id: string) => {
   const card = cards.get(id);
   if (card) {
     console.debug(`blurAndFocus: ${id}`);
@@ -205,7 +180,7 @@ ipcMain.handle('blurAndFocusWithSuppressEvents', (event, id: string) => {
   }
 });
 
-ipcMain.handle('blurAndFocusWithSuppressFocusEvent', (event, id: string) => {
+ipcMain.handle('blur-and-focus-with-suppress-focus-event', (event, id: string) => {
   const card = cards.get(id);
   if (card) {
     console.debug(`blurAndFocus: ${id}`);
@@ -243,7 +218,7 @@ ipcMain.handle('set-title', (event, id: string, title: string) => {
   }
 });
 
-ipcMain.handle('alert-dialog', (event, id: string, msg: string) => {
+ipcMain.handle('alert-dialog', (event, id: string, label: MessageLabel) => {
   const card = cards.get(id);
   if (!card) {
     return;
@@ -252,28 +227,36 @@ ipcMain.handle('alert-dialog', (event, id: string, msg: string) => {
   dialog.showMessageBoxSync(card.window, {
     type: 'question',
     buttons: ['OK'],
-    message: msg,
+    message: MESSAGE(label),
   });
 });
 
-ipcMain.handle('confirm-dialog', (event, id: string, buttons: string[], msg: string) => {
-  const card = cards.get(id);
-  if (!card) {
-    return;
+ipcMain.handle(
+  'confirm-dialog',
+  (event, id: string, buttonLabels: MessageLabel[], label: MessageLabel) => {
+    const card = cards.get(id);
+    if (!card) {
+      return;
+    }
+    const buttons: string[] = buttonLabels.map(buttonLabel => MESSAGE(buttonLabel));
+    return dialog.showMessageBoxSync(card.window, {
+      type: 'question',
+      buttons: buttons,
+      defaultId: DialogButton.Default,
+      cancelId: DialogButton.Cancel,
+      message: MESSAGE(label),
+    });
   }
-  return dialog.showMessageBoxSync(card.window, {
-    type: 'question',
-    buttons: buttons,
-    defaultId: DialogButton.Default,
-    cancelId: DialogButton.Cancel,
-    message: msg,
-  });
-});
+);
 
 ipcMain.handle('set-window-size', (event, id: string, width: number, height: number) => {
   const card = cards.get(id);
   // eslint-disable-next-line no-unused-expressions
   card?.window.setSize(width, height);
+});
+
+ipcMain.handle('get-uuid', () => {
+  return uuidv4();
 });
 
 ipcMain.handle('bring-to-front', (event, id: string, rearrange = false) => {

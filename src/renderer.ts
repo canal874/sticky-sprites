@@ -1,22 +1,11 @@
 /**
- * @license MediaSticky
+ * @license Media Stickies
  * Copyright (c) Hidekazu Kubota
  *
  * This source code is licensed under the Mozilla Public License Version 2.0
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import {
-  BrowserWindow,
-  IpcMessageEvent,
-  ipcRenderer,
-  MouseInputEvent,
-  remote,
-  shell,
-  WebviewTag,
-} from 'electron';
-import { v4 as uuidv4 } from 'uuid';
-import contextMenu from 'electron-context-menu';
 import {
   CardProp,
   CardPropSerializable,
@@ -32,22 +21,23 @@ import {
   InnerClickEvent,
 } from './modules_common/types';
 import { DialogButton } from './modules_common/const';
-import { CardEditor } from './modules_ext/editor';
+import { CardEditor } from './modules_renderer/editor';
 import {
   getRenderOffsetHeight,
   getRenderOffsetWidth,
   initCardRenderer,
-  MESSAGE,
   render,
-  UI_COLOR_DARKENING_RATE,
 } from './modules_renderer/card_renderer';
-import { darkenHexColor, logger } from './modules_common/utils';
+import { darkenHexColor } from './modules_common/color';
 import {
   deleteCard,
   saveCard,
   saveCardColor,
   waitUnfinishedTasks,
 } from './modules_renderer/save';
+import window from './modules_renderer/window';
+
+const UI_COLOR_DARKENING_RATE = 0.8;
 
 let cardProp: CardProp = new CardProp('');
 
@@ -55,6 +45,8 @@ let cardCssStyle: CardCssStyle = {
   padding: { left: 0, right: 0, top: 0, bottom: 0 },
   border: { left: 0, right: 0, top: 0, bottom: 0 },
 };
+
+let canClose = false;
 
 let isShiftDown = false;
 let isCtrlDown = false;
@@ -65,8 +57,9 @@ const cardEditor: ICardEditor = new CardEditor();
 
 const close = async () => {
   await waitUnfinishedTasks(cardProp.id).catch((e: Error) => {
-    logger.debug(e.message);
+    console.error(e.message);
   });
+  canClose = true;
   window.close();
 };
 
@@ -83,150 +76,6 @@ const queueSaveCommand = () => {
   clearTimeout(execSaveCommandTimeout);
   execSaveCommandTimeout = setTimeout(execSaveCommand, 1000);
 };
-
-/**
- * Context Menu
- */
-
-const setContextMenu = (win: BrowserWindow | WebviewTag) => {
-  const changeCardColor = (backgroundColor: string, opacity = 1.0) => {
-    const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
-    saveCardColor(cardProp, backgroundColor, uiColor, opacity);
-    render(['CardStyle', 'EditorStyle']);
-  };
-
-  contextMenu({
-    window: win,
-    showSaveImageAs: true,
-    showInspectElement: false,
-    menu: actions => [
-      actions.searchWithGoogle({}),
-      actions.separator(),
-      actions.cut({}),
-      actions.copy({}),
-      actions.paste({}),
-      actions.separator(),
-      actions.saveImageAs({}),
-      actions.separator(),
-      actions.copyLink({}),
-      actions.separator(),
-    ],
-    prepend: () => [
-      {
-        label: MESSAGE.zoomIn,
-        click: () => {
-          if (cardProp.style.zoom < 1.0) {
-            cardProp.style.zoom += 0.2;
-          }
-          else {
-            cardProp.style.zoom += 0.5;
-          }
-          if (cardProp.style.zoom > 3) {
-            cardProp.style.zoom = 3;
-          }
-          render(['CardStyle', 'EditorStyle']);
-
-          saveCard(cardProp);
-        },
-      },
-      {
-        label: MESSAGE.zoomOut,
-        click: () => {
-          if (cardProp.style.zoom <= 1.0) {
-            cardProp.style.zoom -= 0.2;
-          }
-          else {
-            cardProp.style.zoom -= 0.5;
-          }
-          if (cardProp.style.zoom <= 0.4) {
-            cardProp.style.zoom = 0.4;
-          }
-          render(['CardStyle', 'EditorStyle']);
-
-          saveCard(cardProp);
-        },
-      },
-      /*
-    {
-      label: MESSAGE.bringToFront,
-      click: async () => {
-        const newZ = await ipcRenderer.invoke('bring-to-front', cardProp.id);
-        // eslint-disable-next-line require-atomic-updates
-        cardProp.geometry.z = newZ;
-        saveCard(cardProp);
-      },
-    },
-    */
-      {
-        label: MESSAGE.sendToBack,
-        click: async () => {
-          const newZ = await ipcRenderer.invoke('send-to-back', cardProp.id);
-          // eslint-disable-next-line require-atomic-updates
-          cardProp.geometry.z = newZ;
-          saveCard(cardProp);
-        },
-      },
-    ],
-    append: () => [
-      {
-        label: MESSAGE.yellow,
-        click: () => {
-          changeCardColor('#ffffa0');
-        },
-      },
-      {
-        label: MESSAGE.red,
-        click: () => {
-          changeCardColor('#ffb0b0');
-        },
-      },
-      {
-        label: MESSAGE.green,
-        click: () => {
-          changeCardColor('#d0ffd0');
-        },
-      },
-      {
-        label: MESSAGE.blue,
-        click: () => {
-          changeCardColor('#d0d0ff');
-        },
-      },
-      {
-        label: MESSAGE.orange,
-        click: () => {
-          changeCardColor('#ffb000');
-        },
-      },
-      {
-        label: MESSAGE.purple,
-        click: () => {
-          changeCardColor('#ffd0ff');
-        },
-      },
-      {
-        label: MESSAGE.white,
-        click: () => {
-          changeCardColor('#ffffff');
-        },
-      },
-      {
-        label: MESSAGE.gray,
-        click: () => {
-          changeCardColor('#d0d0d0');
-        },
-      },
-      {
-        label: MESSAGE.transparent,
-        click: () => {
-          changeCardColor('#ffffff', 0.0);
-        },
-      },
-    ],
-  });
-};
-
-setContextMenu(remote.getCurrentWindow());
 
 /**
  * Initialize
@@ -258,14 +107,14 @@ const initializeUIEvents = () => {
     geometry.x = cardProp.geometry.x + 30;
     geometry.y = cardProp.geometry.y + 30;
 
-    const newId = await ipcRenderer.invoke('create-card', {
+    const newId = await window.api.createCard({
       x: geometry.x,
       y: geometry.y,
       z: geometry.z + 1,
       width: geometry.width,
       height: geometry.height,
     });
-    ipcRenderer.invoke('focus', newId);
+    window.api.focus(newId);
   });
 
   // eslint-disable-next-line no-unused-expressions
@@ -295,13 +144,8 @@ const initializeUIEvents = () => {
        * It disturbs correct behavior of CKEditor.
        * Caret of CKEditor is disappeared just after push Cancel button of window.confirm()
        */
-      ipcRenderer
-        .invoke(
-          'confirm-dialog',
-          cardProp.id,
-          [MESSAGE.btnCloseCard, 'Cancel'],
-          MESSAGE.confirmClosing
-        )
+      window.api
+        .confirmDialog(cardProp.id, ['btnCloseCard', 'btnCancel'], 'confirmClosing')
         .then((res: number) => {
           if (res === DialogButton.Default) {
             // OK
@@ -312,46 +156,60 @@ const initializeUIEvents = () => {
           }
         })
         .catch((e: Error) => {
-          logger.debug(e.message);
+          console.error(e.message);
         });
     }
   });
 };
 
-const waitWebviewLoading = () => {
+const waitIframeInitializing = () => {
   return new Promise((resolve, reject) => {
-    const webview = document.getElementById('contentsFrame')! as WebviewTag;
-    let counter = 0;
-    const checkTimer = setInterval(() => {
-      if (!webview.isLoading()) {
-        clearInterval(checkTimer);
+    const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+
+    const initializingReceived = (event: MessageEvent) => {
+      const msg: ContentsFrameMessage = filterContentsFrameMessage(event);
+      if (msg.command === 'contents-frame-initialized') {
+        clearInterval(iframeLoadTimer);
+        window.removeEventListener('message', initializingReceived);
         resolve();
       }
-      else {
-        counter++;
-        if (counter > 100) {
-          reject(new Error('Failed to load webview'));
-        }
+    };
+    window.addEventListener('message', initializingReceived);
+    let counter = 0;
+    const iframeLoadTimer = setInterval(() => {
+      const msg: ContentsFrameMessage = { command: 'check-initializing', arg: '' };
+      iframe.contentWindow!.postMessage(msg, '*');
+      if (++counter > 100) {
+        clearInterval(iframeLoadTimer);
+        reject(new Error('Cannot load iframe in waitIframeInitializing()'));
       }
     }, 100);
   });
 };
 
-const onready = () => {
-  // case 3)
-  const url = window.location.search;
-  const arr = url.slice(1).split('&');
-  const params: { [key: string]: string } = {};
-  for (var i = 0; i < arr.length; i++) {
-    const pair = arr[i].split('=');
-    params[pair[0]] = pair[1];
-  }
-  const id = params.id;
-  if (!id) {
-    console.error('id parameter is not given in URL');
-    return;
-  }
-  ipcRenderer.send('ready-' + id);
+const initializeContentsFrameEvents = () => {
+  const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+
+  window.addEventListener('message', (event: MessageEvent) => {
+    const msg: ContentsFrameMessage = filterContentsFrameMessage(event);
+    switch (msg.command) {
+      case 'click-parent':
+        // Click request from child frame
+        if (msg.arg !== undefined) {
+          startEditorByClick(JSON.parse(msg.arg) as InnerClickEvent);
+        }
+        break;
+
+      case 'contents-frame-file-dropped':
+        if (msg.arg !== undefined) {
+          addDroppedImage(JSON.parse(msg.arg) as FileDropEvent);
+        }
+        break;
+
+      default:
+        break;
+    }
+  });
 };
 
 const onload = async () => {
@@ -409,132 +267,202 @@ const onload = async () => {
     },
   };
 
-  // case 2) ipcRenderer.send('finish-load', id);
-
-  initializeContentsFrameEvents();
   initializeUIEvents();
 
-  await Promise.all([cardEditor.loadUI(cardCssStyle), waitWebviewLoading()]).catch(e => {
-    logger.error(e.message);
-  });
+  await Promise.all([cardEditor.loadUI(cardCssStyle), waitIframeInitializing()]).catch(
+    e => {
+      console.error(e.message);
+    }
+  );
 
-  ipcRenderer.send('finish-load-' + id);
-  // case 1)
-  // ipcRenderer.send('finish-load', id);
-  // console.debug('(2) loadUI is completed');
+  initializeContentsFrameEvents();
+
+  window.api.finishLoad(id);
 };
 
-const initializeIPCEvents = () => {
-  // ipc (inter-process communication)
-
-  // Render card data
-  ipcRenderer.on(
-    'render-card',
-    (event: Electron.IpcRendererEvent, _prop: CardPropSerializable) => {
-      cardProp = CardProp.fromObject(_prop);
-
-      initCardRenderer(cardProp, cardCssStyle, cardEditor);
-
-      cardEditor.setCard(cardProp);
-
-      document.getElementById('card')!.style.visibility = 'visible';
-
-      render();
-
-      if (cardEditor.editorType === 'WYSIWYG') {
-        cardEditor
-          .showEditor()
-          .then(() => {
-            ipcRenderer.invoke('finish-render-card', cardProp.id);
-          })
-          .catch((e: Error) => {
-            // logger.error does not work in ipcRenderer event.
-            console.error(`Error in render-card: ${e.message}`);
-          });
-      }
-      else {
-        ipcRenderer.invoke('finish-render-card', cardProp.id).catch((e: Error) => {
-          // logger.error does not work in ipcRenderer event.
-          console.error(`Error in render-card: ${e.message}`);
-        });
-      }
-    }
-  );
-
-  ipcRenderer.on('card-close', () => {
-    close();
-  });
-
-  ipcRenderer.on('card-focused', async () => {
-    console.debug('card-focused');
-
-    cardProp.status = 'Focused';
-    render(['CardStyle']);
-
-    if (cardEditor.editorType === 'WYSIWYG') {
-      cardEditor.startEdit();
-    }
-    const newZ = await ipcRenderer.invoke('bring-to-front', cardProp.id);
-    // eslint-disable-next-line require-atomic-updates
-    cardProp.geometry.z = newZ;
-    saveCard(cardProp);
-  });
-
-  ipcRenderer.on('card-blurred', () => {
-    console.debug('card-blurred');
-
-    cardProp.status = 'Blurred';
-    render(['CardStyle']);
-
-    if (cardEditor.isOpened) {
-      if (cardEditor.editorType === 'Markup') {
-        if (cardEditor.isCodeMode) {
-          return;
-        }
-
-        cardEditor.hideEditor();
-      }
-      const { dataChanged, data } = cardEditor.endEdit();
-      if (dataChanged) {
-        cardProp.data = data;
-        render();
-        saveCard(cardProp);
-      }
-
-      const { left, top } = cardEditor.getScrollPosition();
-      const webview = document.getElementById('contentsFrame') as WebviewTag;
-      webview.executeJavaScript(`window.scrollTo(${left}, ${top})`);
-    }
-  });
-
-  ipcRenderer.on(
-    'resize-by-hand',
-    (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
-      cardProp.geometry.width = Math.round(newBounds.width + getRenderOffsetWidth());
-      cardProp.geometry.height = Math.round(newBounds.height + getRenderOffsetHeight());
-
-      render(['TitleBar', 'ContentsRect', 'EditorRect']);
-
-      queueSaveCommand();
-    }
-  );
-
-  ipcRenderer.on(
-    'move-by-hand',
-    (event: Electron.IpcRendererEvent, newBounds: Electron.Rectangle) => {
-      cardProp.geometry.x = Math.round(newBounds.x);
-      cardProp.geometry.y = Math.round(newBounds.y);
-
-      queueSaveCommand();
-    }
-  );
-};
-
-const filterContentsFrameMessage = (event: IpcMessageEvent): ContentsFrameMessage => {
-  if (event.channel !== 'message' || !event.args || !event.args[0]) {
-    return { command: '', arg: '' };
+// eslint-disable-next-line complexity
+window.addEventListener('message', event => {
+  if (event.source !== window || !event.data.command) return;
+  switch (event.data.command) {
+    case 'card-blurred':
+      onCardBlurred();
+      break;
+    case 'card-close':
+      onCardClose();
+      break;
+    case 'card-focused':
+      onCardFocused();
+      break;
+    case 'change-card-color':
+      onChangeCardColor(event.data.backgroundColor, event.data.opacity);
+      break;
+    case 'move-by-hand':
+      onMoveByHand(event.data.bounds);
+      break;
+    case 'render-card':
+      onRenderCard(event.data.prop);
+      break;
+    case 'resize-by-hand':
+      onResizeByHand(event.data.bounds);
+      break;
+    case 'send-to-back':
+      onSendToBack();
+      break;
+    case 'zoom-in':
+      onZoomIn();
+      break;
+    case 'zoom-out':
+      onZoomOut();
+      break;
+    default:
+      break;
   }
-  const msg: ContentsFrameMessage = event.args[0];
+});
+
+const onCardClose = () => {
+  close();
+};
+
+const onCardFocused = async () => {
+  cardProp.status = 'Focused';
+  render(['CardStyle']);
+
+  if (cardEditor.editorType === 'WYSIWYG') {
+    cardEditor.startEdit();
+  }
+  const newZ = await window.api.bringToFront(cardProp.id);
+  // eslint-disable-next-line require-atomic-updates
+  cardProp.geometry.z = newZ;
+  saveCard(cardProp);
+};
+
+const onCardBlurred = () => {
+  cardProp.status = 'Blurred';
+  render(['CardStyle']);
+
+  if (cardEditor.isOpened) {
+    if (cardEditor.editorType === 'Markup') {
+      if (cardEditor.isCodeMode) {
+        return;
+      }
+
+      cardEditor.hideEditor();
+    }
+    const { dataChanged, data } = cardEditor.endEdit();
+    if (dataChanged) {
+      cardProp.data = data;
+      render();
+      saveCard(cardProp);
+    }
+
+    const { left, top } = cardEditor.getScrollPosition();
+    const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+    iframe.contentWindow!.scrollTo(left, top);
+  }
+};
+
+const onChangeCardColor = (backgroundColor: string, opacity = 1.0) => {
+  const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
+  saveCardColor(cardProp, backgroundColor, uiColor, opacity);
+  render(['CardStyle', 'EditorStyle']);
+};
+
+const onResizeByHand = (newBounds: Electron.Rectangle) => {
+  cardProp.geometry.width = Math.round(newBounds.width + getRenderOffsetWidth());
+  cardProp.geometry.height = Math.round(newBounds.height + getRenderOffsetHeight());
+
+  render(['TitleBar', 'ContentsRect', 'EditorRect']);
+
+  queueSaveCommand();
+};
+
+const onMoveByHand = (newBounds: Electron.Rectangle) => {
+  cardProp.geometry.x = Math.round(newBounds.x);
+  cardProp.geometry.y = Math.round(newBounds.y);
+
+  queueSaveCommand();
+};
+
+// Render card data
+const onRenderCard = (_prop: CardPropSerializable) => {
+  cardProp = CardProp.fromObject(_prop);
+
+  initCardRenderer(cardProp, cardCssStyle, cardEditor);
+
+  cardEditor.setCard(cardProp);
+
+  document.getElementById('card')!.style.visibility = 'visible';
+
+  render()
+    .then(() => {
+      const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+      // Listen load event for reload()
+      iframe.addEventListener('load', e => {
+        render(['ContentsData', 'CardStyle']);
+      });
+    })
+    .catch(e => {
+      console.error(`Error in render-card: ${e.message}`);
+    });
+
+  if (cardEditor.editorType === 'WYSIWYG') {
+    cardEditor
+      .showEditor()
+      .then(() => {
+        window.api.finishRenderCard(cardProp.id);
+      })
+      .catch((e: Error) => {
+        // logger.error does not work in ipcRenderer event.
+        console.error(`Error in render-card: ${e.message}`);
+      });
+  }
+  else {
+    window.api.finishRenderCard(cardProp.id).catch((e: Error) => {
+      // logger.error does not work in ipcRenderer event.
+      console.error(`Error in render-card: ${e.message}`);
+    });
+  }
+};
+
+const onSendToBack = async () => {
+  const newZ = await window.api.sendToBack(cardProp.id);
+  // eslint-disable-next-line require-atomic-updates
+  cardProp.geometry.z = newZ;
+  saveCard(cardProp);
+};
+
+const onZoomIn = () => {
+  if (cardProp.style.zoom < 1.0) {
+    cardProp.style.zoom += 0.2;
+  }
+  else {
+    cardProp.style.zoom += 0.5;
+  }
+  if (cardProp.style.zoom > 3) {
+    cardProp.style.zoom = 3;
+  }
+  render(['CardStyle', 'EditorStyle']);
+
+  saveCard(cardProp);
+};
+
+const onZoomOut = () => {
+  if (cardProp.style.zoom <= 1.0) {
+    cardProp.style.zoom -= 0.2;
+  }
+  else {
+    cardProp.style.zoom -= 0.5;
+  }
+  if (cardProp.style.zoom <= 0.4) {
+    cardProp.style.zoom = 0.4;
+  }
+  render(['CardStyle', 'EditorStyle']);
+
+  saveCard(cardProp);
+};
+
+const filterContentsFrameMessage = (event: MessageEvent): ContentsFrameMessage => {
+  const msg: ContentsFrameMessage = event.data;
   if (!contentsFrameCommand.includes(msg.command)) {
     return { command: '', arg: '' };
   }
@@ -543,28 +471,24 @@ const filterContentsFrameMessage = (event: IpcMessageEvent): ContentsFrameMessag
 
 const startEditorByClick = async (clickEvent: InnerClickEvent) => {
   await cardEditor.showEditor().catch((e: Error) => {
-    logger.error(`Error in clicking contents: ${e.message}`);
+    console.error(`Error in clicking contents: ${e.message}`);
   });
 
-  // Set scroll position of editor to that of webview
-  const webview = document.getElementById('contentsFrame') as WebviewTag;
-  const scrollTop = await webview.executeJavaScript('window.scrollY');
-  const scrollLeft = await webview.executeJavaScript('window.scrollX');
+  // Set scroll position of editor to that of iframe
+  const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+  const scrollTop = iframe.contentWindow!.scrollY;
+  const scrollLeft = iframe.contentWindow!.scrollX;
   cardEditor.setScrollPosition(scrollLeft, scrollTop);
 
   const offsetY = document.getElementById('titleBar')!.offsetHeight;
-  const leftMouseDown: MouseInputEvent = {
-    button: 'left',
-    type: 'mouseDown',
-    x: clickEvent.x,
-    y: clickEvent.y + offsetY,
-  };
   cardEditor.execAfterMouseDown(cardEditor.startEdit);
-  ipcRenderer.invoke('send-mouse-input', cardProp.id, leftMouseDown);
+  window.api.sendLeftMouseDown(cardProp.id, clickEvent.x, clickEvent.y + offsetY);
 };
-const addDroppedImage = (fileDropEvent: FileDropEvent) => {
+
+const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
+  const uuid: string = await window.api.getUuid();
   /*
-   * Must sanitize params from webview
+   * Must sanitize params from iframe
    * - fileDropEvent.path is checked whether it is correct path or not
    *   by using dropImg.src = fileDropEvent.path;
    *   Incorrect path cannot be loaded.
@@ -602,7 +526,7 @@ const addDroppedImage = (fileDropEvent: FileDropEvent) => {
     newImageHeight = Math.floor(newImageHeight);
 
     const imgTag = cardEditor.getImageTag(
-      uuidv4(),
+      uuid,
       fileDropEvent.path,
       newImageWidth,
       newImageHeight,
@@ -627,8 +551,7 @@ const addDroppedImage = (fileDropEvent: FileDropEvent) => {
       cardProp.data = cardProp.data + '<br />' + imgTag;
     }
 
-    await ipcRenderer.invoke(
-      'set-window-size',
+    await window.api.setWindowSize(
       cardProp.id,
       cardProp.geometry.width,
       cardProp.geometry.height
@@ -642,9 +565,9 @@ const addDroppedImage = (fileDropEvent: FileDropEvent) => {
     }
     render(['TitleBar', 'CardStyle', 'ContentsData', 'ContentsRect']);
 
-    ipcRenderer.invoke('focus', cardProp.id);
+    window.api.focus(cardProp.id);
     await cardEditor.showEditor().catch((err: Error) => {
-      logger.error(`Error in loading image: ${err.message}`);
+      console.error(`Error in loading image: ${err.message}`);
     });
     cardEditor.startEdit();
   });
@@ -652,60 +575,10 @@ const addDroppedImage = (fileDropEvent: FileDropEvent) => {
   dropImg.src = fileDropEvent.path;
 };
 
-const initializeContentsFrameEvents = () => {
-  const webview = document.getElementById('contentsFrame')! as WebviewTag;
-
-  setContextMenu(webview);
-
-  webview.addEventListener('did-finish-load', e => {
-    // cardProp is empty before the card is initialized.
-    if (!cardProp.isEmpty) {
-      render(['ContentsData']);
-    }
-  });
-
-  // Open hyperlink on external browser window
-  // by preventing to open it on new electron window
-  // when target='_blank' is set.
-  webview.addEventListener('new-window', e => {
-    shell.openExternal(e.url);
-  });
-
-  // When trying to open URL in webview
-  const defaultSrc = webview.src;
-  webview.addEventListener('will-navigate', e => {
-    if (e.url !== defaultSrc) {
-      shell.openExternal(e.url);
-      webview.reload();
-    }
-  });
-
-  webview.addEventListener('ipc-message', event => {
-    const msg: ContentsFrameMessage = filterContentsFrameMessage(event);
-    switch (msg.command) {
-      case 'contents-frame-loaded':
-        render(['CardStyle']);
-        break;
-
-      case 'click-parent':
-        // Click request from child frame (webview)
-        if (msg.arg !== undefined) {
-          startEditorByClick(JSON.parse(msg.arg) as InnerClickEvent);
-        }
-        break;
-
-      case 'contents-frame-file-dropped':
-        if (msg.arg !== undefined) {
-          addDroppedImage(JSON.parse(msg.arg) as FileDropEvent);
-        }
-        break;
-
-      default:
-        break;
-    }
-  });
-};
-
-initializeIPCEvents();
-window.document.addEventListener('DOMContentLoaded', onready, false);
 window.addEventListener('load', onload, false);
+window.addEventListener('beforeunload', e => {
+  if (!canClose) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
