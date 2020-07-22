@@ -24,3 +24,17 @@ window.addEventListener('message', (event: MessageEvent) => {
       break;
   }
 });
+
+window.addEventListener('load', () => {
+  /**
+   * Remove APIs
+   **/
+  // eslint-disable-next-line prefer-const
+  let disableAPIList = ['open', 'alert', 'confirm', 'prompt', 'print'];
+  disableAPIList.forEach(prop => {
+    // @ts-ignore
+    window[prop] = () => {
+      console.error(prop + ' is disabled.');
+    };
+  });
+});
