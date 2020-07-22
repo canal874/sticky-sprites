@@ -64,3 +64,12 @@ document.addEventListener('drop', event => {
     window.parent.postMessage(msg, '*');
   }
 });
+
+// Remove APIs
+const disableAPIList = ['open', 'alert', 'confirm', 'prompt', 'print'];
+disableAPIList.forEach(prop => {
+  // @ts-ignore
+  window[prop] = () => {
+    console.error(prop + ' is disabled.');
+  };
+});
