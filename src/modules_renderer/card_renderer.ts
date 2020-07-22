@@ -169,20 +169,25 @@ const renderCardStyle = () => {
 
   document.getElementById('title')!.style.backgroundColor = uiRgba;
 
-  const iframeDoc = (document.getElementById('contentsFrame') as HTMLIFrameElement)
-    .contentWindow?.document;
-  if (iframeDoc) {
-    const style = iframeDoc.createElement('style');
-    style.innerHTML =
-      'body::-webkit-scrollbar { width: 7px; background-color: ' +
-      backgroundRgba +
-      '}\n' +
-      'body::-webkit-scrollbar-thumb { background-color: ' +
-      uiRgba +
-      '}';
-    iframeDoc.head.appendChild(style);
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const iframeDoc = (document.getElementById('contentsFrame') as HTMLIFrameElement)
+      .contentDocument;
+    if (iframeDoc) {
+      const style = iframeDoc.createElement('style');
+      style.innerHTML =
+        'body::-webkit-scrollbar { width: 7px; background-color: ' +
+        backgroundRgba +
+        '}\n' +
+        'body::-webkit-scrollbar-thumb { background-color: ' +
+        uiRgba +
+        '}';
+      iframeDoc.head.appendChild(style);
 
-    iframeDoc.body.style.zoom = `${cardProp.style.zoom}`;
+      iframeDoc.body.style.zoom = `${cardProp.style.zoom}`;
+    }
+  } catch (e) {
+    console.error(e);
   }
 };
 
