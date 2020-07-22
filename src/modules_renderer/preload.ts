@@ -100,11 +100,8 @@ ipcRenderer.on(
   (event: Electron.IpcRendererEvent, _bounds: Electron.Rectangle) =>
     window.postMessage({ command: 'resize-by-hand', bounds: _bounds }, 'file://')
 );
-
-ipcRenderer.on('zoom-in', () => window.postMessage({ command: 'zoom-in' }, 'file://'));
-
-ipcRenderer.on('zoom-out', () => window.postMessage({ command: 'zoom-out' }, 'file://'));
-
 ipcRenderer.on('send-to-back', () =>
   window.postMessage({ command: 'send-to-back' }, 'file://')
 );
+ipcRenderer.on('zoom-in', () => window.postMessage({ command: 'zoom-in' }, 'file://'));
+ipcRenderer.on('zoom-out', () => window.postMessage({ command: 'zoom-out' }, 'file://'));
