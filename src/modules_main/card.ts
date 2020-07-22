@@ -9,7 +9,7 @@
 import url from 'url';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { BrowserWindow, ipcMain, shell } from 'electron';
+import { BrowserWindow, dialog, ipcMain, shell, WebContents } from 'electron';
 import contextMenu from 'electron-context-menu';
 import { CardProp } from '../modules_common/cardprop';
 import { CardIO } from './io';
@@ -51,6 +51,24 @@ const generateNewCardId = (): string => {
 };
 
 export const cards: Map<string, Card> = new Map<string, Card>();
+
+export const deleteCard = async (id: string) => {
+  await CardIO.deleteCardData(id)
+    .catch((e: Error) => {
+      logger.error(`delete-card: ${e.message}`);
+    })
+    .then(() => {
+      logger.debug(`deleted : ${id}`);
+      // eslint-disable-next-line no-unused-expressions
+      const card = cards.get(id);
+      if (card) {
+        card.window.destroy();
+      }
+    })
+    .catch((e: Error) => {
+      logger.error(`send card-close: ${e.message}`);
+    });
+};
 
 /**
  * Context Menu
@@ -155,6 +173,7 @@ const setContextMenu = (win: BrowserWindow) => {
 export class Card {
   public prop: CardProp; // ! is Definite assignment assertion
   public window: BrowserWindow;
+  public indexUrl: string;
 
   public suppressFocusEventOnce = false;
   public suppressBlurEventOnce = false;
@@ -206,6 +225,15 @@ export class Card {
         });
       };
     }
+
+    this.indexUrl = url.format({
+      pathname: path.join(__dirname, '../index.html'),
+      protocol: 'file:',
+      slashes: true,
+      query: {
+        id: this.prop.id,
+      },
+    });
 
     this.window = new BrowserWindow({
       webPreferences: {
@@ -259,6 +287,81 @@ export class Card {
     this.window.on('blur', this._blurListener);
 
     setContextMenu(this.window);
+
+    this.window.webContents.on('did-finish-load', () => {
+      const checkNavigation = async (_event: Electron.Event, navUrl: string) => {
+        console.debug('did-start-navigate : ' + navUrl);
+        // Check top frame
+        const topFrameURL = this.indexUrl.replace(/\\/g, '/');
+        if (navUrl === topFrameURL) {
+          // Top frame is reloaded
+          this.window.webContents.off('did-start-navigation', checkNavigation);
+          logger.debug('Top frame is reloaded.');
+          return true;
+        }
+
+        // Check iframe
+        const iframeRex = new RegExp(
+          topFrameURL.replace(/index.html\?.+$/, 'iframe/contents_frame.html$')
+        );
+        const isValid = iframeRex.test(navUrl);
+        if (navUrl === 'about:blank') {
+          // skip
+        }
+        else if (isValid) {
+          // console.debug(`Block navigation to valid url: ${url}`);
+          // When iframe is reloaded, cardWindow must be also reloaded not to apply tampered sandbox attributes to iframe.
+          logger.error(`Block navigation to valid url: ${navUrl}`);
+          this.window.webContents.off('did-start-navigation', checkNavigation);
+
+          // Same origin policy between top frame and iframe is failed after reload(). (Cause unknown)
+          // Create and destroy card for workaround.
+          // this.window.webContents.send('reload');
+          const card = new Card('Load', this.prop.id);
+          const prevWin = this.window;
+          const tmpCard = cards.get(this.prop.id);
+          card
+            .render()
+            .then(() => {
+              prevWin.destroy();
+              cards.set(this.prop.id, card);
+            })
+            .catch(() => {});
+        }
+        else {
+          logger.error(`Block navigation to invalid url: ${navUrl}`);
+          this.window.webContents.off('did-start-navigation', checkNavigation);
+          /**
+           * 1. Call window.api.finishRenderCard(cardProp.id) to tell initialize process the error
+           * 2. Show alert dialog
+           * 3. Remove malicious card
+           */
+          this.renderingCompleted = true;
+          dialog.showMessageBoxSync(this.window, {
+            type: 'question',
+            buttons: ['OK'],
+            message: 'Page navigation is not permitted. The card is removed.',
+          });
+          await deleteCard(this.prop.id);
+          cards.delete(this.prop.id);
+          this.window.destroy();
+        }
+      };
+      console.debug('did-finish-load: ' + this.window.webContents.getURL());
+      this.window.webContents.on('did-start-navigation', checkNavigation);
+    });
+
+    this.window.webContents.on('will-navigate', (event, navUrl) => {
+      // block page transition
+      const prevUrl = this.indexUrl.replace(/\\/g, '/');
+      if (navUrl === prevUrl) {
+        // console.debug('reload() in top frame is permitted');
+      }
+      else {
+        logger.error('Page navigation in top frame is not permitted.');
+        event.preventDefault();
+      }
+    });
   }
 
   public render = () => {
@@ -300,7 +403,7 @@ export class Card {
         // Don't use 'did-finish-load' event.
         // loadHTML resolves after loading HTML and processing required script are finished.
         //     this.window.webContents.on('did-finish-load', () => {
-        ipcMain.handle('finish-load-' + this.prop.id, this._finishReloadListener);
+        // ipcMain.handle('finish-load-' + this.prop.id, this._finishReloadListener);
         resolve();
       };
       ipcMain.handleOnce('finish-load-' + this.prop.id, finishLoadListener);
@@ -311,16 +414,8 @@ export class Card {
           reject(new Error(`Error in loadHTML: ${validatedURL} ${errorDescription}`));
         }
       );
-      this.window.loadURL(
-        url.format({
-          pathname: path.join(__dirname, '../index.html'),
-          protocol: 'file:',
-          slashes: true,
-          query: {
-            id: this.prop.id,
-          },
-        })
-      );
+
+      this.window.loadURL(this.indexUrl);
     });
   };
 

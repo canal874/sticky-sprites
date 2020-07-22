@@ -19,7 +19,12 @@ import {
   MessageLabel,
   setCurrentMessages,
 } from './modules_common/i18n';
-import { Card, cards, setGlobalFocusEventListenerPermission } from './modules_main/card';
+import {
+  Card,
+  cards,
+  deleteCard,
+  setGlobalFocusEventListenerPermission,
+} from './modules_main/card';
 import { logger } from './modules_main/logger';
 
 // Most secure option
@@ -55,7 +60,7 @@ ipcMain.handle('save-card', async (event, cardPropObj: CardPropSerializable) => 
         card.prop = prop;
       }
       else {
-        throw new Error('The card is not registered in cards.');
+        throw new Error('The card is not registered in cards: ' + prop.id);
       }
     })
     .catch((e: Error) => {
@@ -64,18 +69,7 @@ ipcMain.handle('save-card', async (event, cardPropObj: CardPropSerializable) => 
 });
 
 ipcMain.handle('delete-card', async (event, id: string) => {
-  await CardIO.deleteCardData(id)
-    .catch((e: Error) => {
-      logger.error(`delete-card: ${e.message}`);
-    })
-    .then(() => {
-      logger.debug(`deleted : ${id}`);
-      // eslint-disable-next-line no-unused-expressions
-      cards.get(id)?.window.webContents.send('card-close');
-    })
-    .catch((e: Error) => {
-      logger.error(`send card-close: ${e.message}`);
-    });
+  await deleteCard(id);
 });
 
 ipcMain.handle('finish-render-card', (event, id: string) => {
@@ -147,7 +141,12 @@ app.on('ready', async () => {
   });
 
   for (const key of backToFront) {
-    cards.get(key)!.window.moveTop();
+    const card = cards.get(key);
+    if (card) {
+      if (!card.window.isDestroyed()) {
+        card.window.moveTop();
+      }
+    }
   }
   logger.debug(`Completed to load ${renderers.length} cards`);
 });
