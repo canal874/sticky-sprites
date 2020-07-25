@@ -289,7 +289,7 @@ export class Card {
     setContextMenu(this.window);
 
     this.window.webContents.on('did-finish-load', () => {
-      const checkNavigation = async (_event: Electron.Event, navUrl: string) => {
+      const checkNavigation = (_event: Electron.Event, navUrl: string) => {
         console.debug('did-start-navigate : ' + navUrl);
         // Check top frame
         const topFrameURL = this.indexUrl.replace(/\\/g, '/');
@@ -342,6 +342,8 @@ export class Card {
             buttons: ['OK'],
             message: 'Page navigation is not permitted. The card is removed.',
           });
+          // Reload if permitted
+          // Destroy if not permitted
           /*
           await deleteCard(this.prop.id);
           cards.delete(this.prop.id);
