@@ -342,9 +342,11 @@ export class Card {
             buttons: ['OK'],
             message: 'Page navigation is not permitted. The card is removed.',
           });
+          /*
           await deleteCard(this.prop.id);
           cards.delete(this.prop.id);
           this.window.destroy();
+        */
         }
       };
       console.debug('did-finish-load: ' + this.window.webContents.getURL());
