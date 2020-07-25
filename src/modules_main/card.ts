@@ -66,7 +66,7 @@ export const deleteCard = async (id: string) => {
       }
     })
     .catch((e: Error) => {
-      logger.error(`send card-close: ${e.message}`);
+      logger.error(`card destroy: ${e.message}`);
     });
 };
 

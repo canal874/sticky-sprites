@@ -6,8 +6,9 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
+import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { app, dialog, ipcMain, MouseInputEvent } from 'electron';
+import { app, dialog, ipcMain, Menu, MouseInputEvent, Tray } from 'electron';
 import { selectPreferredLanguage, translate } from 'typed-intl';
 import { CardIO } from './modules_main/io';
 import { DialogButton } from './modules_common/const';
@@ -97,6 +98,19 @@ app.on('ready', async () => {
   logger.debug('locale: ' + app.getLocale());
   selectPreferredLanguage(['en', 'ja'], [app.getLocale(), 'en']);
   setCurrentMessages(translations.messages());
+
+  const tray = new Tray(path.join(__dirname, '../assets/media_stickies_grad_icon.ico'));
+  const contextMenu = Menu.buildFromTemplate([
+    { label: MESSAGE('settings'), click: () => {} },
+    {
+      label: MESSAGE('exit'),
+      click: () => {
+        cards.forEach((card, key) => card.window.webContents.send('card-close'));
+      },
+    },
+  ]);
+  tray.setToolTip(MESSAGE('trayToolTip'));
+  tray.setContextMenu(contextMenu);
 
   // load cards
   const cardArray: Card[] = await CardIO.getCardIdList()

@@ -1,4 +1,5 @@
 export interface Messages {
+  exit: string;
   zoomIn: string;
   zoomOut: string;
   bringToFront: string;
@@ -10,6 +11,8 @@ export interface Messages {
   btnCloseCard: string;
   btnOK: string;
   btnCancel: string;
+  settings: string;
+  trayToolTip: string;
   white: string;
   yellow: string;
   red: string;
@@ -24,6 +27,7 @@ export interface Messages {
 export type MessageLabel = keyof Messages;
 
 export const English: Messages = {
+  exit: 'Exit',
   zoomIn: 'Zoom In',
   zoomOut: 'Zoom Out',
   bringToFront: 'Bring to Front',
@@ -38,6 +42,8 @@ export const English: Messages = {
   btnCloseCard: 'Close',
   btnOK: 'OK',
   btnCancel: 'Cancel',
+  settings: 'Settings...',
+  trayToolTip: 'Media Stickies',
   white: 'white',
   yellow: 'yellow',
   red: 'red',
@@ -50,6 +56,7 @@ export const English: Messages = {
 };
 
 export const Japanese: Messages = {
+  exit: '終了',
   zoomIn: '拡大',
   zoomOut: '縮小',
   bringToFront: '最前面へ',
@@ -64,6 +71,8 @@ export const Japanese: Messages = {
   btnCloseCard: '閉じる',
   btnOK: 'はい',
   btnCancel: 'キャンセル',
+  settings: '設定...',
+  trayToolTip: 'Media Stickies',
   white: '白',
   yellow: '黄',
   red: '赤',

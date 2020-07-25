@@ -9,6 +9,9 @@
 import { contextBridge, ipcRenderer, MouseInputEvent } from 'electron';
 
 contextBridge.exposeInMainWorld('api', {
+  /**
+   * Command from Renderer process
+   */
   alertDialog: (id: string, message: string) => {
     return ipcRenderer.invoke('alert-dialog', id, message);
   },
@@ -65,6 +68,9 @@ contextBridge.exposeInMainWorld('api', {
   },
 });
 
+/**
+ * Command from Main process
+ */
 ipcRenderer.on('card-blurred', () =>
   window.postMessage({ command: 'card-blurred' }, 'file://')
 );
