@@ -3,6 +3,7 @@
     "allowJs": true,
     "module": "commonjs",
     "target": "ES2019",
+    "jsx": "react",
     "strict": true,
     "noImplicitAny": true,
     "skipLibCheck": true,
