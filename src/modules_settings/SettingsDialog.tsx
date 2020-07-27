@@ -6,24 +6,28 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import React from 'react';
+import { MenuList, MenuListProps } from './MenuList';
 
-const e = React.createElement;
-
-interface Props {}
-interface State {
-  liked: boolean;
+export interface SettingsDialogProps {
+  menu: MenuListProps;
 }
+interface State {}
 
-export class SettingsDialog extends React.Component {
-  state: State = { liked: false };
-  constructor (props: Props) {
-    super(props);
-  }
-
+export class SettingsDialog extends React.Component<SettingsDialogProps, State> {
   render () {
-    if (this.state.liked) {
-      return 'You liked this.';
-    }
-    return <button onClick={() => this.setState({ liked: true })}>Like</button>;
+    return (
+      <div className='settingsDialog'>
+        <MenuList
+          title={this.props.menu.title}
+          items={this.props.menu.items}
+          defaultItem={this.props.menu.defaultItem}
+        />
+        {/*      <SettingsContent>
+        <SaveSetting headline="Save"></SaveSetting>
+        <PermissionSetting headline="Permission"></PermissionSetting>
+      </SettingsContent>
+      */}
+      </div>
+    );
   }
 }
