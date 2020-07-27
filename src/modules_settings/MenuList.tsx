@@ -42,15 +42,13 @@ export class MenuList extends React.Component<MenuListProps, MenuListState> {
     activeItem: this.props.defaultItem,
   };
 
-  items = this.props.items.map(item => (
-    <MenuItem key={item} item={item} activeItem={this.state.activeItem} />
-  ));
-
   render () {
     return (
       <div className='settingMenu'>
         <h1>{this.props.title}</h1>
-        {this.items}
+        {this.props.items.map(item => (
+          <MenuItem key={item} item={item} activeItem={this.state.activeItem} />
+        ))}
       </div>
     );
   }
