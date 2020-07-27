@@ -7,8 +7,9 @@
  */
 
 import path from 'path';
+import { setFlagsFromString } from 'v8';
 import { v4 as uuidv4 } from 'uuid';
-import { app, dialog, ipcMain, Menu, MouseInputEvent, Tray } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, MouseInputEvent, Tray } from 'electron';
 import { selectPreferredLanguage, translate } from 'typed-intl';
 import { CardIO } from './modules_main/io';
 import { DialogButton } from './modules_common/const';
@@ -27,9 +28,6 @@ import {
   setGlobalFocusEventListenerPermission,
 } from './modules_main/card';
 import { logger } from './modules_main/logger';
-
-// Most secure option
-app.enableSandbox();
 
 // process.on('unhandledRejection', console.dir);
 
@@ -88,6 +86,19 @@ ipcMain.handle('create-card', (event, propObject: CardPropSerializable) => {
   return card.prop.id;
 });
 
+const openSettings = () => {
+  const settingWindow = new BrowserWindow({
+    webPreferences: {
+      nodeIntegration: true,
+      sandbox: false,
+    },
+    maximizable: false,
+    fullscreenable: false,
+
+    icon: path.join(__dirname, '../assets/media_stickies_grad_icon.ico'),
+  });
+  settingWindow.loadURL(path.join(__dirname, 'settings.html'));
+};
 /**
  * This method will be called when Electron has finished
  * initialization and is ready to create browser windows.
@@ -99,9 +110,17 @@ app.on('ready', async () => {
   selectPreferredLanguage(['en', 'ja'], [app.getLocale(), 'en']);
   setCurrentMessages(translations.messages());
 
+  // for debug
+  openSettings();
+
   const tray = new Tray(path.join(__dirname, '../assets/media_stickies_grad_icon.ico'));
   const contextMenu = Menu.buildFromTemplate([
-    { label: MESSAGE('settings'), click: () => {} },
+    {
+      label: MESSAGE('settings'),
+      click: () => {
+        openSettings();
+      },
+    },
     {
       label: MESSAGE('exit'),
       click: () => {

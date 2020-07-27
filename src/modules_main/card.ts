@@ -238,6 +238,7 @@ export class Card {
     this.window = new BrowserWindow({
       webPreferences: {
         preload: path.join(__dirname, '../modules_renderer/preload.js'),
+        sandbox: true,
         contextIsolation: true,
       },
       minWidth: MINIMUM_WINDOW_WIDTH,
