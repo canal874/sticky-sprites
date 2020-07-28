@@ -16,7 +16,7 @@ const onready = () => {
     menu: {
       title: 'Settings',
       defaultItem: 'save',
-      items: ['save', 'permission'],
+      items: ['save', 'permission', 'language'],
     },
   };
   ReactDOM.render(React.createElement(SettingsDialog, props), domContainer);
