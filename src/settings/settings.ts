@@ -8,7 +8,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { SettingsDialog, SettingsDialogProps } from './modules_settings/SettingsDialog';
+import { SettingsDialog, SettingsDialogProps } from './SettingsDialog';
 
 const onready = () => {
   const domContainer = document.getElementById('react-container');

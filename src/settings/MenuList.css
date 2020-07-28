@@ -1,0 +1,11 @@
+.menuItem {
+  font-size: 32px;
+}
+
+.activeItem {
+  font-weight: bold;
+}
+
+.inactiveItem {
+  font-weight: normal;
+}

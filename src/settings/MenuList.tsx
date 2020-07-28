@@ -28,7 +28,7 @@ class MenuItem extends React.Component<MenuItemProps> {
       <h2
         id={this.props.item}
         className={`menuItem ${
-          this.props.activeItem === this.props.item ? 'activeItem' : ''
+          this.props.activeItem === this.props.item ? 'activeItem' : 'inactiveItem'
         }`}
       >
         {this.props.item}

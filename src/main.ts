@@ -97,7 +97,7 @@ const openSettings = () => {
 
     icon: path.join(__dirname, '../assets/media_stickies_grad_icon.ico'),
   });
-  settingWindow.loadURL(path.join(__dirname, 'settings.html'));
+  settingWindow.loadURL(path.join(__dirname, 'settings/settings.html'));
 };
 /**
  * This method will be called when Electron has finished
