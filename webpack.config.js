@@ -1,7 +1,8 @@
 const path = require('path');
-const { mainModule } = require('process');
+const cssModulesScopedName = '[path]___[name]__[local]___[hash:base64:5]';
 
 module.exports = {
+  devtool: 'source-map',
   // メインとなるJavaScriptファイル（エントリーポイント）
   entry: './src/settings/settings.ts',
   output: {
@@ -14,8 +15,34 @@ module.exports = {
       {
         // 拡張子 .ts .tsx の場合
         test: /\.tsx?$/,
-        // TypeScript をコンパイルする
-        use: 'ts-loader'
+        exclude: [/node_modules/],
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['@babel/preset-env'],
+              plugins: [
+              'transform-react-jsx',
+              ['react-css-modules', { generateScopedName: cssModulesScopedName }],
+            ]
+          }
+          },
+          // TypeScript をコンパイルする
+          'ts-loader'
+        ]
+      },
+      {
+        test: /\.css$/,
+        use: {
+          loader: 'css-loader',
+          options: {
+            modules: {
+              localIdentName: cssModulesScopedName,
+            },
+            importLoaders: 1,
+            sourceMap: false,
+          }
+        },
       }
     ]
   },

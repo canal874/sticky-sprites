@@ -6,6 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import React from 'react';
+import './MenuList.css';
 
 interface MenuItemProps {
   item: string;
@@ -27,7 +28,7 @@ class MenuItem extends React.Component<MenuItemProps> {
     return (
       <h2
         id={this.props.item}
-        className={`menuItem ${
+        styleName={`menuItem ${
           this.props.activeItem === this.props.item ? 'activeItem' : 'inactiveItem'
         }`}
       >
