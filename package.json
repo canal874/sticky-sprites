@@ -10,8 +10,10 @@
     "compile": "npx eslint --fix --ext .ts . && tsc",
     "bundle": "npx browserify ./dist/renderer.js -o ./dist/bundle.js",
     "bundle-debug": "npx browserify --debug ./dist/renderer.js -o ./dist/bundle.js",
-    "start-clean": "npm run copy-static && npm run compile && npm run bundle-debug && electron-forge start",
-    "start": "npm run compile && npm run bundle-debug && electron-forge start",
+    "compile-settings": "npx webpack",
+    "start-clean": "npm run copy-static && npm run compile && npm run bundle-debug && npm run compile-settings && electron-forge start",
+    "start-nosettings": "npm run compile && npm run bundle-debug && electron-forge start",
+    "start": "npm run compile && npm run bundle-debug && npm run compile-settings && electron-forge start",
     "make": "npm run copy-static && npm run compile && npm run bundle && electron-forge make",
     "lint": "eslint --ext .ts ."
   },
@@ -68,7 +70,10 @@
     "eslint-config-standardize": "^0.6.1",
     "eslint-plugin-prettierx": "^0.12.0",
     "rexreplace": "^6.0.1",
-    "typescript": "^3.8.3"
+    "ts-loader": "^8.0.1",
+    "typescript": "^3.8.3",
+    "webpack": "^4.44.0",
+    "webpack-cli": "^3.3.12"
   },
   "dependencies": {
     "@types/ckeditor": "^4.9.9",
