@@ -11,6 +11,7 @@ import './MenuItem.css';
 interface MenuItemProps {
   id: string;
   activeItem: string;
+  color: string;
   onClick: (event: React.MouseEvent<HTMLHeadingElement, MouseEvent>) => void;
 }
 
@@ -21,7 +22,7 @@ export class MenuItem extends React.Component<MenuItemProps> {
         id={this.props.id}
         styleName={`menuItem ${
           this.props.activeItem === this.props.id ? 'activeItem' : 'inactiveItem'
-        }`}
+        } ${this.props.color}`}
         onClick={this.props.onClick}
       >
         {this.props.id}

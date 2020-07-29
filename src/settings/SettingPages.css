@@ -1,0 +1,7 @@
+.settingPages {
+  background-color: #ffffa0;
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  height: 100%;
+}

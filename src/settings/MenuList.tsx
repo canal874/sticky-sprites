@@ -7,39 +7,30 @@
  */
 import * as React from 'react';
 import { MenuItem } from './MenuItem';
+import './MenuList.css';
 
 export interface MenuListProps {
   title: string;
-  defaultItem: string;
-  items: string[];
+  items: { name: string; color: string }[];
 }
 
-interface MenuListState {
+interface MenuListPropsInternal {
   activeItem: string;
+  onClick: (event: React.MouseEvent<HTMLHeadingElement, MouseEvent>) => void;
 }
 
-export class MenuList extends React.Component<MenuListProps, MenuListState> {
-  constructor (props: MenuListProps) {
-    super(props);
-    this.state = {
-      activeItem: this.props.defaultItem,
-    };
-  }
-
-  handleClick = (e: React.MouseEvent<HTMLElement>) => {
-    this.setState({ activeItem: e.currentTarget.id || '' });
-  };
-
+export class MenuList extends React.Component<MenuListProps & MenuListPropsInternal> {
   render = () => {
     return (
-      <div className='settingMenu'>
+      <div styleName='menuList'>
         <h1>{this.props.title}</h1>
         {this.props.items.map(item => (
           <MenuItem
-            key={item}
-            id={item}
-            activeItem={this.state.activeItem}
-            onClick={this.handleClick}
+            key={item.name}
+            id={item.name}
+            activeItem={this.props.activeItem}
+            color={item.color}
+            onClick={this.props.onClick}
           />
         ))}
       </div>

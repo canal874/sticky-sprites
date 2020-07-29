@@ -7,26 +7,43 @@
  */
 import * as React from 'react';
 import { MenuList, MenuListProps } from './MenuList';
+import { SettingPages } from './SettingPages';
+import './SettingsDialog.css';
 
 export interface SettingsDialogProps {
   menu: MenuListProps;
+  defaultSetting: string;
 }
-interface State {}
 
-export class SettingsDialog extends React.Component<SettingsDialogProps, State> {
+interface SettingsDialogState {
+  activeSetting: string;
+}
+
+export class SettingsDialog extends React.Component<
+  SettingsDialogProps,
+  SettingsDialogState
+> {
+  constructor (props: SettingsDialogProps) {
+    super(props);
+    this.state = {
+      activeSetting: this.props.defaultSetting,
+    };
+  }
+
+  handleClick = (e: React.MouseEvent<HTMLElement>) => {
+    this.setState({ activeSetting: e.currentTarget.id || '' });
+  };
+
   render () {
     return (
-      <div className='settingsDialog'>
+      <div styleName='settingsDialog'>
         <MenuList
           title={this.props.menu.title}
           items={this.props.menu.items}
-          defaultItem={this.props.menu.defaultItem}
+          activeItem={this.state.activeSetting}
+          onClick={this.handleClick}
         />
-        {/*      <SettingsContent>
-        <SaveSetting headline="Save"></SaveSetting>
-        <PermissionSetting headline="Permission"></PermissionSetting>
-      </SettingsContent>
-      */}
+        <SettingPages />
       </div>
     );
   }

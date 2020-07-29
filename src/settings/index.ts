@@ -13,10 +13,23 @@ import { SettingsDialog, SettingsDialogProps } from './SettingsDialog';
 const onready = () => {
   const domContainer = document.getElementById('react-container');
   const props: SettingsDialogProps = {
+    defaultSetting: 'save',
     menu: {
       title: 'Settings',
-      defaultItem: 'save',
-      items: ['save', 'permission', 'language'],
+      items: [
+        {
+          name: 'save',
+          color: 'yellow',
+        },
+        {
+          name: 'permission',
+          color: 'purple',
+        },
+        {
+          name: 'language',
+          color: 'orange',
+        },
+      ],
     },
   };
   ReactDOM.render(React.createElement(SettingsDialog, props), domContainer);

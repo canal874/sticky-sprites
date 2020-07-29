@@ -1,5 +1,7 @@
 .menuItem {
   font-size: 32px;
+  height: 48px;
+  margin: 0px;
 }
 
 .activeItem {
@@ -8,4 +10,40 @@
 
 .inactiveItem {
   font-weight: normal;
+}
+
+.yellow {
+  background-color: #ffffa0;
+}
+
+.red {
+  background-color: #ffb0b0;
+}
+
+.green {
+  background-color: #d0ffd0;
+}
+
+.blue {
+  background-color: #d0d0ff;
+}
+
+.orange {
+  background-color: #ffb000;
+}
+
+.purple {
+  background-color: #ffd0ff;
+}
+
+.white {
+  background-color: #ffffff;
+}
+
+.gray {
+  background-color: #d0d0d0;
+}
+
+.transparent {
+  background-color: none;
 }
