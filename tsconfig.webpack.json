@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "module": "commonjs",
+    "module": "ES2015",
     "target": "ES2019",
+    "jsx": "preserve",
     "strict": true,
     "noImplicitAny": true,
     "skipLibCheck": true,
@@ -15,11 +16,5 @@
     "paths": {
       "*": ["node_modules/*"]
     },
-  },
-  "include": [
-    "src/**/*",
-  ],
-  "exclude": [
-    "src/settings/*"
-  ]
+  }
 }

@@ -6,8 +6,8 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
-import ReactDOM from 'react-dom';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { SettingsDialog, SettingsDialogProps } from './SettingsDialog';
 
 const onready = () => {

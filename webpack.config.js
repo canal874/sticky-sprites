@@ -20,41 +20,58 @@ module.exports = {
           {
             loader: 'babel-loader',
             options: {
-              presets: ['@babel/preset-env'],
               plugins: [
-              'transform-react-jsx',
-              ['react-css-modules', { generateScopedName: cssModulesScopedName }],
+                'transform-react-jsx',
+                ['react-css-modules', { generateScopedName: cssModulesScopedName }],
             ]
           }
           },
           // TypeScript をコンパイルする
-          'ts-loader'
+          {
+            loader: 'ts-loader',
+            options: {
+              configFile: 'tsconfig.webpack.json'
+            }
+          }
         ]
       },
       {
+        enforce: "pre",
+        test: /\.js$/,
+        loader: "source-map-loader"
+      },
+      {
         test: /\.css$/,
-        use: {
-          loader: 'css-loader',
-          options: {
-            modules: {
-              localIdentName: cssModulesScopedName,
-            },
-            importLoaders: 1,
-            sourceMap: false,
-          }
-        },
+        use: [
+          'style-loader',
+          {
+            // Must use css-loader@3 because hash generator of css-loader@4 is different from that of 'react-css-modules'
+            // See https://github.com/webpack-contrib/css-loader/issues/877
+            loader: 'css-loader', 
+            options: {
+              modules: {
+                localIdentName: cssModulesScopedName,
+              },
+              importLoaders: 1,
+              sourceMap: true,
+            }
+          },
+        ]
       }
     ]
   },
-  // import 文で .ts ファイルを解決するため
   resolve: {
     extensions: [
       '.ts',
 	    '.tsx',      
-	    '.js' // node_modulesのライブラリ読み込みに必要
+	    '.js' // for node_modules
     ],
     modules: [
-	    'node_modules', // node_modules 内も対象とする
+	    'node_modules', 
     ],
+  },
+  externals: {
+    "react": "React",
+    "react-dom": "ReactDOM"
   }
 };
