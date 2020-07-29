@@ -11,7 +11,7 @@ import { cardColors, ColorName } from '../modules_common/color';
 
 interface MenuItemProps {
   id: string;
-  activeItem: string;
+  activeItemName: string;
   color: ColorName;
   onClick: (event: React.MouseEvent<HTMLHeadingElement, MouseEvent>) => void;
 }
@@ -26,7 +26,7 @@ export class MenuItem extends React.Component<MenuItemProps> {
       <h2
         id={this.props.id}
         styleName={`menuItem ${
-          this.props.activeItem === this.props.id ? 'activeItem' : 'inactiveItem'
+          this.props.activeItemName === this.props.id ? 'activeItem' : 'inactiveItem'
         }`}
         onClick={this.props.onClick}
         style={this.style(this.props.color)}

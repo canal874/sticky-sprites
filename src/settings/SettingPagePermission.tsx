@@ -1,0 +1,18 @@
+/**
+ * @license Media Stickies
+ * Copyright (c) Hidekazu Kubota
+ *
+ * This source code is licensed under the Mozilla Public License Version 2.0
+ * found in the LICENSE file in the root directory of this source tree.
+ */
+import * as React from 'react';
+
+export interface SettingPagePermissionProps {
+  title: string;
+}
+
+export class SettingPagePermission extends React.Component<SettingPagePermissionProps> {
+  render = () => {
+    return <h3>{this.props.title}</h3>;
+  };
+}

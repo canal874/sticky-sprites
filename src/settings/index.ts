@@ -13,7 +13,7 @@ import { SettingsDialog, SettingsDialogProps } from './SettingsDialog';
 const onready = () => {
   const domContainer = document.getElementById('react-container');
   const props: SettingsDialogProps = {
-    defaultSetting: 'save',
+    defaultSettingName: 'save',
     menu: {
       title: 'Settings',
       items: [

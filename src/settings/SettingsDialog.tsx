@@ -12,11 +12,11 @@ import './SettingsDialog.css';
 
 export interface SettingsDialogProps {
   menu: MenuListProps;
-  defaultSetting: string;
+  defaultSettingName: string;
 }
 
 interface SettingsDialogState {
-  activeSetting: string;
+  activeSettingName: string;
 }
 
 export class SettingsDialog extends React.Component<
@@ -26,12 +26,12 @@ export class SettingsDialog extends React.Component<
   constructor (props: SettingsDialogProps) {
     super(props);
     this.state = {
-      activeSetting: this.props.defaultSetting,
+      activeSettingName: this.props.defaultSettingName,
     };
   }
 
   handleClick = (e: React.MouseEvent<HTMLElement>) => {
-    this.setState({ activeSetting: e.currentTarget.id || '' });
+    this.setState({ activeSettingName: e.currentTarget.id || '' });
   };
 
   render () {
@@ -40,10 +40,13 @@ export class SettingsDialog extends React.Component<
         <MenuList
           title={this.props.menu.title}
           items={this.props.menu.items}
-          activeItem={this.state.activeSetting}
+          activeItemName={this.state.activeSettingName}
           onClick={this.handleClick}
         />
-        <SettingPages />
+        <SettingPages
+          items={this.props.menu.items}
+          activeItemName={this.state.activeSettingName}
+        />
       </div>
     );
   }

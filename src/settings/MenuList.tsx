@@ -16,7 +16,7 @@ export interface MenuListProps {
 }
 
 interface MenuListPropsInternal {
-  activeItem: string;
+  activeItemName: string;
   onClick: (event: React.MouseEvent<HTMLHeadingElement, MouseEvent>) => void;
 }
 
@@ -29,7 +29,7 @@ export class MenuList extends React.Component<MenuListProps & MenuListPropsInter
           <MenuItem
             key={item.name}
             id={item.name}
-            activeItem={this.props.activeItem}
+            activeItemName={this.props.activeItemName}
             color={item.color}
             onClick={this.props.onClick}
           />
