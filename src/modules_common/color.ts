@@ -6,6 +6,32 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
+export interface CardColors {
+  yellow: string;
+  red: string;
+  green: string;
+  blue: string;
+  orange: string;
+  purple: string;
+  white: string;
+  gray: string;
+  transparent: string;
+}
+
+export type ColorName = keyof CardColors;
+
+export const cardColors: CardColors = {
+  yellow: '#ffffa0',
+  red: '#ffb0b0',
+  green: '#d0ffd0',
+  blue: '#d0d0ff',
+  orange: '#ffb000',
+  purple: '#ffd0ff',
+  white: '#ffffff',
+  gray: '#d0d0d0',
+  transparent: '#ffffff',
+};
+
 export const darkenHexColor = (colorHEX: string, darkRate: number): string => {
   if (darkRate > 1 || darkRate < 0) {
     console.error(`Invalid darkRate: ${darkRate}`);

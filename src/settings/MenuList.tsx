@@ -8,10 +8,11 @@
 import * as React from 'react';
 import { MenuItem } from './MenuItem';
 import './MenuList.css';
+import { ColorName } from '../modules_common/color';
 
 export interface MenuListProps {
   title: string;
-  items: { name: string; color: string }[];
+  items: { name: string; color: ColorName }[];
 }
 
 interface MenuListPropsInternal {

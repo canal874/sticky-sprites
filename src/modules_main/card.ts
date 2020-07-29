@@ -17,6 +17,7 @@ import { getCurrentDateAndTime } from '../modules_common/utils';
 import { logger } from './logger';
 import { CardInitializeType } from '../modules_common/types';
 import { MESSAGE } from '../modules_common/i18n';
+import { cardColors, ColorName } from '../modules_common/color';
 
 /**
  * Const
@@ -75,6 +76,20 @@ export const deleteCard = async (id: string) => {
  */
 
 const setContextMenu = (win: BrowserWindow) => {
+  const setColor = (name: ColorName) => {
+    return {
+      label: MESSAGE(name),
+      click: () => {
+        if (name === 'transparent') {
+          win.webContents.send('change-card-color', cardColors[name], 0.0);
+        }
+        else {
+          win.webContents.send('change-card-color', cardColors[name]);
+        }
+      },
+    };
+  };
+
   contextMenu({
     window: win,
     showSaveImageAs: true,
@@ -112,60 +127,15 @@ const setContextMenu = (win: BrowserWindow) => {
       },
     ],
     append: () => [
-      {
-        label: MESSAGE('yellow'),
-        click: () => {
-          win.webContents.send('change-card-color', '#ffffa0');
-        },
-      },
-      {
-        label: MESSAGE('red'),
-        click: () => {
-          win.webContents.send('change-card-color', '#ffb0b0');
-        },
-      },
-      {
-        label: MESSAGE('green'),
-        click: () => {
-          win.webContents.send('change-card-color', '#d0ffd0');
-        },
-      },
-      {
-        label: MESSAGE('blue'),
-        click: () => {
-          win.webContents.send('change-card-color', '#d0d0ff');
-        },
-      },
-      {
-        label: MESSAGE('orange'),
-        click: () => {
-          win.webContents.send('change-card-color', '#ffb000');
-        },
-      },
-      {
-        label: MESSAGE('purple'),
-        click: () => {
-          win.webContents.send('change-card-color', '#ffd0ff');
-        },
-      },
-      {
-        label: MESSAGE('white'),
-        click: () => {
-          win.webContents.send('change-card-color', '#ffffff');
-        },
-      },
-      {
-        label: MESSAGE('gray'),
-        click: () => {
-          win.webContents.send('change-card-color', '#d0d0d0');
-        },
-      },
-      {
-        label: MESSAGE('transparent'),
-        click: () => {
-          win.webContents.send('change-card-color', '#ffffff', 0.0);
-        },
-      },
+      setColor('yellow'),
+      setColor('red'),
+      setColor('green'),
+      setColor('blue'),
+      setColor('orange'),
+      setColor('purple'),
+      setColor('white'),
+      setColor('gray'),
+      setColor('transparent'),
     ],
   });
 };
