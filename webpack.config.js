@@ -13,7 +13,6 @@ module.exports = {
   module: {
     rules: [
       {
-        // 拡張子 .ts .tsx の場合
         test: /\.tsx?$/,
         exclude: [/node_modules/],
         use: [
@@ -21,12 +20,14 @@ module.exports = {
             loader: 'babel-loader',
             options: {
               plugins: [
+                // 3) .jsx => .js
                 'transform-react-jsx',
+                // 2) styleName in .jsx => className in .jsx
                 ['react-css-modules', { generateScopedName: cssModulesScopedName }],
             ]
           }
           },
-          // TypeScript をコンパイルする
+          // 1) .ts => .js,  .tsx => .jsx
           {
             loader: 'ts-loader',
             options: {
@@ -43,10 +44,14 @@ module.exports = {
       {
         test: /\.css$/,
         use: [
-          'style-loader',
+           // import .css in .js
+           'style-loader',
           {
-            // Must use css-loader@3 because hash generator of css-loader@4 is different from that of 'react-css-modules'
-            // See https://github.com/webpack-contrib/css-loader/issues/877
+            /**
+             * Must use css-loader@3 because hash generator of css-loader@4 is different from that of 'react-css-modules'
+             * See https://github.com/webpack-contrib/css-loader/issues/877
+             */ 
+            // Apply css modules
             loader: 'css-loader', 
             options: {
               modules: {
