@@ -11,8 +11,6 @@ export interface SettingPagePermissionProps {
   title: string;
 }
 
-export class SettingPagePermission extends React.Component<SettingPagePermissionProps> {
-  render = () => {
-    return <h3>{this.props.title}</h3>;
-  };
-}
+export const SettingPagePermission = (props: SettingPagePermissionProps) => {
+  return <h3>{props.title}</h3>;
+};

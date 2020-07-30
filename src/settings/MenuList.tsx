@@ -15,26 +15,13 @@ export interface MenuListProps {
   items: { name: string; color: ColorName }[];
 }
 
-interface MenuListPropsInternal {
-  activeItemName: string;
-  onClick: (event: React.MouseEvent<HTMLHeadingElement, MouseEvent>) => void;
-}
-
-export class MenuList extends React.Component<MenuListProps & MenuListPropsInternal> {
-  render = () => {
-    return (
-      <div styleName='menuList'>
-        <h1>{this.props.title}</h1>
-        {this.props.items.map(item => (
-          <MenuItem
-            key={item.name}
-            id={item.name}
-            activeItemName={this.props.activeItemName}
-            color={item.color}
-            onClick={this.props.onClick}
-          />
-        ))}
-      </div>
-    );
-  };
-}
+export const MenuList = (props: MenuListProps) => {
+  return (
+    <div styleName='menuList'>
+      <h1>{props.title}</h1>
+      {props.items.map(item => (
+        <MenuItem key={item.name} id={item.name} color={item.color} />
+      ))}
+    </div>
+  );
+};

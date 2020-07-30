@@ -11,13 +11,11 @@ export interface SettingPageSaveProps {
   title: string;
 }
 
-export class SettingPageSave extends React.Component<SettingPageSaveProps> {
-  render = () => {
-    return (
-      <div>
-        <h3>{this.props.title}</h3>
-        <p>Save Settings</p>
-      </div>
-    );
-  };
-}
+export const SettingPageSave = (props: SettingPageSaveProps) => {
+  return (
+    <div>
+      <h3>{props.title}</h3>
+      <p>Save Settings</p>
+    </div>
+  );
+};

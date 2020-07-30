@@ -11,8 +11,6 @@ export interface SettingPageLanguageProps {
   title: string;
 }
 
-export class SettingPageLanguage extends React.Component<SettingPageLanguageProps> {
-  render = () => {
-    return <h3>{this.props.title}</h3>;
-  };
-}
+export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
+  return <h3>{props.title}</h3>;
+};

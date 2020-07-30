@@ -9,45 +9,23 @@ import * as React from 'react';
 import { MenuList, MenuListProps } from './MenuList';
 import { SettingPages } from './SettingPages';
 import './SettingsDialog.css';
+import { SettingsDialogState, StoreProvider } from './Store';
 
 export interface SettingsDialogProps {
   menu: MenuListProps;
   defaultSettingName: string;
 }
 
-interface SettingsDialogState {
-  activeSettingName: string;
-}
-
-export class SettingsDialog extends React.Component<
-  SettingsDialogProps,
-  SettingsDialogState
-> {
-  constructor (props: SettingsDialogProps) {
-    super(props);
-    this.state = {
-      activeSettingName: this.props.defaultSettingName,
-    };
-  }
-
-  handleClick = (e: React.MouseEvent<HTMLElement>) => {
-    this.setState({ activeSettingName: e.currentTarget.id || '' });
+export const SettingsDialog = (props: SettingsDialogProps) => {
+  const initialState: SettingsDialogState = {
+    activeSettingName: props.defaultSettingName,
   };
-
-  render () {
-    return (
-      <div styleName='settingsDialog'>
-        <MenuList
-          title={this.props.menu.title}
-          items={this.props.menu.items}
-          activeItemName={this.state.activeSettingName}
-          onClick={this.handleClick}
-        />
-        <SettingPages
-          items={this.props.menu.items}
-          activeItemName={this.state.activeSettingName}
-        />
-      </div>
-    );
-  }
-}
+  return (
+    <div styleName='settingsDialog'>
+      <StoreProvider initialState={initialState}>
+        <MenuList title={props.menu.title} items={props.menu.items} />
+        <SettingPages items={props.menu.items} />
+      </StoreProvider>
+    </div>
+  );
+};

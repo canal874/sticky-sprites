@@ -11,38 +11,38 @@ import { cardColors, ColorName } from '../modules_common/color';
 import { SettingPageSave } from './SettingPageSave';
 import { SettingPagePermission } from './SettingPagePermission';
 import { SettingPageLanguage } from './SettingPageLanguage';
+import { Store, StoreProvider } from './Store';
 
 export interface SettingsProps {
-  activeItemName: string;
   items: { name: string; color: ColorName }[];
 }
 
-export class SettingPages extends React.Component<SettingsProps> {
-  style = (color: ColorName) => ({
+export const SettingPages = (props: SettingsProps) => {
+  const [state, dispatch]: StoreProvider = React.useContext(Store);
+
+  const style = (color: ColorName) => ({
     backgroundColor: cardColors[color],
   });
 
-  render = () => {
-    const activeItem = this.props.items.find(
-      item => item.name === this.props.activeItemName
-    );
-    const color = activeItem ? activeItem.color : 'white';
+  const activeItem = props.items.find(item => item.name === state.activeSettingName);
 
-    let activePage;
-    if (this.props.activeItemName === 'save') {
-      activePage = <SettingPageSave title='save' />;
-    }
-    else if (this.props.activeItemName === 'permission') {
-      activePage = <SettingPagePermission title='permission' />;
-    }
-    else if (this.props.activeItemName === 'language') {
-      activePage = <SettingPageLanguage title='language' />;
-    }
+  const color = activeItem ? activeItem.color : 'white';
 
-    return (
-      <div styleName='settingPages' style={this.style(color)}>
-        {activePage}
-      </div>
-    );
-  };
-}
+  let activePage;
+
+  if (state.activeSettingName === 'save') {
+    activePage = <SettingPageSave title='save' />;
+  }
+  else if (state.activeSettingName === 'permission') {
+    activePage = <SettingPagePermission title='permission' />;
+  }
+  else if (state.activeSettingName === 'language') {
+    activePage = <SettingPageLanguage title='language' />;
+  }
+
+  return (
+    <div styleName='settingPages' style={style(color)}>
+      {activePage}
+    </div>
+  );
+};
