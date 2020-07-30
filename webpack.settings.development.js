@@ -1,7 +1,7 @@
 const createElectronReloadWebpackPlugin = require('electron-reload-webpack-plugin');
 
 const { merge } = require('webpack-merge');
-const common = require('./webpack.common.js');
+const common = require('./webpack.settings.common.js');
 
 // Create one plugin for both renderer and main process
 const ElectronReloadWebpackPlugin = createElectronReloadWebpackPlugin({

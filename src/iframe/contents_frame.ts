@@ -55,7 +55,7 @@ document.addEventListener('drop', event => {
   if (file) {
     const e: FileDropEvent = {
       name: file.name,
-      path: file.path,
+      path: (file as any).path,
     };
     const msg: ContentsFrameMessage = {
       command: 'contents-frame-file-dropped',

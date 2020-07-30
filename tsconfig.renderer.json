@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "module": "commonjs",
+    "module": "ES2015",
     "target": "ES2019",
     "strict": true,
     "noImplicitAny": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "sourceMap": false,
+    "sourceMap": true,
     "baseUrl": ".",
     "outDir": "dist",
     "moduleResolution": "node",
@@ -17,12 +17,9 @@
     },
   },
   "include": [
-    "src/main.ts",
-    "src/modules_common/*",
-    "src/modules_main/*",
+    "src/**/*",
   ],
   "exclude": [
-    "src/modules_renderer/*",
     "src/settings/*"
   ]
 }

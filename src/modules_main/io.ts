@@ -13,7 +13,6 @@ import path from 'path';
 import PouchDB from 'pouchdb';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
-import { logger } from './logger';
 
 // '../../../../../../media_stickies_data' is default path when using asar created by squirrels.windows.
 // './media_stickies_data' is default path when starting from command line (npm start).
@@ -80,7 +79,7 @@ class CardIOClass implements ICardIO {
             // Don't use doc.hasOwnProperty(key)
             // See eslint no-prototype-builtins
             else if (!Object.prototype.hasOwnProperty.call(doc, key)) {
-              logger.warn(`db entry id "${id}" lacks "${key}"`);
+              console.warn(`db entry id "${id}" lacks "${key}"`);
             }
             else {
               // Type of doc cannot be resolved by @types/pouchdb-core
@@ -117,7 +116,7 @@ class CardIOClass implements ICardIO {
   };
 
   public writeOrCreateCardData = async (prop: CardProp): Promise<string> => {
-    logger.debug('Saving card...: ' + JSON.stringify(prop.toObject()));
+    console.debug('Saving card...: ' + JSON.stringify(prop.toObject()));
     // In PouchDB, _id must be used instead of id in document.
     // Convert class to Object to serialize.
     const propObj = Object.assign({ _id: prop.id, _rev: '' }, prop.toObject());
@@ -139,7 +138,7 @@ class CardIOClass implements ICardIO {
     return cardsDB
       .put(propObj)
       .then(res => {
-        logger.debug(`Saved: ${res.id}`);
+        console.debug(`Saved: ${res.id}`);
         return res.id;
       })
       .catch(e => {

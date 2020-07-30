@@ -7,7 +7,7 @@
     "noImplicitAny": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "sourceMap": false,
+    "sourceMap": true,
     "baseUrl": ".",
     "outDir": "dist",
     "moduleResolution": "node",
@@ -18,11 +18,9 @@
   },
   "include": [
     "src/main.ts",
-    "src/modules_common/*",
-    "src/modules_main/*",
+    "src/modules_renderer/preload.ts"
   ],
   "exclude": [
-    "src/modules_renderer/*",
     "src/settings/*"
   ]
 }

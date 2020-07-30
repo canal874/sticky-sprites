@@ -14,7 +14,6 @@ import contextMenu from 'electron-context-menu';
 import { CardProp } from '../modules_common/cardprop';
 import { CardIO } from './io';
 import { getCurrentDateAndTime } from '../modules_common/utils';
-import { logger } from './logger';
 import { CardInitializeType } from '../modules_common/types';
 import { MESSAGE } from '../modules_common/i18n';
 import { cardColors, ColorName } from '../modules_common/color';
@@ -56,10 +55,10 @@ export const cards: Map<string, Card> = new Map<string, Card>();
 export const deleteCard = async (id: string) => {
   await CardIO.deleteCardData(id)
     .catch((e: Error) => {
-      logger.error(`delete-card: ${e.message}`);
+      console.error(`delete-card: ${e.message}`);
     })
     .then(() => {
-      logger.debug(`deleted : ${id}`);
+      console.debug(`deleted : ${id}`);
       // eslint-disable-next-line no-unused-expressions
       const card = cards.get(id);
       if (card) {
@@ -67,7 +66,7 @@ export const deleteCard = async (id: string) => {
       }
     })
     .catch((e: Error) => {
-      logger.error(`card destroy: ${e.message}`);
+      console.error(`card destroy: ${e.message}`);
     });
 };
 
@@ -186,7 +185,7 @@ export class Card {
         return new Promise((resolve, reject) => {
           CardIO.readCardData(id, this.prop)
             .then(() => {
-              // logger.debug('loadCardData  ' + arg);
+              // console.debug('loadCardData  ' + arg);
               resolve();
             })
             .catch((e: Error) => {
@@ -207,7 +206,7 @@ export class Card {
 
     this.window = new BrowserWindow({
       webPreferences: {
-        preload: path.join(__dirname, '../modules_renderer/preload.js'),
+        preload: path.join(__dirname, './preload.js'),
         sandbox: true,
         contextIsolation: true,
       },
@@ -267,7 +266,7 @@ export class Card {
         if (navUrl === topFrameURL) {
           // Top frame is reloaded
           this.window.webContents.off('did-start-navigation', checkNavigation);
-          logger.debug('Top frame is reloaded.');
+          console.debug('Top frame is reloaded.');
           return true;
         }
 
@@ -282,7 +281,7 @@ export class Card {
         else if (isValid) {
           // console.debug(`Block navigation to valid url: ${url}`);
           // When iframe is reloaded, cardWindow must be also reloaded not to apply tampered sandbox attributes to iframe.
-          logger.error(`Block navigation to valid url: ${navUrl}`);
+          console.error(`Block navigation to valid url: ${navUrl}`);
           this.window.webContents.off('did-start-navigation', checkNavigation);
 
           // Same origin policy between top frame and iframe is failed after reload(). (Cause unknown)
@@ -300,7 +299,7 @@ export class Card {
             .catch(() => {});
         }
         else {
-          logger.error(`Block navigation to invalid url: ${navUrl}`);
+          console.error(`Block navigation to invalid url: ${navUrl}`);
           this.window.webContents.off('did-start-navigation', checkNavigation);
           /**
            * 1. Call window.api.finishRenderCard(cardProp.id) to tell initialize process the error
@@ -333,7 +332,7 @@ export class Card {
         // console.debug('reload() in top frame is permitted');
       }
       else {
-        logger.error('Page navigation in top frame is not permitted.');
+        console.error('Page navigation in top frame is not permitted.');
         event.preventDefault();
       }
     });
@@ -353,7 +352,7 @@ export class Card {
     return new Promise(resolve => {
       this.window.setSize(_prop.geometry.width, _prop.geometry.height);
       this.window.setPosition(_prop.geometry.x, _prop.geometry.y);
-      logger.debug(`renderCard in main [${_prop.id}] ${_prop.data.substr(0, 40)}`);
+      console.debug(`renderCard in main [${_prop.id}] ${_prop.data.substr(0, 40)}`);
       this.window.showInactive();
       this.window.webContents.send('render-card', _prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
       const checkTimer = setInterval(() => {
@@ -373,7 +372,7 @@ export class Card {
   private _loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
       const finishLoadListener = (event: Electron.IpcMainInvokeEvent) => {
-        logger.debug('loadHTML  ' + this.prop.id);
+        console.debug('loadHTML  ' + this.prop.id);
 
         // Don't use 'did-finish-load' event.
         // loadHTML resolves after loading HTML and processing required script are finished.
@@ -401,25 +400,25 @@ export class Card {
       setGlobalFocusEventListenerPermission(true);
     }
     if (this.suppressFocusEventOnce) {
-      logger.debug(`skip focus event listener ${this.prop.id}`);
+      console.debug(`skip focus event listener ${this.prop.id}`);
       this.suppressFocusEventOnce = false;
     }
     else if (!getGlobalFocusEventListenerPermission()) {
-      logger.debug(`focus event listener is suppressed ${this.prop.id}`);
+      console.debug(`focus event listener is suppressed ${this.prop.id}`);
     }
     else {
-      logger.debug(`focus ${this.prop.id}`);
+      console.debug(`focus ${this.prop.id}`);
       this.window.webContents.send('card-focused');
     }
   };
 
   private _blurListener = () => {
     if (this.suppressBlurEventOnce) {
-      logger.debug(`skip blur event listener ${this.prop.id}`);
+      console.debug(`skip blur event listener ${this.prop.id}`);
       this.suppressBlurEventOnce = false;
     }
     else {
-      logger.debug(`blur ${this.prop.id}`);
+      console.debug(`blur ${this.prop.id}`);
       this.window.webContents.send('card-blurred');
     }
   };

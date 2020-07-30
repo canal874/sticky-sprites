@@ -7,10 +7,10 @@
  */
 
 import path from 'path';
-import { setFlagsFromString } from 'v8';
 import { v4 as uuidv4 } from 'uuid';
 import { app, BrowserWindow, dialog, ipcMain, Menu, MouseInputEvent, Tray } from 'electron';
 import { selectPreferredLanguage, translate } from 'typed-intl';
+import electronConnect from 'electron-connect';
 import { CardIO } from './modules_main/io';
 import { DialogButton } from './modules_common/const';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
@@ -27,7 +27,6 @@ import {
   deleteCard,
   setGlobalFocusEventListenerPermission,
 } from './modules_main/card';
-import { logger } from './modules_main/logger';
 
 // process.on('unhandledRejection', console.dir);
 
@@ -63,7 +62,7 @@ ipcMain.handle('save-card', async (event, cardPropObj: CardPropSerializable) => 
       }
     })
     .catch((e: Error) => {
-      logger.debug(e.message);
+      console.debug(e.message);
     });
 });
 
@@ -100,7 +99,7 @@ const openSettings = () => {
 
   // hot reload
   if (process.env.NODE_ENV === 'development') {
-    require('electron-connect').client.create(settingWindow);
+    electronConnect.client.client.create(settingWindow);
   }
 
   settingWindow.loadURL(path.join(__dirname, 'settings/settings.html'));
@@ -112,7 +111,7 @@ const openSettings = () => {
  */
 app.on('ready', async () => {
   // locale can be got after 'ready'
-  logger.debug('locale: ' + app.getLocale());
+  console.debug('locale: ' + app.getLocale());
   selectPreferredLanguage(['en', 'ja'], [app.getLocale(), 'en']);
   setCurrentMessages(translations.messages());
 
@@ -157,7 +156,7 @@ app.on('ready', async () => {
       return cardArr;
     })
     .catch((e: Error) => {
-      logger.error(`Cannot load a list of cards: ${e.message}`);
+      console.error(`Cannot load a list of cards: ${e.message}`);
       return [];
     });
 
@@ -168,7 +167,7 @@ app.on('ready', async () => {
   }
 
   await Promise.all(renderers).catch((e: Error) => {
-    logger.error(`Error while rendering cards in ready event: ${e.message}`);
+    console.error(`Error while rendering cards in ready event: ${e.message}`);
   });
 
   const backToFront = [...cards.keys()].sort((a, b) => {
@@ -189,7 +188,7 @@ app.on('ready', async () => {
       }
     }
   }
-  logger.debug(`Completed to load ${renderers.length} cards`);
+  console.debug(`Completed to load ${renderers.length} cards`);
 });
 
 /**
