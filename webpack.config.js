@@ -7,7 +7,7 @@ module.exports = {
   entry: './src/settings/index.ts',
   output: {
     path: path.resolve(__dirname, 'dist/settings'),
-    filename: 'main.js'
+    filename: 'main.js',
   },
 
   module: {
@@ -24,59 +24,58 @@ module.exports = {
                 'transform-react-jsx',
                 // 2) styleName in .jsx => className in .jsx
                 ['react-css-modules', { generateScopedName: cssModulesScopedName }],
-            ]
-          }
+              ],
+            },
           },
           // 1) .ts => .js,  .tsx => .jsx
           {
             loader: 'ts-loader',
             options: {
-              configFile: 'tsconfig.webpack.json'
-            }
-          }
-        ]
+              configFile: 'tsconfig.webpack.json',
+            },
+          },
+        ],
       },
       {
-        enforce: "pre",
+        enforce: 'pre',
         test: /\.js$/,
-        loader: "source-map-loader"
+        loader: 'source-map-loader',
       },
       {
         test: /\.css$/,
         use: [
-           // import .css in .js
-           'style-loader',
+          // import .css in .js
+          'style-loader',
           {
             /**
              * Must use css-loader@3 because hash generator of css-loader@4 is different from that of 'react-css-modules'
              * See https://github.com/webpack-contrib/css-loader/issues/877
-             */ 
+             */
+
             // Apply css modules
-            loader: 'css-loader', 
+            loader: 'css-loader',
             options: {
               modules: {
                 localIdentName: cssModulesScopedName,
               },
               importLoaders: 1,
               sourceMap: true,
-            }
+            },
           },
-        ]
-      }
-    ]
+        ],
+      },
+    ],
   },
   resolve: {
     extensions: [
       '.ts',
-	    '.tsx',      
-	    '.js' // for node_modules
+      '.tsx',
+      '.js', // for node_modules
     ],
-    modules: [
-	    'node_modules', 
-    ],
+    modules: ['node_modules'],
   },
   externals: {
-    "react": "React",
-    "react-dom": "ReactDOM"
-  }
+    'react': 'React',
+    'react-dom': 'ReactDOM',
+  },
 };
