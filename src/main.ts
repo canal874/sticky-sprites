@@ -99,7 +99,7 @@ const openSettings = () => {
 
   // hot reload
   if (process.env.NODE_ENV === 'development') {
-    electronConnect.client.client.create(settingWindow);
+    electronConnect.client.create(settingWindow);
   }
 
   settingWindow.loadURL(path.join(__dirname, 'settings/settings.html'));
