@@ -97,6 +97,12 @@ const openSettings = () => {
 
     icon: path.join(__dirname, '../assets/media_stickies_grad_icon.ico'),
   });
+
+  // hot reload
+  if (process.env.NODE_ENV === 'development') {
+    require('electron-connect').client.create(settingWindow);
+  }
+
   settingWindow.loadURL(path.join(__dirname, 'settings/settings.html'));
 };
 /**
@@ -111,7 +117,9 @@ app.on('ready', async () => {
   setCurrentMessages(translations.messages());
 
   // for debug
-  openSettings();
+  if (process.env.NODE_ENV === 'development') {
+    openSettings();
+  }
 
   const tray = new Tray(path.join(__dirname, '../assets/media_stickies_grad_icon.ico'));
   const contextMenu = Menu.buildFromTemplate([

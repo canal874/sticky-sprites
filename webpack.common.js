@@ -2,8 +2,6 @@ const path = require('path');
 const cssModulesScopedName = '[path]___[name]__[local]___[hash:base64:5]';
 
 module.exports = {
-  devtool: 'source-map',
-  // メインとなるJavaScriptファイル（エントリーポイント）
   entry: './src/settings/index.ts',
   output: {
     path: path.resolve(__dirname, 'dist/settings'),
