@@ -7,10 +7,10 @@
  */
 import * as React from 'react';
 
-export interface SettingPagePermissionProps {
+export interface SettingPageSecurityProps {
   title: string;
 }
 
-export const SettingPagePermission = (props: SettingPagePermissionProps) => {
+export const SettingPageSecurity = (props: SettingPageSecurityProps) => {
   return <h3>{props.title}</h3>;
 };

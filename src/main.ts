@@ -16,6 +16,7 @@ import { DialogButton } from './modules_common/const';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 import {
   English,
+  getCurrentMessages,
   Japanese,
   MESSAGE,
   MessageLabel,
@@ -83,6 +84,10 @@ ipcMain.handle('create-card', (event, propObject: CardPropSerializable) => {
   cards.set(card.prop.id, card);
   card.render();
   return card.prop.id;
+});
+
+ipcMain.handle('get-i18n', () => {
+  return getCurrentMessages();
 });
 
 const openSettings = () => {

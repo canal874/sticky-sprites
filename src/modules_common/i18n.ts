@@ -22,6 +22,10 @@ export interface Messages {
   purple: string;
   gray: string;
   transparent: string;
+  SettingsDialog: string;
+  SettingPageLanguage: string;
+  SettingPageSecurity: string;
+  SettingPageSave: string;
 }
 
 export type MessageLabel = keyof Messages;
@@ -53,6 +57,10 @@ export const English: Messages = {
   purple: 'purple',
   gray: 'gray',
   transparent: 'transparent',
+  SettingsDialog: 'Settings',
+  SettingPageLanguage: 'Language',
+  SettingPageSecurity: 'Security',
+  SettingPageSave: 'Save',
 };
 
 export const Japanese: Messages = {
@@ -82,11 +90,18 @@ export const Japanese: Messages = {
   purple: '紫',
   gray: 'グレー',
   transparent: '透明',
+  SettingsDialog: '設定',
+  SettingPageLanguage: '言語',
+  SettingPageSecurity: 'セキュリティ',
+  SettingPageSave: '保存先',
 };
 
 let currentMessages: Messages = English;
 export const setCurrentMessages = (current: Messages) => {
   currentMessages = current;
+};
+export const getCurrentMessages = () => {
+  return currentMessages;
 };
 export const MESSAGE = (label: MessageLabel) => {
   return currentMessages[label];

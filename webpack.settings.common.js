@@ -3,6 +3,7 @@ const cssModulesScopedName = '[path]___[name]__[local]___[hash:base64:5]';
 
 module.exports = {
   entry: './src/settings/index.ts',
+  target: 'electron-renderer',
   output: {
     path: path.resolve(__dirname, 'dist/settings'),
     filename: 'main.js',

@@ -1,7 +1,9 @@
 .menuItem {
-  font-size: 32px;
-  height: 48px;
+  font-size: 28px;
+  height: 28px;
+  padding: 12px;
   margin: 0px;
+  line-height: 1em;
 }
 
 .activeItem {

@@ -8,7 +8,12 @@
 import * as React from 'react';
 import './MenuItem.css';
 import { cardColors, ColorName } from '../modules_common/color';
-import { Store, StoreProvider, SettingsDialogAction } from './Store';
+import {
+  DispatchContext,
+  DispatchProvider,
+  MessageContext,
+  SettingsDialogAction,
+} from './StoreProvider';
 
 interface MenuItemProps {
   id: string;
@@ -16,11 +21,13 @@ interface MenuItemProps {
 }
 
 export const MenuItem = (props: MenuItemProps) => {
+  const MESSAGE = React.useContext(MessageContext);
+
   const style = (color: ColorName) => ({
     backgroundColor: cardColors[color],
   });
 
-  const [state, dispatch]: StoreProvider = React.useContext(Store);
+  const [state, dispatch]: DispatchProvider = React.useContext(DispatchContext);
 
   const handleClick = () => {
     const action: SettingsDialogAction = {
@@ -38,7 +45,7 @@ export const MenuItem = (props: MenuItemProps) => {
       onClick={handleClick}
       style={style(props.color)}
     >
-      {props.id}
+      {MESSAGE(props.id)}
     </h2>
   );
 };

@@ -9,6 +9,7 @@ import * as React from 'react';
 import { MenuItem } from './MenuItem';
 import './MenuList.css';
 import { ColorName } from '../modules_common/color';
+import { MessageContext } from './StoreProvider';
 
 export interface MenuListProps {
   title: string;
@@ -16,9 +17,10 @@ export interface MenuListProps {
 }
 
 export const MenuList = (props: MenuListProps) => {
+  const MESSAGE = React.useContext(MessageContext);
   return (
     <div styleName='menuList'>
-      <h1>{props.title}</h1>
+      <h1 styleName='menuListTitle'>{MESSAGE(props.title)}</h1>
       {props.items.map(item => (
         <MenuItem key={item.name} id={item.name} color={item.color} />
       ))}

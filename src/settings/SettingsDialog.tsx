@@ -9,7 +9,7 @@ import * as React from 'react';
 import { MenuList, MenuListProps } from './MenuList';
 import { SettingPages } from './SettingPages';
 import './SettingsDialog.css';
-import { SettingsDialogState, StoreProvider } from './Store';
+import { MessageContext, SettingsDialogState, StoreProvider } from './StoreProvider';
 
 export interface SettingsDialogProps {
   menu: MenuListProps;

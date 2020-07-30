@@ -9,16 +9,16 @@ import * as React from 'react';
 import './SettingPages.css';
 import { cardColors, ColorName } from '../modules_common/color';
 import { SettingPageSave } from './SettingPageSave';
-import { SettingPagePermission } from './SettingPagePermission';
+import { SettingPageSecurity } from './SettingPageSecurity';
 import { SettingPageLanguage } from './SettingPageLanguage';
-import { Store, StoreProvider } from './Store';
+import { DispatchContext, DispatchProvider } from './StoreProvider';
 
 export interface SettingsProps {
   items: { name: string; color: ColorName }[];
 }
 
 export const SettingPages = (props: SettingsProps) => {
-  const [state, dispatch]: StoreProvider = React.useContext(Store);
+  const [state, dispatch]: DispatchProvider = React.useContext(DispatchContext);
 
   const style = (color: ColorName) => ({
     backgroundColor: cardColors[color],
@@ -34,7 +34,7 @@ export const SettingPages = (props: SettingsProps) => {
     activePage = <SettingPageSave title='save' />;
   }
   else if (state.activeSettingName === 'permission') {
-    activePage = <SettingPagePermission title='permission' />;
+    activePage = <SettingPageSecurity title='permission' />;
   }
   else if (state.activeSettingName === 'language') {
     activePage = <SettingPageLanguage title='language' />;
