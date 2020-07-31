@@ -35,12 +35,12 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
   const menuHeight = 50;
   const style = (color: ColorName) => ({
     backgroundColor: cardColors[color],
-    zIndex: isActive ? 100 : props.index,
+    zIndex: isActive ? 190 : props.index,
   });
 
   const handleClick = () => {
     const action: SettingsDialogAction = {
-      payload: { activeSettingId: props.id },
+      activeSettingId: props.id,
     };
     dispatch(action);
   };
@@ -49,7 +49,7 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
     <h2
       id={props.id}
       styleName={`menuItem ${isActive ? 'activeItem' : 'inactiveItem'}`}
-      onClick={handleClick}
+      onClick={isActive ? () => {} : handleClick}
       style={style(props.color)}
     >
       {MESSAGE(props.label)}

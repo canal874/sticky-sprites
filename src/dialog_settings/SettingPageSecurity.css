@@ -1,37 +1,19 @@
-.settingPageSave {
+.settingPageSecurity {
   height: 220px;
+  width: 350px;
   margin: 0px;
   padding: 32px;
   font-size: 18px;
   font-weight: bold;
-  position: absolute;
-  box-shadow: 5px 5px 10px 0 rgba(0,0,0, .5);
-}
-
-.locationSelector {
-  float: left;
-  height: 30px;  
-}
-
-.saveFilePath {
-  float: left;
-  height: 18px;
-  padding: 6px;
-  margin-left: 10px;  
-}
-
-.saveChangeFilePathButton {
-  float: left;
-  height: 30px;
-  margin-left: 20px;
-  margin-top: 0px;
+  position: absolute;  
+  box-shadow: 5px 5px 10px 0 rgba(0,0,0, .5)       
 }
 
 .previousActivePage {
   transform-origin: left top;
-  animation: flip 0.2s ease-out 1;
+  animation: flip 0.2s ease-out 1;  
   opacity: 1.0;
-  transform: rotateZ(-3deg);    
+  transform: rotateZ(-3deg);  
 }
 
 @keyframes flip {
@@ -41,7 +23,7 @@
 
 .activePage {
   transform-origin: left top;
-  animation: fluffy1 0.5s ease-out 1 ;  
+  animation: fluffy1 0.5s ease-out 1;  
 }
 
 @keyframes fluffy1 {
@@ -54,5 +36,5 @@
 
 .inactivePage {
   opacity: 1.0;
-  transform: rotateZ(-5deg);  
+  transform: rotateZ(-5deg);
 }

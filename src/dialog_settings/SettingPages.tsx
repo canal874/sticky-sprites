@@ -19,31 +19,33 @@ export interface SettingsProps {
 }
 
 export const SettingPages = (props: SettingsProps) => {
-  const [state, dispatch]: SettingsDialogProvider = React.useContext(SettingsDialogContext);
+  const [settingsDialogState, dispatch]: SettingsDialogProvider = React.useContext(
+    SettingsDialogContext
+  );
+  let ActivePage;
+  const pages = props.items.map((item, index) => {
+    let Page;
+    if (item.id === 'save') {
+      Page = <SettingPageSave item={item} index={index} />;
+    }
+    else if (item.id === 'security') {
+      Page = <SettingPageSecurity item={item} index={index} />;
+    }
+    else if (item.id === 'language') {
+      Page = <SettingPageLanguage item={item} index={index} />;
+    }
 
-  const style = (color: ColorName) => ({
-    backgroundColor: cardColors[color],
+    if (settingsDialogState.activeSettingId === item.id) {
+      ActivePage = Page;
+    }
+    else {
+      return Page;
+    }
   });
-
-  const activeItem = props.items.find(item => item.id === state.activeSettingId);
-
-  const color = activeItem ? activeItem.color : 'white';
-
-  let activePage;
-
-  if (state.activeSettingId === 'save') {
-    activePage = <SettingPageSave />;
-  }
-  else if (state.activeSettingId === 'permission') {
-    activePage = <SettingPageSecurity />;
-  }
-  else if (state.activeSettingId === 'language') {
-    activePage = <SettingPageLanguage />;
-  }
-
   return (
-    <div styleName='settingPages' style={style(color)}>
-      {activePage}
+    <div styleName='settingPages'>
+      {ActivePage}
+      {pages}
     </div>
   );
 };

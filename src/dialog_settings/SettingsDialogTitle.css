@@ -11,10 +11,20 @@
   grid-row: 1;
   grid-column: 2;
   font-size: 20px;
-  line-height: 1em;
-  height: 20px;
+  line-height: 20px;
+  height: 40px;
+  padding-top: 20px;
+  padding-left: 20px;
   margin: 0px;
-  padding: 12px;
-  z-index: 200;
+
+  width: 150px;
+  
+  position: relative;
+  top: 10px;
+  left: -25px;
+
+  z-index: 300;
+
+  border-radius: 10px;
   box-shadow: 5px 0px 10px 0 rgba(0,0,0, .5)   
 }

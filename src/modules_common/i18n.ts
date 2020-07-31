@@ -34,6 +34,7 @@ type MessagesSettings = {
   saveChangeFilePathButton: string;
   languageDetailedText: string;
   currentLanguage: string;
+  securityDetailedText: string;
 };
 
 type MessagesLanguage = {
@@ -64,6 +65,7 @@ const SettingsEnglish: MessagesSettings = {
   languageDetailedText:
     'Switch the Current Language list box to display the default language',
   currentLanguage: 'Current Language',
+  securityDetailedText: 'Only following URLs are allowed to load into a card:',
 };
 export const English: Messages = {
   ...LanguagesCommon,
@@ -106,6 +108,7 @@ const SettingsJapanese: MessagesSettings = {
   saveChangeFilePathButton: '変更',
   languageDetailedText: 'このアプリのメニュー表示のために使用する言語を選んでください。',
   currentLanguage: '使用する言語',
+  securityDetailedText: '次の URL のみカードに読み込むことができます:',
 };
 export const Japanese: Messages = {
   ...LanguagesCommon,

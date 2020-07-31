@@ -5,7 +5,7 @@
   border-radius: 10px;
   font-size: 28px;
   height: 28px;
-  width: 200px;
+  width: 220px;
   padding: 12px;
   margin: 0px;
   line-height: 1em;
@@ -14,21 +14,21 @@
 
 .activeItem {
   font-weight: bold;
-  z-index: 100;
   box-shadow: 10px 5px 10px 0 rgba(0,0,0, .5);
   transform-origin: right top;
   animation: fluffy1 0.5s ease-out 1;
-}
-
-@keyframes fluffy1 {
-  0% { transform:rotateZ(-5deg) translateX(15px) }
-  20% { transform:rotateZ(3deg) translateX(0px) }
-  100% { transform:rotateZ(0) translateX(0px) }
 }
 
 .inactiveItem {
   font-weight: normal;
   transform-origin: right top;  
   transform: rotateZ(-5deg) translateX(20px);
-  z-index: 0;
+}
+
+@keyframes fluffy1 {
+  0% { transform:rotateZ(-5deg) translateX(15px) }
+  20% { transform:rotateZ(3deg) translateX(0px) }
+  60% { transform:rotateZ(-1deg) translateX(0px) }
+  80% { transform:rotateZ(1deg) translateX(0px) }  
+  100% { transform:rotateZ(0) translateX(0px) }  
 }

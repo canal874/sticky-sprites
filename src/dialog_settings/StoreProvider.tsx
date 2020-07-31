@@ -54,15 +54,20 @@ export const MessageContext = React.createContext<MessageState>(initialMessageSt
  */
 export interface SettingsDialogState {
   activeSettingId: string;
+  previousActiveSettingId: string;
 }
 export interface SettingsDialogAction {
-  payload: SettingsDialogState;
+  activeSettingId: string;
 }
 const SettingsDialogReducer = (
   state: SettingsDialogState,
   action: SettingsDialogAction
 ) => {
-  return action.payload;
+  const nextState: SettingsDialogState = {
+    activeSettingId: action.activeSettingId,
+    previousActiveSettingId: state.activeSettingId,
+  };
+  return nextState;
 };
 export const SettingsDialogContext = React.createContext<SettingsDialogState | any>('');
 export type SettingsDialogProvider = [
@@ -113,6 +118,7 @@ export const StoreProvider = (props: {
 
   const initialState: SettingsDialogState = {
     activeSettingId: props.defaultSettingId,
+    previousActiveSettingId: '',
   };
   const [state, dispatch]: SettingsDialogProvider = React.useReducer(
     SettingsDialogReducer,
