@@ -26,20 +26,23 @@ const onready = () => {
 
   const render = () => {
     const props: SettingsDialogProps = {
-      defaultSettingName: 'SettingPageSave',
+      defaultSettingId: 'save',
       menu: {
-        title: 'SettingsDialog',
+        title: 'settingsDialog',
         items: [
           {
-            name: 'SettingPageSave',
+            id: 'save',
+            label: 'settingPageSave',
             color: 'yellow',
           },
           {
-            name: 'SettingPageSecurity',
+            id: 'security',
+            label: 'settingPageSecurity',
             color: 'purple',
           },
           {
-            name: 'SettingPageLanguage',
+            id: 'language',
+            label: 'settingPageLanguage',
             color: 'orange',
           },
         ],

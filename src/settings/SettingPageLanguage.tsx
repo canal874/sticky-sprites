@@ -7,10 +7,8 @@
  */
 import * as React from 'react';
 
-export interface SettingPageLanguageProps {
-  title: string;
-}
+export interface SettingPageLanguageProps {}
 
 export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
-  return <h3>{props.title}</h3>;
+  return <h3>foo </h3>;
 };

@@ -7,10 +7,8 @@
  */
 import * as React from 'react';
 
-export interface SettingPageSecurityProps {
-  title: string;
-}
+export interface SettingPageSecurityProps {}
 
 export const SettingPageSecurity = (props: SettingPageSecurityProps) => {
-  return <h3>{props.title}</h3>;
+  return <h3>bar</h3>;
 };

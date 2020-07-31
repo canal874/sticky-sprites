@@ -1,4 +1,4 @@
-export interface Messages {
+type MessagesMain = {
   exit: string;
   zoomIn: string;
   zoomOut: string;
@@ -22,13 +22,21 @@ export interface Messages {
   purple: string;
   gray: string;
   transparent: string;
-  SettingsDialog: string;
-  SettingPageLanguage: string;
-  SettingPageSecurity: string;
-  SettingPageSave: string;
-}
+};
 
-export type MessageLabel = keyof Messages;
+type MessagesSettings = {
+  settingsDialog: string;
+  settingPageLanguage: string;
+  settingPageSecurity: string;
+  settingPageSave: string;
+  saveDetailedText: string;
+  saveFilePath: string;
+  saveChangeFilePathButton: string;
+};
+
+export type Messages = MessagesMain & MessagesSettings;
+
+export type MessageLabel = keyof MessagesMain | keyof MessagesSettings;
 
 export const English: Messages = {
   exit: 'Exit',
@@ -57,10 +65,13 @@ export const English: Messages = {
   purple: 'purple',
   gray: 'gray',
   transparent: 'transparent',
-  SettingsDialog: 'Settings',
-  SettingPageLanguage: 'Language',
-  SettingPageSecurity: 'Security',
-  SettingPageSave: 'Save',
+  settingsDialog: 'Settings',
+  settingPageLanguage: 'Language',
+  settingPageSecurity: 'Security',
+  settingPageSave: 'Data Save',
+  saveDetailedText: 'Data is saved to the following location automatically:',
+  saveFilePath: 'Save in the folder of',
+  saveChangeFilePathButton: 'Change',
 };
 
 export const Japanese: Messages = {
@@ -90,10 +101,13 @@ export const Japanese: Messages = {
   purple: '紫',
   gray: 'グレー',
   transparent: '透明',
-  SettingsDialog: '設定',
-  SettingPageLanguage: '言語',
-  SettingPageSecurity: 'セキュリティ',
-  SettingPageSave: '保存先',
+  settingsDialog: '設定',
+  settingPageLanguage: '言語',
+  settingPageSecurity: 'セキュリティ',
+  settingPageSave: 'データ保存先',
+  saveDetailedText: 'データは次の場所へ自動的に保存されます。',
+  saveFilePath: 'このフォルダに保存',
+  saveChangeFilePathButton: '変更',
 };
 
 let currentMessages: Messages = English;

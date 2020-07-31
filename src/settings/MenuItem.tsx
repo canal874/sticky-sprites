@@ -14,9 +14,11 @@ import {
   MessageContext,
   SettingsDialogAction,
 } from './StoreProvider';
+import { MessageLabel } from '../modules_common/i18n';
 
-interface MenuItemProps {
+export interface MenuItemProps {
   id: string;
+  label: MessageLabel;
   color: ColorName;
 }
 
@@ -31,7 +33,7 @@ export const MenuItem = (props: MenuItemProps) => {
 
   const handleClick = () => {
     const action: SettingsDialogAction = {
-      payload: { activeSettingName: props.id },
+      payload: { activeSettingId: props.id },
     };
     dispatch(action);
   };
@@ -40,12 +42,12 @@ export const MenuItem = (props: MenuItemProps) => {
     <h2
       id={props.id}
       styleName={`menuItem ${
-        state.activeSettingName === props.id ? 'activeItem' : 'inactiveItem'
+        state.activeSettingId === props.id ? 'activeItem' : 'inactiveItem'
       }`}
       onClick={handleClick}
       style={style(props.color)}
     >
-      {MESSAGE(props.id)}
+      {MESSAGE(props.label)}
     </h2>
   );
 };

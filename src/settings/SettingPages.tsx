@@ -12,9 +12,10 @@ import { SettingPageSave } from './SettingPageSave';
 import { SettingPageSecurity } from './SettingPageSecurity';
 import { SettingPageLanguage } from './SettingPageLanguage';
 import { DispatchContext, DispatchProvider } from './StoreProvider';
+import { MenuItemProps } from './MenuItem';
 
 export interface SettingsProps {
-  items: { name: string; color: ColorName }[];
+  items: MenuItemProps[];
 }
 
 export const SettingPages = (props: SettingsProps) => {
@@ -24,20 +25,20 @@ export const SettingPages = (props: SettingsProps) => {
     backgroundColor: cardColors[color],
   });
 
-  const activeItem = props.items.find(item => item.name === state.activeSettingName);
+  const activeItem = props.items.find(item => item.id === state.activeSettingId);
 
   const color = activeItem ? activeItem.color : 'white';
 
   let activePage;
 
-  if (state.activeSettingName === 'save') {
-    activePage = <SettingPageSave title='save' />;
+  if (state.activeSettingId === 'save') {
+    activePage = <SettingPageSave />;
   }
-  else if (state.activeSettingName === 'permission') {
-    activePage = <SettingPageSecurity title='permission' />;
+  else if (state.activeSettingId === 'permission') {
+    activePage = <SettingPageSecurity />;
   }
-  else if (state.activeSettingName === 'language') {
-    activePage = <SettingPageLanguage title='language' />;
+  else if (state.activeSettingId === 'language') {
+    activePage = <SettingPageLanguage />;
   }
 
   return (

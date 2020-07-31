@@ -13,7 +13,7 @@ import { MessageLabel, Messages } from '../modules_common/i18n';
  * State of Settings Dialog updated by dispatcher
  */
 export interface SettingsDialogState {
-  activeSettingName: string;
+  activeSettingId: string;
 }
 export interface SettingsDialogAction {
   payload: SettingsDialogState;
@@ -32,9 +32,9 @@ const SettingsDialogReducer = (
  * Global State referred by child nodes
  */
 // eslint-disable-next-line import/no-mutable-exports
-export let MessageContext: React.Context<(label: string) => string>;
+export let MessageContext: React.Context<(label: MessageLabel) => string>;
 export const setMessageContext = (currentMessages: Messages) => {
-  const MESSAGE = (label: string) => {
+  const MESSAGE = (label: MessageLabel) => {
     return currentMessages[label as MessageLabel];
   };
   MessageContext = React.createContext(MESSAGE);
