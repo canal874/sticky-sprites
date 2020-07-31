@@ -9,7 +9,7 @@
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { app, BrowserWindow, dialog, ipcMain, Menu, MouseInputEvent, Tray } from 'electron';
-import { selectPreferredLanguage, translate } from 'typed-intl';
+import { preferredLanguage, selectPreferredLanguage, translate } from 'typed-intl';
 import electronConnect from 'electron-connect';
 import { CardIO } from './modules_main/io';
 import { DialogButton } from './modules_common/const';
@@ -93,15 +93,18 @@ const openSettings = () => {
       nodeIntegration: true,
       sandbox: false,
     },
+    width: 800,
+    height: 360,
     maximizable: false,
     fullscreenable: false,
-
+    autoHideMenuBar: true,
     icon: path.join(__dirname, '../assets/media_stickies_grad_icon.ico'),
   });
 
   // hot reload
   if (process.env.NODE_ENV === 'development') {
     electronConnect.client.create(settingWindow);
+    settingWindow.webContents.openDevTools();
   }
 
   settingWindow.loadURL(path.join(__dirname, 'settings/settings.html'));
@@ -115,7 +118,7 @@ app.on('ready', async () => {
   // locale can be got after 'ready'
   console.debug('locale: ' + app.getLocale());
   selectPreferredLanguage(['en', 'ja'], [app.getLocale(), 'en']);
-  setCurrentMessages(translations.messages());
+  setCurrentMessages((preferredLanguage() as unknown) as string, translations.messages());
 
   // for debug
   if (process.env.NODE_ENV === 'development') {
