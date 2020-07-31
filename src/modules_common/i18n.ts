@@ -32,13 +32,42 @@ type MessagesSettings = {
   saveDetailedText: string;
   saveFilePath: string;
   saveChangeFilePathButton: string;
+  languageDetailedText: string;
+  currentLanguage: string;
 };
 
-export type Messages = MessagesMain & MessagesSettings;
+type MessagesLanguage = {
+  en: string;
+  ja: string;
+};
 
-export type MessageLabel = keyof MessagesMain | keyof MessagesSettings;
+export type Messages = MessagesMain & MessagesSettings & MessagesLanguage;
 
+export type MessageLabel =
+  | keyof MessagesMain
+  | keyof MessagesSettings
+  | keyof MessagesLanguage;
+
+const LanguagesCommon: MessagesLanguage = {
+  en: 'English',
+  ja: '日本語(Japanese)',
+};
+
+const SettingsEnglish: MessagesSettings = {
+  settingsDialog: 'Settings',
+  settingPageLanguage: 'Language',
+  settingPageSecurity: 'Security',
+  settingPageSave: 'Data Save',
+  saveDetailedText: 'Data is saved to the following location automatically:',
+  saveFilePath: 'Save in the folder of',
+  saveChangeFilePathButton: 'Change',
+  languageDetailedText:
+    'Switch the Current Language list box to display the default language',
+  currentLanguage: 'Current Language',
+};
 export const English: Messages = {
+  ...LanguagesCommon,
+  ...SettingsEnglish,
   exit: 'Exit',
   zoomIn: 'Zoom In',
   zoomOut: 'Zoom Out',
@@ -65,16 +94,22 @@ export const English: Messages = {
   purple: 'purple',
   gray: 'gray',
   transparent: 'transparent',
-  settingsDialog: 'Settings',
-  settingPageLanguage: 'Language',
-  settingPageSecurity: 'Security',
-  settingPageSave: 'Data Save',
-  saveDetailedText: 'Data is saved to the following location automatically:',
-  saveFilePath: 'Save in the folder of',
-  saveChangeFilePathButton: 'Change',
 };
 
+const SettingsJapanese: MessagesSettings = {
+  settingsDialog: '設定',
+  settingPageLanguage: '言語',
+  settingPageSecurity: 'セキュリティ',
+  settingPageSave: 'データ保存先',
+  saveDetailedText: 'データは次の場所へ自動的に保存されます。',
+  saveFilePath: 'このフォルダに保存',
+  saveChangeFilePathButton: '変更',
+  languageDetailedText: 'このアプリのメニュー表示のために使用する言語を選んでください。',
+  currentLanguage: '使用する言語',
+};
 export const Japanese: Messages = {
+  ...LanguagesCommon,
+  ...SettingsJapanese,
   exit: '終了',
   zoomIn: '拡大',
   zoomOut: '縮小',
@@ -101,21 +136,16 @@ export const Japanese: Messages = {
   purple: '紫',
   gray: 'グレー',
   transparent: '透明',
-  settingsDialog: '設定',
-  settingPageLanguage: '言語',
-  settingPageSecurity: 'セキュリティ',
-  settingPageSave: 'データ保存先',
-  saveDetailedText: 'データは次の場所へ自動的に保存されます。',
-  saveFilePath: 'このフォルダに保存',
-  saveChangeFilePathButton: '変更',
 };
 
 let currentMessages: Messages = English;
-export const setCurrentMessages = (current: Messages) => {
-  currentMessages = current;
+let currentLanguage = 'en';
+export const setCurrentMessages = (language: string, messages: Messages) => {
+  currentLanguage = language;
+  currentMessages = messages;
 };
 export const getCurrentMessages = () => {
-  return currentMessages;
+  return [currentLanguage, currentMessages];
 };
 export const MESSAGE = (label: MessageLabel) => {
   return currentMessages[label];

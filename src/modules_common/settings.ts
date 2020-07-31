@@ -14,6 +14,7 @@ import path from 'path';
 
 export type Settings = {
   cardDir: string;
+  language: string;
 };
 export type SettingsLabel = keyof Settings;
 
@@ -21,4 +22,5 @@ export const settings: Settings = {
   cardDir: process.defaultApp
     ? './media_stickies_data'
     : path.join(__dirname, '../../../../../../media_stickies_data'),
+  language: 'en',
 };

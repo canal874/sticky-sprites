@@ -90,7 +90,7 @@ export const StoreProvider = (props: {
   React.useEffect(() => {
     let unmounted = false;
     const load = async () => {
-      const myMessages: Messages = await ipcRenderer.invoke('get-i18n');
+      const [language, myMessages] = await ipcRenderer.invoke('get-i18n');
       if (!unmounted) {
         const getI18nMessage = (label: MessageLabel) => {
           return myMessages[label as MessageLabel];

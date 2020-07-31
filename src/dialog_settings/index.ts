@@ -8,10 +8,7 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { ipcRenderer } from 'electron';
 import { SettingsDialog, SettingsDialogProps } from './SettingsDialog';
-import { Messages } from '../modules_common/i18n';
-import { Settings } from '../modules_common/settings';
 
 const onready = () => {
   const domContainer = document.getElementById('react-container');
