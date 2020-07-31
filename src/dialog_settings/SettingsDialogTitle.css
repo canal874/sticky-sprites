@@ -8,6 +8,7 @@
 
   color: #606060;
   background-color: #f7f7f7;
+  border: 1px solid black;
   grid-row: 1;
   grid-column: 2;
   font-size: 20px;
@@ -19,9 +20,9 @@
 
   width: 150px;
   
-  position: relative;
+  position: absolute;
   top: 10px;
-  left: -25px;
+  left: 195px;
 
   z-index: 300;
 

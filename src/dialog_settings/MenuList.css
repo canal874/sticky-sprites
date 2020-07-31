@@ -1,6 +1,6 @@
 .menuList {
-  grid-row: 2;
-  grid-column: 1;
+  top: 40px;
+  position: absolute;
   width: 220px;
   height: 100%;
   padding: 0px;

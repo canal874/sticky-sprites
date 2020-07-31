@@ -18,7 +18,13 @@ export const SettingsDialogTitle = (props: SettingsDialogTitleProps) => {
   const MESSAGE = React.useContext(MessageContext).MESSAGE;
   return (
     <h1 styleName='title'>
-      <span className='fas fa-cog'></span>&nbsp;&nbsp;{MESSAGE(props.title)}
+      <div style={{ float: 'left', cursor: 'pointer' }}>
+        <span className='fas fa-window-close'></span>&nbsp;&nbsp;
+        {MESSAGE(props.title)}
+      </div>
+      <div style={{ float: 'right', marginRight: '12px' }}>
+        <span style={{ color: '#909090' }} className='fas fa-cog'></span>
+      </div>
     </h1>
   );
 };
