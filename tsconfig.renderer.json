@@ -20,6 +20,6 @@
     "src/**/*",
   ],
   "exclude": [
-    "src/settings/*"
+    "src/dialog_settings/*"
   ]
 }
