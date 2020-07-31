@@ -1,0 +1,10 @@
+@font-face {
+	font-family: 'tegaki_zatsu';
+	src: url(./851tegaki_zatsu_normal_0883.ttf);
+}
+
+
+
+body {
+  font-family: tegaki_zatsu;
+}
