@@ -6,21 +6,23 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import * as React from 'react';
-import { ipcRenderer } from 'electron';
-import { MessageContext } from './StoreProvider';
-import { Settings } from '../modules_common/settings';
+import { AppSettingsContext, AppSettingsProvider, MessageContext } from './StoreProvider';
 import './SettingPageSave.css';
 
 export interface SettingPageSaveProps {}
 
 export const SettingPageSave = (props: SettingPageSaveProps) => {
   const MESSAGE = React.useContext(MessageContext).MESSAGE;
-
+  const [appSettingsState, appSettingsDispatch]: AppSettingsProvider = React.useContext(
+    AppSettingsContext
+  );
   return (
     <div styleName='settingPageSave'>
       <p>{MESSAGE('saveDetailedText')}</p>
       <input type='radio' styleName='locationSelector' checked />
-      <div styleName='saveFilePath'>{MESSAGE('saveFilePath')}</div>
+      <div styleName='saveFilePath'>
+        {MESSAGE('saveFilePath')}: {appSettingsState.settings.cardDir}
+      </div>
       <button styleName='saveChangeFilePathButton'>
         {MESSAGE('saveChangeFilePathButton')}
       </button>
