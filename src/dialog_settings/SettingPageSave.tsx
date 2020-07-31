@@ -39,7 +39,8 @@ export const SettingPageSave = (props: SettingPageSaveProps) => {
   return (
     <div
       style={style(props.item.color)}
-      styleName={`settingPageSave ${
+      styleName='settingPageSave'
+      className={`${
         settingsDialogState.activeSettingId === props.item.id ? 'activePage' : ''
       } ${
         settingsDialogState.previousActiveSettingId === props.item.id

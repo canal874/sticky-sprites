@@ -33,7 +33,8 @@ export const SettingPageSecurity = (props: SettingPageSecurityProps) => {
   return (
     <div
       style={style(props.item.color)}
-      styleName={`settingPageSecurity ${
+      styleName='settingPageSecurity'
+      className={`${
         settingsDialogState.activeSettingId === props.item.id ? 'activePage' : ''
       } ${
         settingsDialogState.previousActiveSettingId === props.item.id

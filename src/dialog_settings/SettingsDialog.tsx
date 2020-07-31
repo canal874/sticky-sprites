@@ -23,7 +23,7 @@ export const SettingsDialog = (props: SettingsDialogProps) => {
   return (
     <div styleName='settingsDialog'>
       <StoreProvider defaultSettingId={props.defaultSettingId}>
-        <SettingsDialogTitle title={props.title} />
+        <SettingsDialogTitle title={props.title} items={props.menu.items} />
         <MenuList items={props.menu.items} />
         <SettingPages items={props.menu.items} />
       </StoreProvider>

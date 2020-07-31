@@ -1,3 +1,21 @@
+.pin {
+  position: absolute;
+  top: 18px;
+  left: 198px;  
+  color: #606060;
+  font-size: 20px;  
+  line-height: 20px;  
+  border: 7px solid #ffffff;
+  width: 15px;
+  height: 15px;
+  padding-top: 20px;
+  padding-left: 20px;
+  margin: 0px;
+  z-index: 300;
+  border-radius: 30px;
+  box-shadow: 5px 0px 10px 0 rgba(0,0,0, .2)     
+}
+
 .title {
   /*
     -webkit-app-region:drag prevents JavaScript mouse events.
@@ -6,23 +24,21 @@
   -webkit-app-region: drag;
   -webkit-user-select: none;
 
+  position: absolute;
+  top: 22px;
+  left: 600px;
+  width: 150px;
+
   color: #606060;
   background-color: #f7f7f7;
-  border: 1px solid black;
-  grid-row: 1;
-  grid-column: 2;
   font-size: 20px;
   line-height: 20px;
-  height: 40px;
-  padding-top: 20px;
+  height: 30px;
+  padding-top: 10px;
   padding-left: 20px;
   margin: 0px;
 
-  width: 150px;
-  
-  position: absolute;
-  top: 10px;
-  left: 195px;
+
 
   z-index: 300;
 

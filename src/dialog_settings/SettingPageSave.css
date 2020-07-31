@@ -27,32 +27,3 @@
   margin-top: 0px;
 }
 
-.previousActivePage {
-  transform-origin: left top;
-  animation: flip 0.2s ease-out 1;
-  opacity: 1.0;
-  transform: rotateZ(-3deg);    
-}
-
-@keyframes flip {
-  0% { transform:rotateY(0); opacity: 1.0; }
-  100% { transform:rotateZ(360deg); opacity: 0.3;}  
-}
-
-.activePage {
-  transform-origin: left top;
-  animation: fluffy1 0.5s ease-out 1 ;  
-}
-
-@keyframes fluffy1 {
-  0% { transform:rotateZ(-5deg) translateX(15px) }
-  20% { transform:rotateZ(3deg) translateX(0px) }
-  60% { transform:rotateZ(-1deg) translateX(0px) }
-  80% { transform:rotateZ(1deg) translateX(0px) }  
-  100% { transform:rotateZ(0) translateX(0px) }  
-}
-
-.inactivePage {
-  opacity: 1.0;
-  transform: rotateZ(-5deg);  
-}

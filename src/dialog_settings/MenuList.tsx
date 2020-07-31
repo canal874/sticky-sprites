@@ -16,7 +16,6 @@ export interface MenuListProps {
 }
 
 export const MenuList = (props: MenuListProps) => {
-  const MESSAGE = React.useContext(MessageContext).MESSAGE;
   return (
     <div styleName='menuList'>
       {props.items.map((item, index) => (

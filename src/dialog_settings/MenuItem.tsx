@@ -31,6 +31,7 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
   const [state, dispatch]: SettingsDialogProvider = React.useContext(SettingsDialogContext);
 
   const isActive = state.activeSettingId === props.id;
+  const isPrevActive = state.previousActiveSettingId === props.id;
 
   const menuHeight = 50;
   const style = (color: ColorName) => ({
@@ -48,7 +49,9 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
   return (
     <h2
       id={props.id}
-      styleName={`menuItem ${isActive ? 'activeItem' : 'inactiveItem'}`}
+      styleName={`menuItem ${
+        isActive ? 'activeItem' : isPrevActive ? 'previousActiveItem' : 'inactiveItem'
+      }`}
       onClick={isActive ? () => {} : handleClick}
       style={style(props.color)}
     >

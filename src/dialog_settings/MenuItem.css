@@ -19,6 +19,19 @@
   animation: fluffy1 0.5s ease-out 1;
 }
 
+.previousActiveItem {
+  animation: fader 0.7s ease-out 1;
+  font-weight: normal;
+  transform-origin: right top;  
+  transform: rotateZ(-5deg) translateX(20px);
+}
+
+@keyframes fader {
+  0% { opacity: 0.0 }
+  50% {   transform: rotateZ(-90deg) translateX(50px); opacity: 0.0 }
+  100% { transform: rotateZ(-5deg) translateX(20px); opacity: 1.0 }
+}
+
 .inactiveItem {
   font-weight: normal;
   transform-origin: right top;  
