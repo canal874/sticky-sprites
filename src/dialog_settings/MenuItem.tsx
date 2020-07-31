@@ -23,7 +23,7 @@ export interface MenuItemProps {
 }
 
 export const MenuItem = (props: MenuItemProps) => {
-  const MESSAGE = React.useContext(MessageContext);
+  const MESSAGE = React.useContext(MessageContext).MESSAGE;
 
   const style = (color: ColorName) => ({
     backgroundColor: cardColors[color],

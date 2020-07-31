@@ -6,13 +6,16 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import * as React from 'react';
+import { ipcRenderer } from 'electron';
 import { MessageContext } from './StoreProvider';
+import { Settings } from '../modules_common/settings';
 import './SettingPageSave.css';
 
 export interface SettingPageSaveProps {}
 
 export const SettingPageSave = (props: SettingPageSaveProps) => {
-  const MESSAGE = React.useContext(MessageContext);
+  const MESSAGE = React.useContext(MessageContext).MESSAGE;
+
   return (
     <div styleName='settingPageSave'>
       <p>{MESSAGE('saveDetailedText')}</p>

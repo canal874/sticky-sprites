@@ -28,6 +28,7 @@ import {
   deleteCard,
   setGlobalFocusEventListenerPermission,
 } from './modules_main/card';
+import { settings } from './modules_common/settings';
 
 // process.on('unhandledRejection', console.dir);
 
@@ -84,10 +85,6 @@ ipcMain.handle('create-card', (event, propObject: CardPropSerializable) => {
   cards.set(card.prop.id, card);
   card.render();
   return card.prop.id;
-});
-
-ipcMain.handle('get-i18n', () => {
-  return getCurrentMessages();
 });
 
 const openSettings = () => {
@@ -373,3 +370,11 @@ ipcMain.handle(
     targetCard.window.webContents.sendInputEvent(mouseInputEvent);
   }
 );
+
+ipcMain.handle('get-i18n', () => {
+  return getCurrentMessages();
+});
+
+ipcMain.handle('get-settings', () => {
+  return settings;
+});

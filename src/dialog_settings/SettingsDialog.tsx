@@ -9,7 +9,7 @@ import * as React from 'react';
 import { MenuList, MenuListProps } from './MenuList';
 import { SettingPages } from './SettingPages';
 import './SettingsDialog.css';
-import { SettingsDialogState, StoreProvider } from './StoreProvider';
+import { StoreProvider } from './StoreProvider';
 
 export interface SettingsDialogProps {
   menu: MenuListProps;
@@ -17,12 +17,9 @@ export interface SettingsDialogProps {
 }
 
 export const SettingsDialog = (props: SettingsDialogProps) => {
-  const initialState: SettingsDialogState = {
-    activeSettingId: props.defaultSettingId,
-  };
   return (
     <div styleName='settingsDialog'>
-      <StoreProvider initialState={initialState}>
+      <StoreProvider defaultSettingId={props.defaultSettingId}>
         <MenuList title={props.menu.title} items={props.menu.items} />
         <SettingPages items={props.menu.items} />
       </StoreProvider>

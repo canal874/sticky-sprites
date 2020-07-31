@@ -9,19 +9,10 @@
 /**
  * Common part
  */
-import path from 'path';
 import PouchDB from 'pouchdb';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
-
-// '../../../../../../media_stickies_data' is default path when using asar created by squirrels.windows.
-// './media_stickies_data' is default path when starting from command line (npm start).
-// They can be distinguished by using process.defaultApp
-// TODO: Default path for Mac / Linux is needed.
-const cardDir = process.defaultApp
-  ? './media_stickies_data'
-  : path.join(__dirname, '../../../../../../media_stickies_data');
-
+import { settings } from '../modules_common/settings';
 /**
  * Module specific part
  */
@@ -31,7 +22,7 @@ var cardsDB: PouchDB.Database<{}>;
 class CardIOClass implements ICardIO {
   public getCardIdList = (): Promise<string[]> => {
     // returns all card ids.
-    cardsDB = new PouchDB(cardDir);
+    cardsDB = new PouchDB(settings.cardDir);
     return new Promise((resolve, reject) => {
       cardsDB
         .allDocs()
