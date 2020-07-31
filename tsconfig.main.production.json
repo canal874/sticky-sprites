@@ -18,11 +18,9 @@
   },
   "include": [
     "src/main.ts",
-    "src/modules_common/*",
-    "src/modules_main/*",
+    "src/modules_renderer/preload.ts"
   ],
   "exclude": [
-    "src/modules_renderer/*",
-    "src/settings/*"
+    "src/dialog_settings/*"
   ]
 }
