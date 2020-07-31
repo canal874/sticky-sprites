@@ -16,6 +16,7 @@ import {
 import './SettingPageLanguage.css';
 import { cardColors, ColorName } from '../modules_common/color';
 import { MenuItemProps } from './MenuItem';
+import { MessageLabel } from '../modules_common/i18n';
 
 export interface SettingPageLanguageProps {
   item: MenuItemProps;
@@ -54,7 +55,8 @@ export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
     >
       <p>{MESSAGE('languageDetailedText')}</p>
       <p>
-        {MESSAGE('currentLanguage')}: {appSettingsState.settings.language}
+        {MESSAGE('currentLanguage')}:&nbsp;&nbsp;
+        {MESSAGE(appSettingsState.settings.language as MessageLabel)}
       </p>
     </div>
   );
