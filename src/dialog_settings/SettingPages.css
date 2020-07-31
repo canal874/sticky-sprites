@@ -1,4 +1,7 @@
 .settingPages {
+  padding: 0px;
+  margin: 0px;
+  overflow: hidden;
   grid-column: 2;
   grid-row: 1;
   width: 100%;
