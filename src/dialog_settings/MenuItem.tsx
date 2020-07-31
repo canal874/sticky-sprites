@@ -9,10 +9,10 @@ import * as React from 'react';
 import './MenuItem.css';
 import { cardColors, ColorName } from '../modules_common/color';
 import {
-  DispatchContext,
-  DispatchProvider,
   MessageContext,
   SettingsDialogAction,
+  SettingsDialogContext,
+  SettingsDialogProvider,
 } from './StoreProvider';
 import { MessageLabel } from '../modules_common/i18n';
 
@@ -29,7 +29,7 @@ export const MenuItem = (props: MenuItemProps) => {
     backgroundColor: cardColors[color],
   });
 
-  const [state, dispatch]: DispatchProvider = React.useContext(DispatchContext);
+  const [state, dispatch]: SettingsDialogProvider = React.useContext(SettingsDialogContext);
 
   const handleClick = () => {
     const action: SettingsDialogAction = {

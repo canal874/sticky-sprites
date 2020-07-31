@@ -11,7 +11,7 @@ import { cardColors, ColorName } from '../modules_common/color';
 import { SettingPageSave } from './SettingPageSave';
 import { SettingPageSecurity } from './SettingPageSecurity';
 import { SettingPageLanguage } from './SettingPageLanguage';
-import { DispatchContext, DispatchProvider } from './StoreProvider';
+import { SettingsDialogContext, SettingsDialogProvider } from './StoreProvider';
 import { MenuItemProps } from './MenuItem';
 
 export interface SettingsProps {
@@ -19,7 +19,7 @@ export interface SettingsProps {
 }
 
 export const SettingPages = (props: SettingsProps) => {
-  const [state, dispatch]: DispatchProvider = React.useContext(DispatchContext);
+  const [state, dispatch]: SettingsDialogProvider = React.useContext(SettingsDialogContext);
 
   const style = (color: ColorName) => ({
     backgroundColor: cardColors[color],

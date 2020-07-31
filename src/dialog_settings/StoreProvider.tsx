@@ -12,7 +12,7 @@ import { MessageLabel, Messages } from '../modules_common/i18n';
 import { Settings, settings } from '../modules_common/settings';
 
 /**
- * State of App Settings updated by dispatcher
+ * App Settings state updated by dispatcher
  */
 export interface AppSettingsState {
   settings: Settings;
@@ -32,7 +32,7 @@ export const AppSettingsContext = React.createContext<AppSettingsState | any>(
 );
 
 /**
- * Global State referred by child nodes
+ * i18n Message state referred by child nodes
  */
 export interface MessageState {
   MESSAGE: (label: MessageLabel) => string;
@@ -48,8 +48,9 @@ const initialMessageState = {
   MESSAGE: (label: string) => '',
 };
 export const MessageContext = React.createContext<MessageState>(initialMessageState);
+
 /**
- * State of Settings Dialog updated by dispatcher
+ * Settings Dialog Operating updated by dispatcher
  */
 export interface SettingsDialogState {
   activeSettingId: string;
@@ -63,8 +64,11 @@ const SettingsDialogReducer = (
 ) => {
   return action.payload;
 };
-export const DispatchContext = React.createContext<SettingsDialogState | any>('');
-export type DispatchProvider = [SettingsDialogState, React.Dispatch<SettingsDialogAction>];
+export const SettingsDialogContext = React.createContext<SettingsDialogState | any>('');
+export type SettingsDialogProvider = [
+  SettingsDialogState,
+  React.Dispatch<SettingsDialogAction>
+];
 /**
  * StoreProvider
  */
@@ -110,7 +114,7 @@ export const StoreProvider = (props: {
   const initialState: SettingsDialogState = {
     activeSettingId: props.defaultSettingId,
   };
-  const [state, dispatch]: DispatchProvider = React.useReducer(
+  const [state, dispatch]: SettingsDialogProvider = React.useReducer(
     SettingsDialogReducer,
     initialState
   );
@@ -118,9 +122,9 @@ export const StoreProvider = (props: {
   return (
     <MessageContext.Provider value={messageState}>
       <AppSettingsContext.Provider value={[appSettingsState, appSettingsDispatch]}>
-        <DispatchContext.Provider value={[state, dispatch]}>
+        <SettingsDialogContext.Provider value={[state, dispatch]}>
           {props.children}
-        </DispatchContext.Provider>
+        </SettingsDialogContext.Provider>
       </AppSettingsContext.Provider>
     </MessageContext.Provider>
   );
