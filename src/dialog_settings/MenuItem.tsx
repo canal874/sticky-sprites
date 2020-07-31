@@ -22,14 +22,21 @@ export interface MenuItemProps {
   color: ColorName;
 }
 
-export const MenuItem = (props: MenuItemProps) => {
-  const MESSAGE = React.useContext(MessageContext).MESSAGE;
+export interface MenuItemPropsInternal {
+  index: number;
+}
 
+export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
+  const MESSAGE = React.useContext(MessageContext).MESSAGE;
+  const [state, dispatch]: SettingsDialogProvider = React.useContext(SettingsDialogContext);
+
+  const isActive = state.activeSettingId === props.id;
+
+  const menuHeight = 50;
   const style = (color: ColorName) => ({
     backgroundColor: cardColors[color],
+    zIndex: isActive ? 100 : props.index,
   });
-
-  const [state, dispatch]: SettingsDialogProvider = React.useContext(SettingsDialogContext);
 
   const handleClick = () => {
     const action: SettingsDialogAction = {
@@ -41,9 +48,7 @@ export const MenuItem = (props: MenuItemProps) => {
   return (
     <h2
       id={props.id}
-      styleName={`menuItem ${
-        state.activeSettingId === props.id ? 'activeItem' : 'inactiveItem'
-      }`}
+      styleName={`menuItem ${isActive ? 'activeItem' : 'inactiveItem'}`}
       onClick={handleClick}
       style={style(props.color)}
     >

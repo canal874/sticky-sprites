@@ -1,0 +1,20 @@
+.title {
+  /*
+    -webkit-app-region:drag prevents JavaScript mouse events.
+    -webkit-user-select: none  is also needed.
+  */
+  -webkit-app-region: drag;
+  -webkit-user-select: none;
+
+  color: #606060;
+  background-color: #f7f7f7;
+  grid-row: 1;
+  grid-column: 2;
+  font-size: 20px;
+  line-height: 1em;
+  height: 20px;
+  margin: 0px;
+  padding: 12px;
+  z-index: 200;
+  box-shadow: 5px 0px 10px 0 rgba(0,0,0, .5)   
+}

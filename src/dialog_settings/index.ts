@@ -15,8 +15,8 @@ const onready = () => {
 
   const props: SettingsDialogProps = {
     defaultSettingId: 'save',
+    title: 'settingsDialog',
     menu: {
-      title: 'settingsDialog',
       items: [
         {
           id: 'save',

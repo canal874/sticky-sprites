@@ -12,7 +12,6 @@ import { MessageContext } from './StoreProvider';
 import { MessageLabel } from '../modules_common/i18n';
 
 export interface MenuListProps {
-  title: MessageLabel;
   items: MenuItemProps[];
 }
 
@@ -20,9 +19,14 @@ export const MenuList = (props: MenuListProps) => {
   const MESSAGE = React.useContext(MessageContext).MESSAGE;
   return (
     <div styleName='menuList'>
-      <h1 styleName='menuListTitle'>{MESSAGE(props.title)}</h1>
-      {props.items.map(item => (
-        <MenuItem key={item.id} id={item.id} label={item.label} color={item.color} />
+      {props.items.map((item, index) => (
+        <MenuItem
+          key={item.id}
+          id={item.id}
+          label={item.label}
+          color={item.color}
+          index={index}
+        />
       ))}
     </div>
   );

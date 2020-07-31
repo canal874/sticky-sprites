@@ -98,6 +98,8 @@ const openSettings = () => {
     maximizable: false,
     fullscreenable: false,
     autoHideMenuBar: true,
+    transparent: true,
+    frame: false,
     icon: path.join(__dirname, '../assets/media_stickies_grad_icon.ico'),
   });
 

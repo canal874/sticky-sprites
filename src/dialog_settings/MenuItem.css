@@ -1,15 +1,28 @@
 .menuItem {
+  -webkit-user-select: none;
+  cursor: pointer;  
+
+  border-radius: 10px;
   font-size: 28px;
   height: 28px;
+  width: 200px;
   padding: 12px;
   margin: 0px;
   line-height: 1em;
+  position: relative;
 }
 
 .activeItem {
   font-weight: bold;
+  z-index: 100;
+  box-shadow: 10px 5px 10px 0 rgba(0,0,0, .5);
 }
 
 .inactiveItem {
   font-weight: normal;
+  perspective: 1px;
+  transform: rotateZ(-5deg);
+  left: 15px;
+  top: 6px;
+  z-index: 0;
 }
