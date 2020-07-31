@@ -6,16 +6,21 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import * as React from 'react';
+import { MessageContext } from './StoreProvider';
+import './SettingPageSave.css';
 
-export interface SettingPageSaveProps {
-  title: string;
-}
+export interface SettingPageSaveProps {}
 
 export const SettingPageSave = (props: SettingPageSaveProps) => {
+  const MESSAGE = React.useContext(MessageContext);
   return (
-    <div>
-      <h3>{props.title}</h3>
-      <p>Save Settings</p>
+    <div styleName='settingPageSave'>
+      <p>{MESSAGE('saveDetailedText')}</p>
+      <input type='radio' styleName='locationSelector' checked />
+      <div styleName='saveFilePath'>{MESSAGE('saveFilePath')}</div>
+      <button styleName='saveChangeFilePathButton'>
+        {MESSAGE('saveChangeFilePathButton')}
+      </button>
     </div>
   );
 };
