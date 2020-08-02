@@ -42,6 +42,11 @@ if (require('electron-squirrel-startup')) {
 ipcMain.setMaxListeners(1000);
 
 /**
+ * Ensure a reference to Tray object is retained, or it will be GC'ed.
+ */
+let tray = null;
+
+/**
  * i18n
  */
 
@@ -104,7 +109,7 @@ const openSettings = () => {
   });
 
   // hot reload
-  if (process.env.NODE_ENV === 'development') {
+  if (!app.isPackaged && process.env.NODE_ENV === 'development') {
     electronConnect.client.create(settingWindow);
     settingWindow.webContents.openDevTools();
   }
@@ -123,27 +128,9 @@ app.on('ready', async () => {
   setCurrentMessages((preferredLanguage() as unknown) as string, translations.messages());
 
   // for debug
-  if (process.env.NODE_ENV === 'development') {
+  if (!app.isPackaged && process.env.NODE_ENV === 'development') {
     openSettings();
   }
-
-  const tray = new Tray(path.join(__dirname, '../assets/media_stickies_grad_icon.ico'));
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: MESSAGE('settings'),
-      click: () => {
-        openSettings();
-      },
-    },
-    {
-      label: MESSAGE('exit'),
-      click: () => {
-        cards.forEach((card, key) => card.window.webContents.send('card-close'));
-      },
-    },
-  ]);
-  tray.setToolTip(MESSAGE('trayToolTip'));
-  tray.setContextMenu(contextMenu);
 
   // load cards
   const cardArray: Card[] = await CardIO.getCardIdList()
@@ -196,6 +183,27 @@ app.on('ready', async () => {
     }
   }
   console.debug(`Completed to load ${renderers.length} cards`);
+
+  /**
+   * Add task tray
+   **/
+  tray = new Tray(path.join(__dirname, '../assets/media_stickies_grad_icon.ico'));
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: MESSAGE('settings'),
+      click: () => {
+        openSettings();
+      },
+    },
+    {
+      label: MESSAGE('exit'),
+      click: () => {
+        cards.forEach((card, key) => card.window.webContents.send('card-close'));
+      },
+    },
+  ]);
+  tray.setToolTip(MESSAGE('trayToolTip'));
+  tray.setContextMenu(contextMenu);
 });
 
 /**
