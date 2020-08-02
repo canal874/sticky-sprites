@@ -39,15 +39,21 @@ export const SettingsDialogTitle = (props: SettingsDialogTitleProps) => {
     style = {};
   }
 
+  const close = () => {
+    window.close();
+  };
+
   return (
     <div>
       <h1 styleName='pin' style={style}></h1>
       <h1 styleName='title'>
-        <div style={{ float: 'left', cursor: 'pointer' }}>
-          <span style={{ color: '#909090' }} className='fas fa-cog'></span>&nbsp;&nbsp;
-          {MESSAGE(props.title)}
+        <div styleName='draggable'>
+          <div style={{ float: 'left' }}>
+            <span style={{ color: '#909090' }} className='fas fa-cog'></span>&nbsp;&nbsp;
+            {MESSAGE(props.title)}
+          </div>
         </div>
-        <div style={{ float: 'right', marginRight: '12px' }}>
+        <div styleName='closeButton' onClick={close}>
           <span className='fas fa-window-close'></span>
         </div>
       </h1>
