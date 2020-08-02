@@ -576,10 +576,14 @@ const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
 };
 
 window.addEventListener('load', onload, false);
-window.addEventListener('beforeunload', e => {
+window.addEventListener('beforeunload', async e => {
   if (!canClose) {
-    e.preventDefault();
-    e.returnValue = '';
+    await waitUnfinishedTasks(cardProp.id).catch((error: Error) => {
+      console.error(error.message);
+    });
+    //    e.preventDefault();
+    //    e.returnValue = '';
+    console.debug('Closing by operating system');
   }
 });
 
