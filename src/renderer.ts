@@ -37,7 +37,7 @@ import {
 } from './modules_renderer/save';
 import window from './modules_renderer/window';
 
-const UI_COLOR_DARKENING_RATE = 0.8;
+const UI_COLOR_DARKENING_RATE = 0.9;
 
 let cardProp: CardProp = new CardProp('');
 
