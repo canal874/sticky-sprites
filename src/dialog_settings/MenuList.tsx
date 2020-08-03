@@ -8,8 +8,6 @@
 import * as React from 'react';
 import { MenuItem, MenuItemProps } from './MenuItem';
 import './MenuList.css';
-import { MessageContext } from './StoreProvider';
-import { MessageLabel } from '../modules_common/i18n';
 
 export interface MenuListProps {
   items: MenuItemProps[];

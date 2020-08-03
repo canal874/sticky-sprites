@@ -8,7 +8,7 @@
 
 import * as React from 'react';
 import { ipcRenderer } from 'electron';
-import { MessageLabel, Messages } from '../modules_common/i18n';
+import { MessageLabel } from '../modules_common/i18n';
 import { Settings, settings } from '../modules_common/settings';
 
 /**
@@ -32,22 +32,28 @@ export const AppSettingsContext = React.createContext<AppSettingsState | any>(
 );
 
 /**
- * i18n Message state referred by child nodes
+ * Globals fetched from Main process
  */
-export interface MessageState {
+export interface GlobalState {
   MESSAGE: (label: MessageLabel) => string;
 }
 export interface MessageAction {
-  payload: MessageState;
+  type: 'UpdateMessage';
+  payload: (label: MessageLabel) => string;
 }
-const MessagesReducer = (state: MessageState, action: MessageAction) => {
-  return action.payload;
+const GlobalReducer = (state: GlobalState, action: MessageAction) => {
+  if (action.type === 'UpdateMessage') {
+    return { ...state, MESSAGE: action.payload };
+  }
+
+  return state;
 };
-export type MessagesProvider = [MessageState, React.Dispatch<MessageAction>];
-const initialMessageState = {
+// Read only
+export type GlobalProvider = [GlobalState, React.Dispatch<MessageAction>];
+const initialGlobalState: GlobalState = {
   MESSAGE: (label: string) => '',
 };
-export const MessageContext = React.createContext<MessageState>(initialMessageState);
+export const GlobalContext = React.createContext<GlobalState>(initialGlobalState);
 
 /**
  * Settings Dialog Operating updated by dispatcher
@@ -82,9 +88,9 @@ export const StoreProvider = (props: {
   defaultSettingId: string;
   children: React.ReactNode;
 }) => {
-  const [messageState, messageDispatch] = React.useReducer(
-    MessagesReducer,
-    initialMessageState
+  const [globalState, messageDispatch] = React.useReducer(
+    GlobalReducer,
+    initialGlobalState
   );
   const [appSettingsState, appSettingsDispatch] = React.useReducer(
     AppSettingsReducer,
@@ -101,7 +107,7 @@ export const StoreProvider = (props: {
         const getI18nMessage = (label: MessageLabel) => {
           return myMessages[label as MessageLabel];
         };
-        messageDispatch({ payload: { MESSAGE: getI18nMessage } });
+        messageDispatch({ type: 'UpdateMessage', payload: getI18nMessage });
       }
 
       const mySettings: Settings = await ipcRenderer.invoke('get-settings');
@@ -127,12 +133,12 @@ export const StoreProvider = (props: {
   );
 
   return (
-    <MessageContext.Provider value={messageState}>
+    <GlobalContext.Provider value={globalState}>
       <AppSettingsContext.Provider value={[appSettingsState, appSettingsDispatch]}>
         <SettingsDialogContext.Provider value={[state, dispatch]}>
           {props.children}
         </SettingsDialogContext.Provider>
       </AppSettingsContext.Provider>
-    </MessageContext.Provider>
+    </GlobalContext.Provider>
   );
 };

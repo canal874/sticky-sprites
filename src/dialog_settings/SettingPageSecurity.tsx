@@ -7,7 +7,7 @@
  */
 import * as React from 'react';
 import './SettingPageSecurity.css';
-import { MessageContext } from './StoreProvider';
+import { GlobalContext } from './StoreProvider';
 import { MenuItemProps } from './MenuItem';
 import { SettingPageTemplate } from './SettingPageTemplate';
 
@@ -17,11 +17,11 @@ export interface SettingPageSecurityProps {
 }
 
 export const SettingPageSecurity = (props: SettingPageSecurityProps) => {
-  const MESSAGE = React.useContext(MessageContext).MESSAGE;
+  const globalState = React.useContext(GlobalContext);
 
   return (
     <SettingPageTemplate item={props.item} index={props.index}>
-      <p>{MESSAGE('securityDetailedText')}</p>
+      <p>{globalState.MESSAGE('securityDetailedText')}</p>
     </SettingPageTemplate>
   );
 };

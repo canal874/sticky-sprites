@@ -9,7 +9,7 @@ import * as React from 'react';
 import './SettingsDialogTitle.css';
 import { MessageLabel } from '../modules_common/i18n';
 import {
-  MessageContext,
+  GlobalContext,
   SettingsDialogContext,
   SettingsDialogProvider,
 } from './StoreProvider';
@@ -22,7 +22,7 @@ export interface SettingsDialogTitleProps {
 }
 
 export const SettingsDialogTitle = (props: SettingsDialogTitleProps) => {
-  const MESSAGE = React.useContext(MessageContext).MESSAGE;
+  const globalState = React.useContext(GlobalContext);
   const [settingsDialogState, dispatch]: SettingsDialogProvider = React.useContext(
     SettingsDialogContext
   );
@@ -50,7 +50,7 @@ export const SettingsDialogTitle = (props: SettingsDialogTitleProps) => {
         <div styleName='draggable'>
           <div style={{ float: 'left' }}>
             <span style={{ color: '#909090' }} className='fas fa-cog'></span>&nbsp;&nbsp;
-            {MESSAGE(props.title)}
+            {globalState.MESSAGE(props.title)}
           </div>
         </div>
         <div styleName='closeButton' onClick={close}>

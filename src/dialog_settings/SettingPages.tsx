@@ -7,7 +7,6 @@
  */
 import * as React from 'react';
 import './SettingPages.css';
-import { cardColors, ColorName } from '../modules_common/color';
 import { SettingPageSave } from './SettingPageSave';
 import { SettingPageSecurity } from './SettingPageSecurity';
 import { SettingPageLanguage } from './SettingPageLanguage';

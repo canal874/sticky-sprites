@@ -9,7 +9,6 @@ import * as React from 'react';
 import {
   AppSettingsContext,
   AppSettingsProvider,
-  MessageContext,
   SettingsDialogAction,
   SettingsDialogContext,
   SettingsDialogProvider,
@@ -26,8 +25,6 @@ export interface SettingPageTemplateProps {
 }
 
 export const SettingPageTemplate = (props: SettingPageTemplateProps) => {
-  const MESSAGE = React.useContext(MessageContext).MESSAGE;
-
   const [settingsDialogState, dispatch]: SettingsDialogProvider = React.useContext(
     SettingsDialogContext
   );
