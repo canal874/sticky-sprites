@@ -9,7 +9,7 @@ import * as React from 'react';
 import './MenuItem.css';
 import { cardColors, ColorName } from '../modules_common/color';
 import {
-  MessageContext,
+  GlobalContext,
   SettingsDialogAction,
   SettingsDialogContext,
   SettingsDialogProvider,
@@ -30,7 +30,7 @@ export interface MenuItemPropsInternal {
 }
 
 export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
-  const MESSAGE = React.useContext(MessageContext).MESSAGE;
+  const globalState = React.useContext(GlobalContext);
   const [state, dispatch]: SettingsDialogProvider = React.useContext(SettingsDialogContext);
 
   const isActive = state.activeSettingId === props.id;
@@ -42,11 +42,16 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
     zIndex: isActive ? 190 : props.index,
   });
 
+  let currentAudio: HTMLAudioElement;
   const handleClick = () => {
     // Play if page changes
-    (document.getElementById(
+    if (currentAudio !== undefined) {
+      currentAudio.pause();
+    }
+    currentAudio = document.getElementById(
       'soundEffect0' + getRandomInt(1, 4)
-    ) as HTMLAudioElement).play();
+    ) as HTMLAudioElement;
+    currentAudio.play();
 
     const action: SettingsDialogAction = {
       activeSettingId: props.id,
@@ -63,7 +68,7 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
       onClick={isActive ? () => {} : handleClick}
       style={style(props.color)}
     >
-      {MESSAGE(props.label)}
+      {globalState.MESSAGE(props.label)}
     </h2>
   );
 };
