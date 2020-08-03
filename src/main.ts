@@ -28,7 +28,7 @@ import {
   deleteCard,
   setGlobalFocusEventListenerPermission,
 } from './modules_main/card';
-import { settings } from './modules_common/settings';
+import { loadSettings, settings } from './modules_common/settings';
 
 // process.on('unhandledRejection', console.dir);
 
@@ -129,7 +129,9 @@ app.on('ready', async () => {
   // locale can be got after 'ready'
   console.debug('locale: ' + app.getLocale());
   selectPreferredLanguage(['en', 'ja'], [app.getLocale(), 'en']);
-  setCurrentMessages((preferredLanguage() as unknown) as string, translations.messages());
+  setCurrentMessages(preferredLanguage()!.language as string, translations.messages());
+
+  loadSettings();
 
   // for debug
   if (!app.isPackaged && process.env.NODE_ENV === 'development') {

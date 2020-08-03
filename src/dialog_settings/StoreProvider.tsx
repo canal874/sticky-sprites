@@ -98,7 +98,6 @@ export const StoreProvider = (props: {
         };
         globalDispatch({ type: 'UpdateMessage', payload: getI18nMessage });
       }
-
       const mySettings: Settings = await ipcRenderer.invoke('get-settings');
       if (!unmounted) {
         globalDispatch({ type: 'UpdateSettings', payload: mySettings });
@@ -110,7 +109,7 @@ export const StoreProvider = (props: {
       unmounted = true;
     };
     return cleanup;
-  });
+  }, []); // Execute only once by using 2nd argument []
 
   const initialState: SettingsDialogState = {
     activeSettingId: props.defaultSettingId,
