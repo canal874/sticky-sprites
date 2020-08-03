@@ -59,6 +59,7 @@ export interface SettingsDialogState {
 export interface SettingsDialogAction {
   activeSettingId: string;
 }
+
 const SettingsDialogReducer = (
   state: SettingsDialogState,
   action: SettingsDialogAction

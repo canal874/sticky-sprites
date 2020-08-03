@@ -39,7 +39,19 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
     zIndex: isActive ? 190 : props.index,
   });
 
+  const getRandomInt = (min: number, max: number) => {
+    // Get int value between min <= x < max
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    // The maximum is exclusive and the minimum is inclusive
+    return Math.floor(Math.random() * (max - min)) + min;
+  };
   const handleClick = () => {
+    // Play if page changes
+    (document.getElementById(
+      'soundEffect0' + getRandomInt(1, 4)
+    ) as HTMLAudioElement).play();
+
     const action: SettingsDialogAction = {
       activeSettingId: props.id,
     };
