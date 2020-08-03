@@ -48,7 +48,7 @@ ipcMain.setMaxListeners(1000);
 // Ensure a reference to Tray object is retained, or it will be GC'ed.
 let tray: Tray;
 
-let settingsWindow: BrowserWindow;
+let settingsDialog: BrowserWindow;
 
 /**
  * i18n
@@ -97,7 +97,7 @@ ipcMain.handle('create-card', (event, propObject: CardPropSerializable) => {
 });
 
 const openSettings = () => {
-  settingsWindow = new BrowserWindow({
+  settingsDialog = new BrowserWindow({
     webPreferences: {
       nodeIntegration: true,
       sandbox: false,
@@ -114,11 +114,11 @@ const openSettings = () => {
 
   // hot reload
   if (!app.isPackaged && process.env.NODE_ENV === 'development') {
-    electronConnect.client.create(settingsWindow);
-    settingsWindow.webContents.openDevTools();
+    electronConnect.client.create(settingsDialog);
+    settingsDialog.webContents.openDevTools();
   }
 
-  settingsWindow.loadURL(path.join(__dirname, 'settings/settings.html'));
+  settingsDialog.loadURL(path.join(__dirname, 'settings/settings.html'));
 };
 /**
  * This method will be called when Electron has finished
@@ -202,8 +202,8 @@ app.on('ready', async () => {
     {
       label: MESSAGE('exit'),
       click: () => {
-        if (settingsWindow !== undefined) {
-          settingsWindow.close();
+        if (settingsDialog !== undefined) {
+          settingsDialog.close();
         }
         cards.forEach((card, key) => card.window.webContents.send('card-close'));
       },
