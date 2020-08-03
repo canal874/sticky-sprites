@@ -222,6 +222,7 @@ app.on('ready', async () => {
  * Exit app
  */
 app.on('window-all-closed', () => {
+  tray.destroy();
   app.quit();
 });
 
