@@ -54,6 +54,7 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
     currentAudio.play();
 
     const action: SettingsDialogAction = {
+      type: 'UpdateActiveSetting',
       activeSettingId: props.id,
     };
     dispatch(action);

@@ -53,6 +53,7 @@ export interface SettingsDialogState {
   previousActiveSettingId: string;
 }
 export interface SettingsDialogAction {
+  type: 'UpdateActiveSetting';
   activeSettingId: string;
 }
 
@@ -60,11 +61,15 @@ const SettingsDialogReducer = (
   state: SettingsDialogState,
   action: SettingsDialogAction
 ) => {
-  const nextState: SettingsDialogState = {
-    activeSettingId: action.activeSettingId,
-    previousActiveSettingId: state.activeSettingId,
-  };
-  return nextState;
+  if (action.type === 'UpdateActiveSetting') {
+    const nextState: SettingsDialogState = {
+      activeSettingId: action.activeSettingId,
+      previousActiveSettingId: state.activeSettingId,
+    };
+    return nextState;
+  }
+
+  return state;
 };
 export const SettingsDialogContext = React.createContext<SettingsDialogState | any>('');
 export type SettingsDialogProvider = [

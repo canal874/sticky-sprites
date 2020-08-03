@@ -48,6 +48,7 @@ export const SettingPageTemplate = (props: SettingPageTemplateProps) => {
         'soundEffect0' + getRandomInt(1, 4)
       ) as HTMLAudioElement).play();
       const action: SettingsDialogAction = {
+        type: 'UpdateActiveSetting',
         activeSettingId: props.item.id,
       };
       dispatch(action);
