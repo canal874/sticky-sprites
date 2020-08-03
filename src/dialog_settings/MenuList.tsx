@@ -25,6 +25,8 @@ export const MenuList = (props: MenuListProps) => {
           label={item.label}
           color={item.color}
           index={index}
+          width={item.width}
+          height={item.height}
         />
       ))}
     </div>

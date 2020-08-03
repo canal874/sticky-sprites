@@ -15,11 +15,14 @@ import {
   SettingsDialogProvider,
 } from './StoreProvider';
 import { MessageLabel } from '../modules_common/i18n';
+import { getRandomInt } from '../modules_common/utils';
 
 export interface MenuItemProps {
   id: string;
   label: MessageLabel;
   color: ColorName;
+  width: number;
+  height: number;
 }
 
 export interface MenuItemPropsInternal {
@@ -39,13 +42,6 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
     zIndex: isActive ? 190 : props.index,
   });
 
-  const getRandomInt = (min: number, max: number) => {
-    // Get int value between min <= x < max
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    // The maximum is exclusive and the minimum is inclusive
-    return Math.floor(Math.random() * (max - min)) + min;
-  };
   const handleClick = () => {
     // Play if page changes
     (document.getElementById(
