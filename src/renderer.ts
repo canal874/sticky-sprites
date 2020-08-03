@@ -123,7 +123,7 @@ const initializeUIEvents = () => {
   });
 
   // eslint-disable-next-line no-unused-expressions
-  document.getElementById('closeBtn')?.addEventListener('click', () => {
+  document.getElementById('closeBtn')?.addEventListener('click', event => {
     if (cardEditor.isOpened) {
       if (cardEditor.editorType === 'Markup') {
         cardEditor.hideEditor();
@@ -135,7 +135,7 @@ const initializeUIEvents = () => {
         saveCard(cardProp);
       }
     }
-    if (cardProp.data === '' || isCtrlDown) {
+    if (cardProp.data === '' || event.ctrlKey) {
       deleteCard(cardProp);
     }
     else {
