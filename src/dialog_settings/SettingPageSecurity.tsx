@@ -12,6 +12,7 @@ import {
   MessageContext,
   SettingsDialogContext,
   SettingsDialogProvider,
+  SettingsDialogAction,
 } from './StoreProvider';
 import { MenuItemProps } from './MenuItem';
 
@@ -38,11 +39,21 @@ export const SettingPageSecurity = (props: SettingPageSecurityProps) => {
     activeState = 'previousActivePage';
   }
 
+  const handleClick = () => {
+    if (activeState !== 'activePage') {
+      const action: SettingsDialogAction = {
+        activeSettingId: props.item.id,
+      };
+      dispatch(action);
+    }
+  };
+
   return (
     <div
       style={style(props.item.color)}
       styleName='settingPageSecurity'
       className={activeState}
+      onClick={handleClick}
     >
       <p>{MESSAGE('securityDetailedText')}</p>
     </div>

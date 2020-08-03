@@ -12,6 +12,7 @@ import {
   MessageContext,
   SettingsDialogContext,
   SettingsDialogProvider,
+  SettingsDialogAction,
 } from './StoreProvider';
 import './SettingPageLanguage.css';
 import { cardColors, ColorName } from '../modules_common/color';
@@ -44,11 +45,21 @@ export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
     activeState = 'previousActivePage';
   }
 
+  const handleClick = () => {
+    if (activeState !== 'activePage') {
+      const action: SettingsDialogAction = {
+        activeSettingId: props.item.id,
+      };
+      dispatch(action);
+    }
+  };
+
   return (
     <div
       style={style(props.item.color)}
       styleName='settingPageLanguage'
       className={activeState}
+      onClick={handleClick}
     >
       <p>{MESSAGE('languageDetailedText')}</p>
       <p>

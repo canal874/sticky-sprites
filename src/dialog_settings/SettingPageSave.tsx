@@ -12,6 +12,7 @@ import {
   MessageContext,
   SettingsDialogContext,
   SettingsDialogProvider,
+  SettingsDialogAction,
 } from './StoreProvider';
 import './SettingPageSave.css';
 import { cardColors, ColorName } from '../modules_common/color';
@@ -44,11 +45,21 @@ export const SettingPageSave = (props: SettingPageSaveProps) => {
     activeState = 'previousActivePage';
   }
 
+  const handleClick = () => {
+    if (activeState !== 'activePage') {
+      const action: SettingsDialogAction = {
+        activeSettingId: props.item.id,
+      };
+      dispatch(action);
+    }
+  };
+
   return (
     <div
       style={style(props.item.color)}
       styleName='settingPageSave'
       className={activeState}
+      onClick={handleClick}
     >
       <p>{MESSAGE('saveDetailedText')}</p>
       <input type='radio' styleName='locationSelector' checked />
