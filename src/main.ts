@@ -42,9 +42,13 @@ if (require('electron-squirrel-startup')) {
 ipcMain.setMaxListeners(1000);
 
 /**
- * Ensure a reference to Tray object is retained, or it will be GC'ed.
+ * Task tray
  */
-let tray = null;
+
+// Ensure a reference to Tray object is retained, or it will be GC'ed.
+let tray: Tray;
+
+let settingsWindow: BrowserWindow;
 
 /**
  * i18n
@@ -93,7 +97,7 @@ ipcMain.handle('create-card', (event, propObject: CardPropSerializable) => {
 });
 
 const openSettings = () => {
-  const settingWindow = new BrowserWindow({
+  settingsWindow = new BrowserWindow({
     webPreferences: {
       nodeIntegration: true,
       sandbox: false,
@@ -110,11 +114,11 @@ const openSettings = () => {
 
   // hot reload
   if (!app.isPackaged && process.env.NODE_ENV === 'development') {
-    electronConnect.client.create(settingWindow);
-    settingWindow.webContents.openDevTools();
+    electronConnect.client.create(settingsWindow);
+    settingsWindow.webContents.openDevTools();
   }
 
-  settingWindow.loadURL(path.join(__dirname, 'settings/settings.html'));
+  settingsWindow.loadURL(path.join(__dirname, 'settings/settings.html'));
 };
 /**
  * This method will be called when Electron has finished
@@ -198,6 +202,9 @@ app.on('ready', async () => {
     {
       label: MESSAGE('exit'),
       click: () => {
+        if (settingsWindow !== undefined) {
+          settingsWindow.close();
+        }
         cards.forEach((card, key) => card.window.webContents.send('card-close'));
       },
     },
