@@ -209,8 +209,13 @@ app.on('ready', async () => {
       },
     },
   ]);
-  tray.setToolTip(MESSAGE('trayToolTip'));
+  let taskTrayToolTip = MESSAGE('trayToolTip');
+  if (!app.isPackaged) {
+    taskTrayToolTip += ' (Development)';
+  }
+  tray.setToolTip(taskTrayToolTip);
   tray.setContextMenu(contextMenu);
+  tray.on('click', openSettings);
 });
 
 /**
