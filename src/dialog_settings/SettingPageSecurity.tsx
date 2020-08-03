@@ -30,22 +30,19 @@ export const SettingPageSecurity = (props: SettingPageSecurityProps) => {
     zIndex: settingsDialogState.activeSettingId === props.item.id ? 200 : 150 - props.index,
   });
 
+  let activeState = 'inactivePage';
+  if (settingsDialogState.activeSettingId === props.item.id) {
+    activeState = 'activePage';
+  }
+  else if (settingsDialogState.previousActiveSettingId === props.item.id) {
+    activeState = 'previousActivePage';
+  }
+
   return (
     <div
       style={style(props.item.color)}
       styleName='settingPageSecurity'
-      className={`${
-        settingsDialogState.activeSettingId === props.item.id ? 'activePage' : ''
-      } ${
-        settingsDialogState.previousActiveSettingId === props.item.id
-          ? 'previousActivePage'
-          : ''
-      } ${
-        settingsDialogState.activeSettingId !== props.item.id &&
-        settingsDialogState.previousActiveSettingId !== props.item.id
-          ? 'inactivePage'
-          : ''
-      }`}
+      className={activeState}
     >
       <p>{MESSAGE('securityDetailedText')}</p>
     </div>
