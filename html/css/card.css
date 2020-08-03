@@ -126,6 +126,7 @@ body > #card > .cke_screen_reader_only{
 
 body > #card > #cke_editor{
   padding: 0px;
+  margin: 0px;
   top: 18px;  
   border: 0px;
   visibility: hidden;

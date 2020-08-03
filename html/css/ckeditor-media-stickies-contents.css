@@ -15,8 +15,9 @@ body
 
 	/* Remove the background color to make it transparent. */
 	background-color: transparent;
-	margin: 0px;
+	margin: 3px 7px 3px 7px;
   padding: 2px;
+
   word-wrap: break-word;
 }
 
