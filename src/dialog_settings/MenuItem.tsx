@@ -30,7 +30,7 @@ export interface MenuItemPropsInternal {
 }
 
 export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
-  const globalState = React.useContext(GlobalContext);
+  const [globalState] = React.useContext(GlobalContext);
   const [state, dispatch]: SettingsDialogProvider = React.useContext(SettingsDialogContext);
 
   const isActive = state.activeSettingId === props.id;

@@ -12,48 +12,38 @@ import { MessageLabel } from '../modules_common/i18n';
 import { Settings, settings } from '../modules_common/settings';
 
 /**
- * App Settings state updated by dispatcher
- */
-export interface AppSettingsState {
-  settings: Settings;
-}
-export interface AppSettingsAction {
-  payload: AppSettingsState;
-}
-const AppSettingsReducer = (state: AppSettingsState, action: AppSettingsAction) => {
-  return action.payload;
-};
-export type AppSettingsProvider = [AppSettingsState, React.Dispatch<AppSettingsAction>];
-const initialAppSettingsState = {
-  settings: settings, // This is not settings from Main process, but from individually loaded modules_common/settings module.
-};
-export const AppSettingsContext = React.createContext<AppSettingsState | any>(
-  initialAppSettingsState
-);
-
-/**
  * Globals fetched from Main process
  */
 export interface GlobalState {
   MESSAGE: (label: MessageLabel) => string;
+  settings: Settings;
 }
-export interface MessageAction {
+export type MessageAction = {
   type: 'UpdateMessage';
   payload: (label: MessageLabel) => string;
-}
-const GlobalReducer = (state: GlobalState, action: MessageAction) => {
+};
+export type AppSettingsAction = {
+  type: 'UpdateSettings';
+  payload: Settings;
+};
+export type GlobalAction = MessageAction | AppSettingsAction;
+const GlobalReducer = (state: GlobalState, action: GlobalAction) => {
   if (action.type === 'UpdateMessage') {
     return { ...state, MESSAGE: action.payload };
+  }
+  else if (action.type === 'UpdateSettings') {
+    return { ...state, settings: action.payload };
   }
 
   return state;
 };
-// Read only
-export type GlobalProvider = [GlobalState, React.Dispatch<MessageAction>];
+
+export type GlobalProvider = [GlobalState, React.Dispatch<GlobalAction>];
 const initialGlobalState: GlobalState = {
   MESSAGE: (label: string) => '',
+  settings: settings, // This is not settings from Main process, but from individually loaded modules_common/settings module.
 };
-export const GlobalContext = React.createContext<GlobalState>(initialGlobalState);
+export const GlobalContext = React.createContext<GlobalState | any>(initialGlobalState);
 
 /**
  * Settings Dialog Operating updated by dispatcher
@@ -88,14 +78,8 @@ export const StoreProvider = (props: {
   defaultSettingId: string;
   children: React.ReactNode;
 }) => {
-  const [globalState, messageDispatch] = React.useReducer(
-    GlobalReducer,
-    initialGlobalState
-  );
-  const [appSettingsState, appSettingsDispatch] = React.useReducer(
-    AppSettingsReducer,
-    initialAppSettingsState
-  );
+  const [globalState, globalDispatch] = React.useReducer(GlobalReducer, initialGlobalState);
+
   /**
    * Load data from Main process
    */
@@ -107,12 +91,12 @@ export const StoreProvider = (props: {
         const getI18nMessage = (label: MessageLabel) => {
           return myMessages[label as MessageLabel];
         };
-        messageDispatch({ type: 'UpdateMessage', payload: getI18nMessage });
+        globalDispatch({ type: 'UpdateMessage', payload: getI18nMessage });
       }
 
       const mySettings: Settings = await ipcRenderer.invoke('get-settings');
       if (!unmounted) {
-        appSettingsDispatch({ payload: { settings: mySettings } });
+        globalDispatch({ type: 'UpdateSettings', payload: mySettings });
       }
     };
     load();
@@ -133,12 +117,10 @@ export const StoreProvider = (props: {
   );
 
   return (
-    <GlobalContext.Provider value={globalState}>
-      <AppSettingsContext.Provider value={[appSettingsState, appSettingsDispatch]}>
-        <SettingsDialogContext.Provider value={[state, dispatch]}>
-          {props.children}
-        </SettingsDialogContext.Provider>
-      </AppSettingsContext.Provider>
+    <GlobalContext.Provider value={[globalState, globalDispatch]}>
+      <SettingsDialogContext.Provider value={[state, dispatch]}>
+        {props.children}
+      </SettingsDialogContext.Provider>
     </GlobalContext.Provider>
   );
 };

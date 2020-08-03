@@ -7,8 +7,6 @@
  */
 import * as React from 'react';
 import {
-  AppSettingsContext,
-  AppSettingsProvider,
   SettingsDialogAction,
   SettingsDialogContext,
   SettingsDialogProvider,
@@ -27,9 +25,6 @@ export interface SettingPageTemplateProps {
 export const SettingPageTemplate = (props: SettingPageTemplateProps) => {
   const [settingsDialogState, dispatch]: SettingsDialogProvider = React.useContext(
     SettingsDialogContext
-  );
-  const [appSettingsState, appSettingsDispatch]: AppSettingsProvider = React.useContext(
-    AppSettingsContext
   );
   const style = (color: ColorName) => ({
     backgroundColor: cardColors[color],

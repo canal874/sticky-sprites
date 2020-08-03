@@ -17,7 +17,7 @@ export interface SettingPageSecurityProps {
 }
 
 export const SettingPageSecurity = (props: SettingPageSecurityProps) => {
-  const globalState = React.useContext(GlobalContext);
+  const [globalState] = React.useContext(GlobalContext);
 
   return (
     <SettingPageTemplate item={props.item} index={props.index}>

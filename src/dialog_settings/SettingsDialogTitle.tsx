@@ -22,7 +22,7 @@ export interface SettingsDialogTitleProps {
 }
 
 export const SettingsDialogTitle = (props: SettingsDialogTitleProps) => {
-  const globalState = React.useContext(GlobalContext);
+  const [globalState] = React.useContext(GlobalContext);
   const [settingsDialogState, dispatch]: SettingsDialogProvider = React.useContext(
     SettingsDialogContext
   );

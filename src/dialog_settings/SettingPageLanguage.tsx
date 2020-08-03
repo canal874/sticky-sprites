@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import * as React from 'react';
-import { AppSettingsContext, AppSettingsProvider, GlobalContext } from './StoreProvider';
+import { GlobalContext } from './StoreProvider';
 import './SettingPageLanguage.css';
 import { cardColors, ColorName } from '../modules_common/color';
 import { MenuItemProps } from './MenuItem';
@@ -19,10 +19,7 @@ export interface SettingPageLanguageProps {
 }
 
 export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
-  const globalState = React.useContext(GlobalContext);
-  const [appSettingsState, appSettingsDispatch]: AppSettingsProvider = React.useContext(
-    AppSettingsContext
-  );
+  const [globalState] = React.useContext(GlobalContext);
 
   const MESSAGE = globalState.MESSAGE;
 
@@ -31,7 +28,7 @@ export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
       <p>{MESSAGE('languageDetailedText')}</p>
       <p>
         {MESSAGE('currentLanguage')}:&nbsp;&nbsp;
-        {MESSAGE(appSettingsState.settings.language as MessageLabel)}
+        {MESSAGE(globalState.settings.language as MessageLabel)}
       </p>
     </SettingPageTemplate>
   );

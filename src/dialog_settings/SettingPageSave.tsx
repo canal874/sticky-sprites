@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import * as React from 'react';
-import { AppSettingsContext, AppSettingsProvider, GlobalContext } from './StoreProvider';
+import { GlobalContext } from './StoreProvider';
 import './SettingPageSave.css';
 import { MenuItemProps } from './MenuItem';
 import { SettingPageTemplate } from './SettingPageTemplate';
@@ -17,11 +17,7 @@ export interface SettingPageSaveProps {
 }
 
 export const SettingPageSave = (props: SettingPageSaveProps) => {
-  const globalState = React.useContext(GlobalContext);
-
-  const [appSettingsState, appSettingsDispatch]: AppSettingsProvider = React.useContext(
-    AppSettingsContext
-  );
+  const [globalState] = React.useContext(GlobalContext);
 
   const MESSAGE = globalState.MESSAGE;
 
@@ -30,7 +26,7 @@ export const SettingPageSave = (props: SettingPageSaveProps) => {
       <p>{MESSAGE('saveDetailedText')}</p>
       <input type='radio' styleName='locationSelector' checked />
       <div styleName='saveFilePath'>
-        {MESSAGE('saveFilePath')}: {appSettingsState.settings.cardDir}
+        {MESSAGE('saveFilePath')}: {globalState.settings.cardDir}
       </div>
       <button styleName='saveChangeFilePathButton'>
         {MESSAGE('saveChangeFilePathButton')}
