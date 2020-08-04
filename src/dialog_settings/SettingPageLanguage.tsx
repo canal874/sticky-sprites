@@ -49,7 +49,7 @@ export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
         ></SelectableTag>
       </p>
       <p style={{ clear: 'both' }}>{MESSAGE('selectableLanguages')}:</p>
-      <div styleName='selectableLanguagesArea'>{languages}</div>
+      <div>{languages}</div>
     </SettingPageTemplate>
   );
 };
