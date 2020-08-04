@@ -16,7 +16,7 @@
   margin: 0px;
   z-index: 300;
   border-radius: 30px;
-  box-shadow: 5px 0px 10px 0 rgba(0,0,0, .2)     
+  box-shadow: 5px 5px 10px 0 rgba(0,0,0, .2)     
 }
 
 .title {
@@ -36,7 +36,7 @@
   z-index: 300;
 
   border-radius: 10px;
-  box-shadow: 5px 0px 10px 0 rgba(0,0,0, .5)   
+  box-shadow: 5px 5px 10px 0 rgba(0,0,0, .5)   
 }
 
 .draggable {
