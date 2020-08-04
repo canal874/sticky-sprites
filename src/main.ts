@@ -6,32 +6,21 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { app, BrowserWindow, dialog, ipcMain, Menu, MouseInputEvent, Tray } from 'electron';
-import { preferredLanguage, selectPreferredLanguage, translate } from 'typed-intl';
-import electronConnect from 'electron-connect';
+import { app, dialog, ipcMain, MouseInputEvent } from 'electron';
 import { CardIO } from './modules_main/io';
 import { DialogButton } from './modules_common/const';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
-import {
-  availableLanguages,
-  defaultLanguage,
-  English,
-  getCurrentMessages,
-  Japanese,
-  MESSAGE,
-  MessageLabel,
-  Messages,
-  setCurrentMessages,
-} from './modules_common/i18n';
+import { availableLanguages, defaultLanguage, MessageLabel } from './modules_common/i18n';
 import {
   Card,
   cards,
   deleteCard,
   setGlobalFocusEventListenerPermission,
 } from './modules_main/card';
-import { globalDispatch, subscribeStore } from './modules_main/store';
+import { initializeGlobalStore, MESSAGE, subscribeStore } from './modules_main/store';
+import { destroyTray, initializeTaskTray } from './modules_main/tray';
+import { openSettings } from './modules_main/settings';
 
 // process.on('unhandledRejection', console.dir);
 
@@ -43,21 +32,6 @@ if (require('electron-squirrel-startup')) {
 
 // Increase max listeners
 ipcMain.setMaxListeners(1000);
-
-/**
- * Task tray
- */
-
-// Ensure a reference to Tray object is retained, or it will be GC'ed.
-let tray: Tray;
-
-let settingsDialog: BrowserWindow;
-
-/**
- * i18n
- */
-
-const translations = translate(English).supporting('ja', Japanese);
 
 /**
  * Card I/O
@@ -99,40 +73,6 @@ ipcMain.handle('create-card', (event, propObject: CardPropSerializable) => {
   return card.prop.id;
 });
 
-const openSettings = () => {
-  if (settingsDialog !== undefined && !settingsDialog.isDestroyed()) {
-    return;
-  }
-
-  settingsDialog = new BrowserWindow({
-    webPreferences: {
-      nodeIntegration: true,
-      sandbox: false,
-    },
-    width: 800,
-    height: 360,
-    maximizable: false,
-    fullscreenable: false,
-    autoHideMenuBar: true,
-    transparent: true,
-    frame: false,
-    icon: path.join(__dirname, '../assets/media_stickies_grad_icon.ico'),
-  });
-
-  // hot reload
-  if (!app.isPackaged && process.env.NODE_ENV === 'development') {
-    electronConnect.client.create(settingsDialog);
-    settingsDialog.webContents.openDevTools();
-  }
-
-  settingsDialog.loadURL(path.join(__dirname, 'settings/settings.html'));
-  settingsDialog.webContents.on('did-finish-load', () => {
-    const unsubscribe = subscribeStore(settingsDialog);
-    settingsDialog.on('close', () => {
-      unsubscribe();
-    });
-  });
-};
 /**
  * This method will be called when Electron has finished
  * initialization and is ready to create browser windows.
@@ -140,12 +80,13 @@ const openSettings = () => {
  */
 app.on('ready', async () => {
   // locale can be got after 'ready'
-  console.debug('locale: ' + app.getLocale());
-  selectPreferredLanguage(availableLanguages, [app.getLocale(), defaultLanguage]);
-  setCurrentMessages(preferredLanguage()!.language as string, translations.messages());
-  const [language, messages] = getCurrentMessages();
-  globalDispatch({ type: 'language', payload: language as string });
-  globalDispatch({ type: 'messages', payload: messages as Messages });
+  const myLocale = app.getLocale();
+  console.debug(`locale: ${myLocale}`);
+  let preferredLanguage: string = defaultLanguage;
+  if (availableLanguages.includes(myLocale)) {
+    preferredLanguage = myLocale;
+  }
+  initializeGlobalStore(preferredLanguage as string);
 
   // for debug
   if (!app.isPackaged && process.env.NODE_ENV === 'development') {
@@ -207,38 +148,14 @@ app.on('ready', async () => {
   /**
    * Add task tray
    **/
-  tray = new Tray(path.join(__dirname, '../assets/media_stickies_grad_icon.ico'));
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: MESSAGE('settings'),
-      click: () => {
-        openSettings();
-      },
-    },
-    {
-      label: MESSAGE('exit'),
-      click: () => {
-        if (settingsDialog) {
-          settingsDialog.close();
-        }
-        cards.forEach((card, key) => card.window.webContents.send('card-close'));
-      },
-    },
-  ]);
-  let taskTrayToolTip = MESSAGE('trayToolTip');
-  if (!app.isPackaged) {
-    taskTrayToolTip += ' (Development)';
-  }
-  tray.setToolTip(taskTrayToolTip);
-  tray.setContextMenu(contextMenu);
-  tray.on('click', openSettings);
+  initializeTaskTray();
 });
 
 /**
  * Exit app
  */
 app.on('window-all-closed', () => {
-  tray.destroy();
+  destroyTray();
   app.quit();
 });
 
@@ -412,7 +329,3 @@ ipcMain.handle(
     targetCard.window.webContents.sendInputEvent(mouseInputEvent);
   }
 );
-
-ipcMain.handle('get-i18n', () => {
-  return getCurrentMessages();
-});

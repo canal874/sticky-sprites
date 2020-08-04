@@ -10,6 +10,7 @@ import { GlobalContext, GlobalProvider } from './StoreProvider';
 import './SettingPageSave.css';
 import { MenuItemProps } from './MenuItem';
 import { SettingPageTemplate } from './SettingPageTemplate';
+import { MessageLabel } from '../modules_common/i18n';
 
 export interface SettingPageSaveProps {
   item: MenuItemProps;
@@ -18,16 +19,18 @@ export interface SettingPageSaveProps {
 
 export const SettingPageSave = (props: SettingPageSaveProps) => {
   const [globalState] = React.useContext(GlobalContext) as GlobalProvider;
-
+  const MESSAGE = (label: MessageLabel) => {
+    return globalState.i18n.messages[label];
+  };
   return (
     <SettingPageTemplate item={props.item} index={props.index}>
-      <p>{globalState.messages.saveDetailedText}</p>
+      <p>{MESSAGE('saveDetailedText')}</p>
       <input type='radio' styleName='locationSelector' checked />
       <div styleName='saveFilePath'>
-        {globalState.messages.saveFilePath}: {globalState.cardDir}
+        {MESSAGE('saveFilePath')}: {globalState.cardDir}
       </div>
       <button styleName='saveChangeFilePathButton'>
-        {globalState.messages.saveChangeFilePathButton}
+        {MESSAGE('saveChangeFilePathButton')}
       </button>
     </SettingPageTemplate>
   );

@@ -63,8 +63,7 @@ const SettingsEnglish: MessagesSettings = {
   saveDetailedText: 'Data is saved to the following location automatically:',
   saveFilePath: 'Save in the folder of',
   saveChangeFilePathButton: 'Change',
-  languageDetailedText:
-    'Switch the Current Language list box to display the default language',
+  languageDetailedText: 'Select the Language in which you want this App to appear',
   currentLanguage: 'Current Language',
   selectableLanguages: 'Selectable Languages',
   securityDetailedText: 'Only following URLs are allowed to load into a card:',
@@ -146,15 +145,3 @@ export const Japanese: Messages = {
 
 export const availableLanguages = ['en', 'ja'];
 export const defaultLanguage = 'en';
-let currentLanguage = defaultLanguage;
-let currentMessages: Messages = English;
-export const setCurrentMessages = (language: string, messages: Messages) => {
-  currentLanguage = language;
-  currentMessages = messages;
-};
-export const getCurrentMessages = () => {
-  return [currentLanguage, currentMessages];
-};
-export const MESSAGE = (label: MessageLabel) => {
-  return currentMessages[label];
-};

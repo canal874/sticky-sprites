@@ -27,10 +27,8 @@ const LocalReducer = (state: GlobalState, action: GlobalAction) => {
 export type GlobalProvider = [GlobalState, (action: GlobalAction) => void];
 const initialGlobalState: GlobalState = {
   cardDir: '',
-  language: '',
-  messages: English,
+  i18n: { language: '', messages: English },
 };
-
 export const GlobalContext = React.createContext<GlobalState | any>(initialGlobalState);
 
 /**

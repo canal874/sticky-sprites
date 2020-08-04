@@ -20,33 +20,36 @@ export interface SettingPageLanguageProps {
 
 export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
   const [globalState, globalDispatch] = React.useContext(GlobalContext) as GlobalProvider;
+  const MESSAGE = (label: MessageLabel) => {
+    return globalState.i18n.messages[label];
+  };
 
   const handleClick = (value: string) => {
-    globalDispatch({ type: 'language', payload: value });
+    globalDispatch({ type: 'i18n', payload: value });
   };
 
   const languages = availableLanguages.map(lang => (
     <SelectableTag
       click={handleClick}
-      label={globalState.messages[lang as MessageLabel]}
+      label={MESSAGE(lang as MessageLabel)}
       value={lang}
-      selected={globalState.language === lang}
+      selected={globalState.i18n.language === lang}
     ></SelectableTag>
   ));
 
   return (
     <SettingPageTemplate item={props.item} index={props.index}>
-      <p>{globalState.messages.languageDetailedText}</p>
+      <p>{MESSAGE('languageDetailedText')}</p>
       <p>
-        <div styleName='currentLanguageLabel'>{globalState.messages.currentLanguage}:</div>
+        <div styleName='currentLanguageLabel'>{MESSAGE('currentLanguage')}:</div>
         <SelectableTag
           click={handleClick}
-          label={globalState.messages[globalState.language as MessageLabel]}
-          value={globalState.language}
+          label={MESSAGE(globalState.i18n.language as MessageLabel)}
+          value={globalState.i18n.language}
           selected={true}
         ></SelectableTag>
       </p>
-      <p style={{ clear: 'both' }}>{globalState.messages.selectableLanguages}:</p>
+      <p style={{ clear: 'both' }}>{MESSAGE('selectableLanguages')}:</p>
       <div>{languages}</div>
     </SettingPageTemplate>
   );

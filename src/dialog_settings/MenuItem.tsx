@@ -34,6 +34,10 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
   const [globalState] = React.useContext(GlobalContext) as GlobalProvider;
   const [state, dispatch]: SettingsDialogProvider = React.useContext(SettingsDialogContext);
 
+  const MESSAGE = (label: MessageLabel) => {
+    return globalState.i18n.messages[label];
+  };
+
   const isActive = state.activeSettingId === props.id;
   const isPrevActive = state.previousActiveSettingId === props.id;
 
@@ -70,7 +74,7 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
       onClick={isActive ? () => {} : handleClick}
       style={style(props.color)}
     >
-      {globalState.messages[props.label]}
+      {MESSAGE(props.label)}
     </h2>
   );
 };

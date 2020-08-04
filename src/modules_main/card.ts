@@ -15,7 +15,7 @@ import { CardProp } from '../modules_common/cardprop';
 import { CardIO } from './io';
 import { getCurrentDateAndTime } from '../modules_common/utils';
 import { CardInitializeType } from '../modules_common/types';
-import { MESSAGE } from '../modules_common/i18n';
+import { MESSAGE } from './store';
 import { cardColors, ColorName } from '../modules_common/color';
 
 /**

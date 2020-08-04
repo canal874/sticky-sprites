@@ -10,6 +10,7 @@ import './SettingPageSecurity.css';
 import { GlobalContext, GlobalProvider } from './StoreProvider';
 import { MenuItemProps } from './MenuItem';
 import { SettingPageTemplate } from './SettingPageTemplate';
+import { MessageLabel } from '../modules_common/i18n';
 
 export interface SettingPageSecurityProps {
   item: MenuItemProps;
@@ -18,10 +19,12 @@ export interface SettingPageSecurityProps {
 
 export const SettingPageSecurity = (props: SettingPageSecurityProps) => {
   const [globalState] = React.useContext(GlobalContext) as GlobalProvider;
-
+  const MESSAGE = (label: MessageLabel) => {
+    return globalState.i18n.messages[label];
+  };
   return (
     <SettingPageTemplate item={props.item} index={props.index}>
-      <p>{globalState.messages.securityDetailedText}</p>
+      <p>{MESSAGE('securityDetailedText')}</p>
     </SettingPageTemplate>
   );
 };

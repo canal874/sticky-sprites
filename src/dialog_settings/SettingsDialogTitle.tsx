@@ -27,6 +27,10 @@ export const SettingsDialogTitle = (props: SettingsDialogTitleProps) => {
   const [settingsDialogState, dispatch]: SettingsDialogProvider = React.useContext(
     SettingsDialogContext
   );
+  const MESSAGE = (label: MessageLabel) => {
+    return globalState.i18n.messages[label];
+  };
+
   const activeItem: MenuItemProps | undefined = props.items.find(
     item => item.id === settingsDialogState.activeSettingId
   );
@@ -51,7 +55,7 @@ export const SettingsDialogTitle = (props: SettingsDialogTitleProps) => {
         <div styleName='draggable'>
           <div style={{ float: 'left' }}>
             <span style={{ color: '#909090' }} className='fas fa-cog'></span>&nbsp;&nbsp;
-            {globalState.messages[props.title]}
+            {MESSAGE(props.title)}
           </div>
         </div>
         <div styleName='closeButton' onClick={close}>
