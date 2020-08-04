@@ -8,10 +8,10 @@
 import * as React from 'react';
 import { GlobalContext } from './StoreProvider';
 import './SettingPageLanguage.css';
-import { cardColors, ColorName } from '../modules_common/color';
 import { MenuItemProps } from './MenuItem';
-import { MessageLabel } from '../modules_common/i18n';
+import { availableLanguages, MessageLabel } from '../modules_common/i18n';
 import { SettingPageTemplate } from './SettingPageTemplate';
+import { SelectableTag } from './SelectableTag';
 
 export interface SettingPageLanguageProps {
   item: MenuItemProps;
@@ -19,9 +19,17 @@ export interface SettingPageLanguageProps {
 }
 
 export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
-  const [globalState] = React.useContext(GlobalContext);
+  const [globalState, globalDispatch] = React.useContext(GlobalContext);
 
   const MESSAGE = globalState.MESSAGE;
+
+  const handleClick = (value: string) => {
+    globalDispatch({ type: 'UpdateLanguageSetting', payload: value });
+  };
+
+  const languages = availableLanguages.map(lang => (
+    <SelectableTag click={handleClick} label={MESSAGE(lang)} value={lang}></SelectableTag>
+  ));
 
   return (
     <SettingPageTemplate item={props.item} index={props.index}>
@@ -30,6 +38,8 @@ export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
         {MESSAGE('currentLanguage')}:&nbsp;&nbsp;
         {MESSAGE(globalState.settings.language as MessageLabel)}
       </p>
+      <p>{MESSAGE('selectableLanguages')}:</p>
+      <div styleName='selectableLanguagesArea'>{languages}</div>
     </SettingPageTemplate>
   );
 };

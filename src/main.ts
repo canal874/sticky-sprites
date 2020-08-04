@@ -15,6 +15,8 @@ import { CardIO } from './modules_main/io';
 import { DialogButton } from './modules_common/const';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
 import {
+  availableLanguages,
+  defaultLanguage,
   English,
   getCurrentMessages,
   Japanese,
@@ -128,7 +130,7 @@ const openSettings = () => {
 app.on('ready', async () => {
   // locale can be got after 'ready'
   console.debug('locale: ' + app.getLocale());
-  selectPreferredLanguage(['en', 'ja'], [app.getLocale(), 'en']);
+  selectPreferredLanguage(availableLanguages, [app.getLocale(), defaultLanguage]);
   setCurrentMessages(preferredLanguage()!.language as string, translations.messages());
 
   loadSettings();

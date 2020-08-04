@@ -34,6 +34,7 @@ type MessagesSettings = {
   saveChangeFilePathButton: string;
   languageDetailedText: string;
   currentLanguage: string;
+  selectableLanguages: string;
   securityDetailedText: string;
 };
 
@@ -65,6 +66,7 @@ const SettingsEnglish: MessagesSettings = {
   languageDetailedText:
     'Switch the Current Language list box to display the default language',
   currentLanguage: 'Current Language',
+  selectableLanguages: 'Selectable Languages',
   securityDetailedText: 'Only following URLs are allowed to load into a card:',
 };
 export const English: Messages = {
@@ -107,7 +109,8 @@ const SettingsJapanese: MessagesSettings = {
   saveFilePath: 'このフォルダに保存',
   saveChangeFilePathButton: '変更',
   languageDetailedText: 'このアプリのメニュー表示のために使用する言語を選んでください。',
-  currentLanguage: '使用する言語',
+  currentLanguage: '使用中の言語',
+  selectableLanguages: '選択可能な言語',
   securityDetailedText: '次の URL のみカードに読み込むことができます:',
 };
 export const Japanese: Messages = {
@@ -141,8 +144,10 @@ export const Japanese: Messages = {
   transparent: '透明',
 };
 
+export const availableLanguages = ['en', 'ja'];
+export const defaultLanguage = 'en';
+let currentLanguage = defaultLanguage;
 let currentMessages: Messages = English;
-let currentLanguage = 'en';
 export const setCurrentMessages = (language: string, messages: Messages) => {
   currentLanguage = language;
   currentMessages = messages;

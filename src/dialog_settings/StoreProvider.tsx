@@ -22,17 +22,25 @@ export type MessageAction = {
   type: 'UpdateMessage';
   payload: (label: MessageLabel) => string;
 };
-export type AppSettingsAction = {
-  type: 'UpdateSettings';
-  payload: Settings;
+export type CardDirSettingAction = {
+  type: 'UpdateCardDirSetting';
+  payload: string;
 };
-export type GlobalAction = MessageAction | AppSettingsAction;
+export type LanguageSettingAction = {
+  type: 'UpdateLanguageSetting';
+  payload: string;
+};
+
+export type GlobalAction = MessageAction | CardDirSettingAction | LanguageSettingAction;
 const GlobalReducer = (state: GlobalState, action: GlobalAction) => {
   if (action.type === 'UpdateMessage') {
     return { ...state, MESSAGE: action.payload };
   }
-  else if (action.type === 'UpdateSettings') {
-    return { ...state, settings: action.payload };
+  else if (action.type === 'UpdateCardDirSetting') {
+    return { ...state, settings: { ...state.settings, cardDir: action.payload } };
+  }
+  else if (action.type === 'UpdateLanguageSetting') {
+    return { ...state, settings: { ...state.settings, language: action.payload } };
   }
 
   return state;
@@ -100,7 +108,8 @@ export const StoreProvider = (props: {
       }
       const mySettings: Settings = await ipcRenderer.invoke('get-settings');
       if (!unmounted) {
-        globalDispatch({ type: 'UpdateSettings', payload: mySettings });
+        globalDispatch({ type: 'UpdateLanguageSetting', payload: mySettings.language });
+        globalDispatch({ type: 'UpdateCardDirSetting', payload: mySettings.cardDir });
       }
     };
     load();
