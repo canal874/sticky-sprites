@@ -12,7 +12,7 @@
 import PouchDB from 'pouchdb';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
-import { settings } from '../modules_common/settings';
+import { getSettings } from './store';
 /**
  * Module specific part
  */
@@ -22,7 +22,7 @@ var cardsDB: PouchDB.Database<{}>;
 class CardIOClass implements ICardIO {
   public getCardIdList = (): Promise<string[]> => {
     // returns all card ids.
-    cardsDB = new PouchDB(settings.cardDir);
+    cardsDB = new PouchDB(getSettings().cardDir);
     return new Promise((resolve, reject) => {
       cardsDB
         .allDocs()

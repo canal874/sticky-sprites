@@ -18,7 +18,7 @@ export interface SettingsProps {
 }
 
 export const SettingPages = (props: SettingsProps) => {
-  const [settingsDialogState, dispatch]: SettingsDialogProvider = React.useContext(
+  const [settingsDialogState]: SettingsDialogProvider = React.useContext(
     SettingsDialogContext
   );
   let ActivePage;

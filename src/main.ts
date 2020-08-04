@@ -22,6 +22,7 @@ import {
   Japanese,
   MESSAGE,
   MessageLabel,
+  Messages,
   setCurrentMessages,
 } from './modules_common/i18n';
 import {
@@ -30,7 +31,7 @@ import {
   deleteCard,
   setGlobalFocusEventListenerPermission,
 } from './modules_main/card';
-import { loadSettings, settings } from './modules_common/settings';
+import { globalDispatch, subscribeStore } from './modules_main/store';
 
 // process.on('unhandledRejection', console.dir);
 
@@ -99,6 +100,10 @@ ipcMain.handle('create-card', (event, propObject: CardPropSerializable) => {
 });
 
 const openSettings = () => {
+  if (settingsDialog !== undefined && !settingsDialog.isDestroyed()) {
+    return;
+  }
+
   settingsDialog = new BrowserWindow({
     webPreferences: {
       nodeIntegration: true,
@@ -121,6 +126,12 @@ const openSettings = () => {
   }
 
   settingsDialog.loadURL(path.join(__dirname, 'settings/settings.html'));
+  settingsDialog.webContents.on('did-finish-load', () => {
+    const unsubscribe = subscribeStore(settingsDialog);
+    settingsDialog.on('close', () => {
+      unsubscribe();
+    });
+  });
 };
 /**
  * This method will be called when Electron has finished
@@ -132,8 +143,9 @@ app.on('ready', async () => {
   console.debug('locale: ' + app.getLocale());
   selectPreferredLanguage(availableLanguages, [app.getLocale(), defaultLanguage]);
   setCurrentMessages(preferredLanguage()!.language as string, translations.messages());
-
-  loadSettings();
+  const [language, messages] = getCurrentMessages();
+  globalDispatch({ type: 'language', payload: language as string });
+  globalDispatch({ type: 'messages', payload: messages as Messages });
 
   // for debug
   if (!app.isPackaged && process.env.NODE_ENV === 'development') {
@@ -206,7 +218,7 @@ app.on('ready', async () => {
     {
       label: MESSAGE('exit'),
       click: () => {
-        if (settingsDialog !== undefined) {
+        if (settingsDialog) {
           settingsDialog.close();
         }
         cards.forEach((card, key) => card.window.webContents.send('card-close'));
@@ -403,8 +415,4 @@ ipcMain.handle(
 
 ipcMain.handle('get-i18n', () => {
   return getCurrentMessages();
-});
-
-ipcMain.handle('get-settings', () => {
-  return settings;
 });

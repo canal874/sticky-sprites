@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import * as React from 'react';
-import { GlobalContext } from './StoreProvider';
+import { GlobalContext, GlobalProvider } from './StoreProvider';
 import './SettingPageLanguage.css';
 import { MenuItemProps } from './MenuItem';
 import { availableLanguages, MessageLabel } from '../modules_common/i18n';
@@ -19,36 +19,34 @@ export interface SettingPageLanguageProps {
 }
 
 export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
-  const [globalState, globalDispatch] = React.useContext(GlobalContext);
-
-  const MESSAGE = globalState.MESSAGE;
+  const [globalState, globalDispatch] = React.useContext(GlobalContext) as GlobalProvider;
 
   const handleClick = (value: string) => {
-    globalDispatch({ type: 'UpdateLanguageSetting', payload: value });
+    globalDispatch({ type: 'language', payload: value });
   };
 
   const languages = availableLanguages.map(lang => (
     <SelectableTag
       click={handleClick}
-      label={MESSAGE(lang)}
+      label={globalState.messages[lang as MessageLabel]}
       value={lang}
-      selected={globalState.settings.language === lang}
+      selected={globalState.language === lang}
     ></SelectableTag>
   ));
 
   return (
     <SettingPageTemplate item={props.item} index={props.index}>
-      <p>{MESSAGE('languageDetailedText')}</p>
+      <p>{globalState.messages.languageDetailedText}</p>
       <p>
-        <div styleName='currentLanguageLabel'>{MESSAGE('currentLanguage')}:</div>
+        <div styleName='currentLanguageLabel'>{globalState.messages.currentLanguage}:</div>
         <SelectableTag
           click={handleClick}
-          label={MESSAGE(globalState.settings.language)}
-          value={globalState.settings.language}
+          label={globalState.messages[globalState.language as MessageLabel]}
+          value={globalState.language}
           selected={true}
         ></SelectableTag>
       </p>
-      <p style={{ clear: 'both' }}>{MESSAGE('selectableLanguages')}:</p>
+      <p style={{ clear: 'both' }}>{globalState.messages.selectableLanguages}:</p>
       <div>{languages}</div>
     </SettingPageTemplate>
   );

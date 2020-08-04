@@ -13,6 +13,7 @@ import {
   SettingsDialogAction,
   SettingsDialogContext,
   SettingsDialogProvider,
+  GlobalProvider,
 } from './StoreProvider';
 import { MessageLabel } from '../modules_common/i18n';
 import { getRandomInt } from '../modules_common/utils';
@@ -30,7 +31,7 @@ export interface MenuItemPropsInternal {
 }
 
 export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
-  const [globalState] = React.useContext(GlobalContext);
+  const [globalState] = React.useContext(GlobalContext) as GlobalProvider;
   const [state, dispatch]: SettingsDialogProvider = React.useContext(SettingsDialogContext);
 
   const isActive = state.activeSettingId === props.id;
@@ -69,7 +70,7 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
       onClick={isActive ? () => {} : handleClick}
       style={style(props.color)}
     >
-      {globalState.MESSAGE(props.label)}
+      {globalState.messages[props.label]}
     </h2>
   );
 };

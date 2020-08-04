@@ -12,9 +12,10 @@ import {
   GlobalContext,
   SettingsDialogContext,
   SettingsDialogProvider,
+  GlobalProvider,
 } from './StoreProvider';
 import { MenuItemProps } from './MenuItem';
-import { cardColors, ColorName, darkenHexColor } from '../modules_common/color';
+import { cardColors, darkenHexColor } from '../modules_common/color';
 
 export interface SettingsDialogTitleProps {
   title: MessageLabel;
@@ -22,7 +23,7 @@ export interface SettingsDialogTitleProps {
 }
 
 export const SettingsDialogTitle = (props: SettingsDialogTitleProps) => {
-  const [globalState] = React.useContext(GlobalContext);
+  const [globalState] = React.useContext(GlobalContext) as GlobalProvider;
   const [settingsDialogState, dispatch]: SettingsDialogProvider = React.useContext(
     SettingsDialogContext
   );
@@ -50,7 +51,7 @@ export const SettingsDialogTitle = (props: SettingsDialogTitleProps) => {
         <div styleName='draggable'>
           <div style={{ float: 'left' }}>
             <span style={{ color: '#909090' }} className='fas fa-cog'></span>&nbsp;&nbsp;
-            {globalState.MESSAGE(props.title)}
+            {globalState.messages[props.title]}
           </div>
         </div>
         <div styleName='closeButton' onClick={close}>

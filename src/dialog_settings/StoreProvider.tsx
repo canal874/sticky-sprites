@@ -8,49 +8,29 @@
 
 import * as React from 'react';
 import { ipcRenderer } from 'electron';
-import { MessageLabel } from '../modules_common/i18n';
-import { Settings, settings } from '../modules_common/settings';
+import { GlobalAction, GlobalState } from '../modules_main/store';
+import { English } from '../modules_common/i18n';
 
 /**
  * Globals fetched from Main process
  */
-export interface GlobalState {
-  MESSAGE: (label: MessageLabel) => string;
-  settings: Settings;
-}
-export type MessageAction = {
-  type: 'UpdateMessage';
-  payload: (label: MessageLabel) => string;
-};
-export type CardDirSettingAction = {
-  type: 'UpdateCardDirSetting';
-  payload: string;
-};
-export type LanguageSettingAction = {
-  type: 'UpdateLanguageSetting';
-  payload: string;
-};
 
-export type GlobalAction = MessageAction | CardDirSettingAction | LanguageSettingAction;
-const GlobalReducer = (state: GlobalState, action: GlobalAction) => {
-  if (action.type === 'UpdateMessage') {
-    return { ...state, MESSAGE: action.payload };
+const LocalReducer = (state: GlobalState, action: GlobalAction) => {
+  if (action.type === 'CopyState') {
+    return action.payload;
   }
-  else if (action.type === 'UpdateCardDirSetting') {
-    return { ...state, settings: { ...state.settings, cardDir: action.payload } };
-  }
-  else if (action.type === 'UpdateLanguageSetting') {
-    return { ...state, settings: { ...state.settings, language: action.payload } };
-  }
-
   return state;
 };
 
-export type GlobalProvider = [GlobalState, React.Dispatch<GlobalAction>];
+// 'GlobalState' and 'settings' is used both Main process and this Renderer process.
+// Notice that they are not shared by reference, but individually bound to those in modules_main/settings module.
+export type GlobalProvider = [GlobalState, (action: GlobalAction) => void];
 const initialGlobalState: GlobalState = {
-  MESSAGE: (label: string) => '',
-  settings: settings, // This is not settings from Main process, but from individually loaded modules_common/settings module.
+  cardDir: '',
+  language: '',
+  messages: English,
 };
+
 export const GlobalContext = React.createContext<GlobalState | any>(initialGlobalState);
 
 /**
@@ -84,6 +64,7 @@ export type SettingsDialogProvider = [
   SettingsDialogState,
   React.Dispatch<SettingsDialogAction>
 ];
+
 /**
  * StoreProvider
  */
@@ -91,34 +72,28 @@ export const StoreProvider = (props: {
   defaultSettingId: string;
   children: React.ReactNode;
 }) => {
-  const [globalState, globalDispatch] = React.useReducer(GlobalReducer, initialGlobalState);
+  const [globalState, localDispatch] = React.useReducer(
+    LocalReducer,
+    initialGlobalState
+  ) as GlobalProvider;
 
-  /**
-   * Load data from Main process
-   */
+  // Proxy dispatch to Main process
+  const globalDispatch = async (action: GlobalAction) => {
+    const state = await ipcRenderer.invoke('globalDispatch', action);
+    // Copy state from Main process to local state
+    localDispatch({ type: 'CopyState', payload: state });
+  };
+
   React.useEffect(() => {
-    let unmounted = false;
-    const load = async () => {
-      const [language, myMessages] = await ipcRenderer.invoke('get-i18n');
-      if (!unmounted) {
-        const getI18nMessage = (label: MessageLabel) => {
-          return myMessages[label as MessageLabel];
-        };
-        globalDispatch({ type: 'UpdateMessage', payload: getI18nMessage });
-      }
-      const mySettings: Settings = await ipcRenderer.invoke('get-settings');
-      if (!unmounted) {
-        globalDispatch({ type: 'UpdateLanguageSetting', payload: mySettings.language });
-        globalDispatch({ type: 'UpdateCardDirSetting', payload: mySettings.cardDir });
-      }
+    const dispatch = (event: Electron.IpcRendererEvent, state: GlobalState) => {
+      localDispatch({ type: 'CopyState', payload: state });
     };
-    load();
-
+    ipcRenderer.on('globalStateChanged', dispatch);
     const cleanup = () => {
-      unmounted = true;
+      ipcRenderer.off('globalStateChanged', dispatch);
     };
     return cleanup;
-  }, []); // Execute only once by using 2nd argument []
+  }, []);
 
   const initialState: SettingsDialogState = {
     activeSettingId: props.defaultSettingId,
