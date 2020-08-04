@@ -6,17 +6,39 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import * as React from 'react';
-import './SettingPageLanguage.css';
+import './SelectableTag.css';
+import { cardColors, ColorName } from '../modules_common/color';
 
 export interface SelectableTagProps {
   click: (value: any) => void;
   label: string;
   value: string;
+  selected: boolean;
 }
 
 export const SelectableTag = (props: SelectableTagProps) => {
   const handleClick = () => {
-    props.click(props.value);
+    if (!props.selected) {
+      props.click(props.value);
+    }
   };
-  return <div onClick={handleClick}>{props.label}</div>;
+
+  const style = (color: ColorName) => ({
+    backgroundColor: cardColors[color],
+  });
+
+  let color: ColorName = 'yellow';
+  if (props.selected) {
+    color = 'green';
+  }
+
+  return (
+    <div
+      style={style(color)}
+      styleName={`tag ${props.selected ? 'selected' : ''}`}
+      onClick={handleClick}
+    >
+      {props.label}
+    </div>
+  );
 };

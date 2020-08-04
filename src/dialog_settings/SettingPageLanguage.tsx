@@ -28,17 +28,27 @@ export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
   };
 
   const languages = availableLanguages.map(lang => (
-    <SelectableTag click={handleClick} label={MESSAGE(lang)} value={lang}></SelectableTag>
+    <SelectableTag
+      click={handleClick}
+      label={MESSAGE(lang)}
+      value={lang}
+      selected={globalState.settings.language === lang}
+    ></SelectableTag>
   ));
 
   return (
     <SettingPageTemplate item={props.item} index={props.index}>
       <p>{MESSAGE('languageDetailedText')}</p>
       <p>
-        {MESSAGE('currentLanguage')}:&nbsp;&nbsp;
-        {MESSAGE(globalState.settings.language as MessageLabel)}
+        <div styleName='currentLanguageLabel'>{MESSAGE('currentLanguage')}:</div>
+        <SelectableTag
+          click={handleClick}
+          label={MESSAGE(globalState.settings.language)}
+          value={globalState.settings.language}
+          selected={true}
+        ></SelectableTag>
       </p>
-      <p>{MESSAGE('selectableLanguages')}:</p>
+      <p style={{ clear: 'both' }}>{MESSAGE('selectableLanguages')}:</p>
       <div styleName='selectableLanguagesArea'>{languages}</div>
     </SettingPageTemplate>
   );
