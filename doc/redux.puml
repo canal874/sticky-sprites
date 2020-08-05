@@ -1,0 +1,37 @@
+' PlantUML
+@startuml
+title Redux in Media Stickies
+
+partition initializeGlobalStore {
+  (*) --> "loadOrCreate"
+}
+
+"electron-store\n(json)" as JSON --> [deserialize] "loadOrCreate"
+
+partition GlobalRedux(MainProcess) {
+  "loadOrCreate" --> [globalDispatch(action)] "Global Store"
+  "Global Store" --> [prev state,\naction] "globalReducer"
+  "globalReducer" --> [new state] "Global Store"
+  "globalReducer" --> [serialize] JSON
+  "subscriber" -down-> [subscribe\nstate changes] "Global Store"
+}
+
+partition LocalRedux(RendererProcess) {
+  "subscriber" --> [IPC:globalStoreChanged(state)] "listener"
+  note left
+    action = { type: CopyState, payload: state }
+  end note
+  "listener" --> [localDispatch(action)] "Local Store"
+  "Local Store" --> [prev state,\naction] "localReducer"
+  note bottom
+    localReducer just returns payload as new state
+  end note
+  "localReducer" --> [new state] "Local Store"
+  "Local Store" --> [state] "React Component" 
+  "React Component" --> [globalDispatch(action)] "Proxy"
+}
+
+partition GlobalRedux(MainProcess) {
+  "Proxy" --> [IPC:globalDispatch(action)] "handler"
+  "handler" --> [globalDispatch(action)] "Global Store"
+}
