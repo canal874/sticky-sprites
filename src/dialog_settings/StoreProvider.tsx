@@ -64,7 +64,8 @@ export const StoreProvider = (props: {
   children: React.ReactNode;
 }) => {
   const [globalState, localDispatch] = React.useState(initialState);
-  // Proxy dispatch to Main process
+  // ! Proxy
+  // Dispatcher to Main process
   const globalDispatch = (action: GlobalAction) => {
     // IPC
     ipcRenderer.invoke('globalDispatch', action);

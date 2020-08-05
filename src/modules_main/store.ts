@@ -99,11 +99,11 @@ ipcMain.handle('globalDispatch', (event, action: GlobalAction) => {
  * Subscriber
  * Add Renderer process as a subscriber
  */
-export const subscribeStore = (win: BrowserWindow) => {
-  win.webContents.send('globalStoreChanged', store.getState());
+export const subscribeStore = (subscriber: BrowserWindow) => {
+  subscriber.webContents.send('globalStoreChanged', store.getState());
   const unsubscribe = store.subscribe(() => {
     emitter.emit('updateTrayContextMenu');
-    win.webContents.send('globalStoreChanged', store.getState());
+    subscriber.webContents.send('globalStoreChanged', store.getState());
   });
   return unsubscribe;
 };
