@@ -93,7 +93,6 @@ const store = createStore(globalReducer);
 // Dispatch request from Renderer process
 ipcMain.handle('globalDispatch', (event, action: GlobalAction) => {
   store.dispatch(action);
-  return store.getState();
 });
 
 /**

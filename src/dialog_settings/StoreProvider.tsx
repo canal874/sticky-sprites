@@ -72,8 +72,6 @@ export const StoreProvider = (props: {
   const globalDispatch = async (action: GlobalAction) => {
     // IPC
     const state = await ipcRenderer.invoke('globalDispatch', action);
-    // Copy GlobalState from Main process to this Renderer process
-    // localDispatch({ type: 'CopyState', payload: state });
   };
 
   React.useEffect(() => {
