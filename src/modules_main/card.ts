@@ -338,14 +338,13 @@ export class Card {
     });
   }
 
-  public render = () => {
-    return Promise.all([this._loadOrCreateCardData(), this._loadHTML()])
-      .then(() => {
-        this._renderCard(this.prop);
-      })
-      .catch(e => {
-        throw new Error(`Error in render(): ${e.message}`);
-      });
+  public render = async () => {
+    await Promise.all([this._loadOrCreateCardData(), this._loadHTML()]).catch(e => {
+      throw new Error(`Error in render(): ${e.message}`);
+    });
+    await this._renderCard(this.prop).catch(e => {
+      throw new Error(`Error in _renderCard(): ${e.message}`);
+    });
   };
 
   _renderCard = (_prop: CardProp) => {
@@ -362,11 +361,6 @@ export class Card {
         }
       }, 200);
     });
-  };
-
-  private _finishReloadListener = (event: Electron.IpcMainInvokeEvent) => {
-    console.log(`reloaded in main: ${this.prop.id}`);
-    this.window.webContents.send('render-card', this.prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
   };
 
   private _loadHTML: () => Promise<void> = () => {
