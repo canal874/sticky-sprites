@@ -16,7 +16,6 @@ import {
   English,
   Japanese,
   MessageLabel,
-  Messages,
 } from '../modules_common/i18n';
 import { emitter } from './event';
 import { GlobalAction, GlobalState, GlobalStateKeys, initialState } from './store.types';
@@ -130,7 +129,7 @@ export const globalDispatch = (action: GlobalAction) => {
 export const initializeGlobalStore = (preferredLanguage: string) => {
   const loadOrCreate = (key: GlobalStateKeys, defaultValue: any) => {
     const value: any = electronStore.get(key, defaultValue);
-    store.dispatch({ type: key, payload: value });
+    globalDispatch({ type: key, payload: value });
   };
 
   loadOrCreate('cardDir', defaultCardDir);
