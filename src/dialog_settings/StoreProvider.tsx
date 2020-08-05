@@ -63,22 +63,18 @@ export const StoreProvider = (props: {
   defaultSettingId: string;
   children: React.ReactNode;
 }) => {
-  const [globalState, localDispatch] = React.useReducer(
-    localReducer,
-    initialState
-  ) as GlobalProvider;
-
+  const [globalState, localDispatch] = React.useState(initialState);
   // Proxy dispatch to Main process
-  const globalDispatch = async (action: GlobalAction) => {
+  const globalDispatch = (action: GlobalAction) => {
     // IPC
-    const state = await ipcRenderer.invoke('globalDispatch', action);
+    ipcRenderer.invoke('globalDispatch', action);
   };
 
   React.useEffect(() => {
     // Add listener that is invoked when global store in Main process is changed
     const dispatch = (event: Electron.IpcRendererEvent, state: GlobalState) => {
       // Copy GlobalState from Main process to this Renderer process
-      localDispatch({ type: 'CopyState', payload: state });
+      localDispatch(state);
     };
     ipcRenderer.on('globalStoreChanged', dispatch);
     const cleanup = () => {
