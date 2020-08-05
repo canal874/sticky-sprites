@@ -1,37 +1,43 @@
 ' PlantUML
 @startuml
-title Redux in Media Stickies
+title Using Redux for App settings in Media Stickies
 
-partition initializeGlobalStore {
-  (*) --> "loadOrCreate"
+skinparam activity {
+  BackgroundColor #e0ffff
+  BorderColor #609090
 }
 
-"electron-store\n(json)" as JSON --> [deserialize] "loadOrCreate"
+partition initializeGlobalStore {
+  (*) --> "loadOrCreate()"
+  note bottom
+    Create by default value
+    if not exist
+  end note
+}
 
-partition GlobalRedux(MainProcess) {
-  "loadOrCreate" --> [globalDispatch(action)] "Global Store"
+"electron-store\n(App settings are saved as JSON)" as JSON << Component >> -up-> [deserialize] "loadOrCreate()"
+
+partition Redux(in_MainProcess) {
+  "loadOrCreate()" --> [globalDispatch\n(action)] "Global Store"
   "Global Store" --> [prev state,\naction] "globalReducer"
   "globalReducer" --> [new state] "Global Store"
   "globalReducer" --> [serialize] JSON
   "subscriber" -down-> [subscribe\nstate changes] "Global Store"
 }
 
-partition LocalRedux(RendererProcess) {
+partition StoreProvider(in_RendererProcess) {
   "subscriber" --> [IPC:globalStoreChanged(state)] "listener"
-  note left
-    action = { type: CopyState, payload: state }
-  end note
-  "listener" --> [localDispatch(action)] "Local Store"
-  "Local Store" --> [prev state,\naction] "localReducer"
+  "listener" --> [localDispatch(state)] "State"
+  "State" --> [state] "GlobalContext.Provider" as Provider
+  Provider --> [state, globalDispatch] "React Component" as React
   note bottom
-    localReducer just returns payload as new state
+    View uses state.
+    UI invokes action.
   end note
-  "localReducer" --> [new state] "Local Store"
-  "Local Store" --> [state] "React Component" 
-  "React Component" --> [globalDispatch(action)] "Proxy"
+  React --> [globalDispatch(action)] "Proxy"
 }
 
-partition GlobalRedux(MainProcess) {
+partition Redux(in_MainProcess) {
   "Proxy" --> [IPC:globalDispatch(action)] "handler"
   "handler" --> [globalDispatch(action)] "Global Store"
 }
