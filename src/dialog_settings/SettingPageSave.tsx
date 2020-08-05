@@ -6,6 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import * as React from 'react';
+import { dialog, ipcRenderer } from 'electron';
 import { GlobalContext, GlobalProvider } from './StoreProvider';
 import './SettingPageSave.css';
 import { MenuItemProps } from './MenuItem';
@@ -22,6 +23,10 @@ export const SettingPageSave = (props: SettingPageSaveProps) => {
   const MESSAGE = (label: MessageLabel) => {
     return globalState.i18n.messages[label];
   };
+  const onChangeButtonClick = async () => {
+    const file = await ipcRenderer.invoke('open-directory-selector-dialog');
+    console.debug(file);
+  };
   return (
     <SettingPageTemplate item={props.item} index={props.index}>
       <p>{MESSAGE('saveDetailedText')}</p>
@@ -29,7 +34,7 @@ export const SettingPageSave = (props: SettingPageSaveProps) => {
       <div styleName='saveFilePath'>
         {MESSAGE('saveFilePath')}: {globalState.cardDir}
       </div>
-      <button styleName='saveChangeFilePathButton'>
+      <button styleName='saveChangeFilePathButton' onClick={onChangeButtonClick}>
         {MESSAGE('saveChangeFilePathButton')}
       </button>
     </SettingPageTemplate>

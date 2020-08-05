@@ -20,9 +20,19 @@ import { getSettings } from './store';
 var cardsDB: PouchDB.Database<{}>;
 
 class CardIOClass implements ICardIO {
+  open = () => {
+    if (cardsDB === undefined) {
+      cardsDB = new PouchDB(getSettings().cardDir);
+    }
+  };
+
+  public close = () => {
+    return cardsDB.close();
+  };
+
   public getCardIdList = (): Promise<string[]> => {
     // returns all card ids.
-    cardsDB = new PouchDB(getSettings().cardDir);
+    this.open();
     return new Promise((resolve, reject) => {
       cardsDB
         .allDocs()
@@ -38,7 +48,7 @@ class CardIOClass implements ICardIO {
   public deleteCardData = (id: string): Promise<string> => {
     // for debug
     // await sleep(60000);
-
+    this.open();
     return new Promise((resolve, reject) => {
       cardsDB
         .get(id)
@@ -55,7 +65,7 @@ class CardIOClass implements ICardIO {
   public readCardData = (id: string, prop: CardProp): Promise<void> => {
     // for debug
     // await sleep(60000);
-
+    this.open();
     return new Promise((resolve, reject) => {
       cardsDB
         .get(id)
@@ -107,6 +117,7 @@ class CardIOClass implements ICardIO {
   };
 
   public writeOrCreateCardData = async (prop: CardProp): Promise<string> => {
+    this.open();
     console.debug('Saving card...: ' + JSON.stringify(prop.toObject()));
     // In PouchDB, _id must be used instead of id in document.
     // Convert class to Object to serialize.

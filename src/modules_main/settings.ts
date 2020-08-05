@@ -6,9 +6,9 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import path from 'path';
-import { app, BrowserWindow, Menu } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import electronConnect from 'electron-connect';
-import { subscribeStore } from './store';
+import { MESSAGE, subscribeStore } from './store';
 
 // eslint-disable-next-line import/no-mutable-exports
 export let settingsDialog: BrowserWindow;
@@ -46,4 +46,18 @@ export const openSettings = () => {
       unsubscribe();
     });
   });
+};
+
+// Dispatch request from Renderer process
+ipcMain.handle('open-directory-selector-dialog', event => {
+  return openDirectorySelectorDialog();
+});
+
+const openDirectorySelectorDialog = () => {
+  const file: string[] | undefined = dialog.showOpenDialogSync(settingsDialog, {
+    properties: ['openDirectory'],
+    title: MESSAGE('chooseSaveFilePath'),
+    message: MESSAGE('chooseSaveFilePath'), // macOS only
+  });
+  return file;
 };

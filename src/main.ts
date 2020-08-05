@@ -155,6 +155,7 @@ app.on('ready', async () => {
  * Exit app
  */
 app.on('window-all-closed', () => {
+  CardIO.close();
   destroyTray();
   app.quit();
 });

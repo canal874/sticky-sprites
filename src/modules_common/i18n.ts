@@ -32,6 +32,7 @@ type MessagesSettings = {
   saveDetailedText: string;
   saveFilePath: string;
   saveChangeFilePathButton: string;
+  chooseSaveFilePath: string;
   languageDetailedText: string;
   currentLanguage: string;
   selectableLanguages: string;
@@ -63,6 +64,7 @@ const SettingsEnglish: MessagesSettings = {
   saveDetailedText: 'Data is saved to the following location automatically:',
   saveFilePath: 'Save in the folder of',
   saveChangeFilePathButton: 'Change',
+  chooseSaveFilePath: 'Select the place for saving data',
   languageDetailedText: 'Select the Language in which you want this App to appear',
   currentLanguage: 'Current Language',
   selectableLanguages: 'Selectable Languages',
@@ -107,6 +109,7 @@ const SettingsJapanese: MessagesSettings = {
   saveDetailedText: 'データは次の場所へ自動的に保存されます。',
   saveFilePath: 'このフォルダに保存',
   saveChangeFilePathButton: '変更',
+  chooseSaveFilePath: 'データの保存先を選んでください',
   languageDetailedText: 'このアプリのメニュー表示のために使用する言語を選んでください。',
   currentLanguage: '使用中の言語',
   selectableLanguages: '選択可能な言語',
