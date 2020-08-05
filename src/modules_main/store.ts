@@ -19,15 +19,7 @@ import {
   Messages,
 } from '../modules_common/i18n';
 import { emitter } from './event';
-
-// '../../../../../../media_stickies_data' is default path when using asar created by squirrels.windows.
-// './media_stickies_data' is default path when starting from command line (npm start).
-// They can be distinguished by using process.defaultApp
-// TODO: Default path for Mac / Linux is needed.
-
-// config.json is saved to
-// app.isPackaged is true : C:\Users\{UserName}\AppData\Roaming\Media Stickies
-// app.isPackaged is false: Project root directory (/media_stickies)
+import { GlobalAction, GlobalState, GlobalStateKeys, initialState } from './store.types';
 
 /**
  * i18n
@@ -35,57 +27,44 @@ import { emitter } from './event';
 const translations = translate(English).supporting('ja', Japanese);
 
 /**
- * Electron local store
+ * Media stickies data store path
+ * * '../../../../../../media_stickies_data' is default path when using asar created by squirrels.windows.
+ * * './media_stickies_data' is default path when starting from command line (npm start).
+ * * They can be distinguished by using app.isPackaged
+ *
+ * TODO: Default path for Mac / Linux is needed.
  */
-const electronStore = new Store({
-  cwd: app.isPackaged ? './' : path.join(__dirname, '../../'),
-});
 
 const defaultCardDir = app.isPackaged
   ? path.join(__dirname, '../../../../../../media_stickies_data')
   : './media_stickies_data';
 
 /**
- * Redux State
+ * electron-store for individual settings (a.k.a local machine settings)
+ *
+ * * Individual settings are serialized into config.json
+ * * It is saved to:
+ * * app.isPackaged == true ? C:\Users\{UserName}\AppData\Roaming\Media Stickies
+ * *                        : Project root directory (/media_stickies)
+ * TODO: config.json path for Mac / Linux is needed.
  */
-export interface GlobalState {
-  cardDir: string;
-  i18n: {
-    language: string;
-    messages: Messages;
-  };
-}
-type GlobalStateKeys = keyof GlobalState;
+
+const electronStore = new Store({
+  cwd: app.isPackaged ? './' : path.join(__dirname, '../../'),
+});
 
 /**
- * Redux Actions
- * 'type' for updating value must be same as one of GlobalStateKeys
+ * Redux for individual settings
+ * Individual settings are deserialized into Global Redux store.
  */
 
-export type CardDirSettingAction = {
-  type: 'cardDir';
-  payload: string;
-};
-
-export type I18nSettingAction = {
-  type: 'i18n';
-  payload: string;
-};
-
-export type CopyStateAction = {
-  type: 'CopyState';
-  payload: GlobalState;
-};
-
-export type GlobalAction = CardDirSettingAction | I18nSettingAction | CopyStateAction;
-
-const globalReducer = (
-  state: GlobalState = {
-    cardDir: '',
-    i18n: { language: '', messages: English },
-  },
-  action: GlobalAction
-) => {
+/**
+ * Redux globalReducer
+ * * Main process has globalReducer, while Renderer process has localReducer.
+ * * The reducer for the global Redux store is globalReducer.
+ * * The function of localReducer is just copying GlobalState from Main process to Renderer process.
+ */
+const globalReducer = (state: GlobalState = initialState, action: GlobalAction) => {
   if (action.type === 'cardDir') {
     electronStore.set(action.type, action.payload);
     return { ...state, cardDir: action.payload };
@@ -103,37 +82,51 @@ const globalReducer = (
   return state;
 };
 
+/**
+ * Global Redux Store
+ */
 const store = createStore(globalReducer);
 
 /**
  * Redux Dispatches
  */
+
+// Dispatch request from Renderer process
 ipcMain.handle('globalDispatch', (event, action: GlobalAction) => {
   store.dispatch(action);
   return store.getState();
 });
 
+/**
+ * Subscriber
+ * Add Renderer process as a subscriber
+ */
 export const subscribeStore = (win: BrowserWindow) => {
-  win.webContents.send('globalStateChanged', store.getState());
+  win.webContents.send('globalStoreChanged', store.getState());
   const unsubscribe = store.subscribe(() => {
     emitter.emit('updateTrayContextMenu');
-    win.webContents.send('globalStateChanged', store.getState());
+    win.webContents.send('globalStoreChanged', store.getState());
   });
   return unsubscribe;
 };
 
+/**
+ * Utilities
+ */
+
+// API for getting local settings
 export const getSettings = () => {
   return store.getState();
 };
 
+// API for globalDispatch
 export const globalDispatch = (action: GlobalAction) => {
   store.dispatch(action);
 };
 
 /**
- * Load from electron local store
+ * Deserializing data from electron-store
  */
-
 export const initializeGlobalStore = (preferredLanguage: string) => {
   const loadOrCreate = (key: GlobalStateKeys, defaultValue: any) => {
     const value: any = electronStore.get(key, defaultValue);
@@ -144,6 +137,9 @@ export const initializeGlobalStore = (preferredLanguage: string) => {
   loadOrCreate('i18n', preferredLanguage);
 };
 
+/**
+ * Utility for i18n
+ */
 export const MESSAGE = (label: MessageLabel) => {
   return getSettings().i18n.messages[label];
 };

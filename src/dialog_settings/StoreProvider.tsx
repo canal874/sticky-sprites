@@ -8,31 +8,26 @@
 
 import * as React from 'react';
 import { ipcRenderer } from 'electron';
-import { GlobalAction, GlobalState } from '../modules_main/store';
-import { English } from '../modules_common/i18n';
+import { GlobalAction, GlobalState, initialState } from '../modules_main/store.types';
 
 /**
- * Globals fetched from Main process
+ * The function of localReducer is just copying GlobalState from Main process to Renderer process.
  */
-
-const LocalReducer = (state: GlobalState, action: GlobalAction) => {
+const localReducer = (state: GlobalState, action: GlobalAction) => {
   if (action.type === 'CopyState') {
     return action.payload;
   }
   return state;
 };
 
-// 'GlobalState' and 'settings' is used both Main process and this Renderer process.
-// Notice that they are not shared by reference, but individually bound to those in modules_main/settings module.
+// 'GlobalState' is used both Main process and this Renderer process.
+// ! Notice that it is not shared with Main and Renderer processes by reference,
+// ! but individually bound to each process.
 export type GlobalProvider = [GlobalState, (action: GlobalAction) => void];
-const initialGlobalState: GlobalState = {
-  cardDir: '',
-  i18n: { language: '', messages: English },
-};
-export const GlobalContext = React.createContext<GlobalState | any>(initialGlobalState);
+export const GlobalContext = React.createContext<GlobalState | any>(initialState);
 
 /**
- * Settings Dialog Operating updated by dispatcher
+ * Local Redux Store used only in this Renderer process
  */
 export interface SettingsDialogState {
   activeSettingId: string;
@@ -42,7 +37,6 @@ export interface SettingsDialogAction {
   type: 'UpdateActiveSetting';
   activeSettingId: string;
 }
-
 const SettingsDialogReducer = (
   state: SettingsDialogState,
   action: SettingsDialogAction
@@ -54,7 +48,6 @@ const SettingsDialogReducer = (
     };
     return nextState;
   }
-
   return state;
 };
 export const SettingsDialogContext = React.createContext<SettingsDialogState | any>('');
@@ -71,35 +64,37 @@ export const StoreProvider = (props: {
   children: React.ReactNode;
 }) => {
   const [globalState, localDispatch] = React.useReducer(
-    LocalReducer,
-    initialGlobalState
+    localReducer,
+    initialState
   ) as GlobalProvider;
 
   // Proxy dispatch to Main process
   const globalDispatch = async (action: GlobalAction) => {
+    // IPC
     const state = await ipcRenderer.invoke('globalDispatch', action);
-    // Copy state from Main process to local state
+    // Copy GlobalState from Main process to this Renderer process
     localDispatch({ type: 'CopyState', payload: state });
   };
 
   React.useEffect(() => {
+    // Add listener that is invoked when global store in Main process is changed
     const dispatch = (event: Electron.IpcRendererEvent, state: GlobalState) => {
+      // Copy GlobalState from Main process to this Renderer process
       localDispatch({ type: 'CopyState', payload: state });
     };
-    ipcRenderer.on('globalStateChanged', dispatch);
+    ipcRenderer.on('globalStoreChanged', dispatch);
     const cleanup = () => {
-      ipcRenderer.off('globalStateChanged', dispatch);
+      ipcRenderer.off('globalStoreChanged', dispatch);
     };
     return cleanup;
   }, []);
 
-  const initialState: SettingsDialogState = {
-    activeSettingId: props.defaultSettingId,
-    previousActiveSettingId: '',
-  };
   const [state, dispatch]: SettingsDialogProvider = React.useReducer(
     SettingsDialogReducer,
-    initialState
+    {
+      activeSettingId: props.defaultSettingId,
+      previousActiveSettingId: '',
+    }
   );
 
   return (
