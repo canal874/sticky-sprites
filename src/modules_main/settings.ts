@@ -9,6 +9,7 @@ import path from 'path';
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import electronConnect from 'electron-connect';
 import { MESSAGE, subscribeStore } from './store';
+import { CardIO } from './io';
 
 // eslint-disable-next-line import/no-mutable-exports
 export let settingsDialog: BrowserWindow;
@@ -48,9 +49,13 @@ export const openSettings = () => {
   });
 };
 
-// Dispatch request from Renderer process
+// Request from settings dialog
 ipcMain.handle('open-directory-selector-dialog', event => {
   return openDirectorySelectorDialog();
+});
+
+ipcMain.handle('close-cardio', async event => {
+  await CardIO.close();
 });
 
 const openDirectorySelectorDialog = () => {

@@ -36,7 +36,7 @@ const translations = translate(English).supporting('ja', Japanese);
 
 const defaultCardDir = app.isPackaged
   ? path.join(__dirname, '../../../../../../media_stickies_data')
-  : './media_stickies_data';
+  : path.join(__dirname, '../..//media_stickies_data');
 
 /**
  * electron-store for individual settings (a.k.a local machine settings)

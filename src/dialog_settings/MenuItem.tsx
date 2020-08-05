@@ -10,10 +10,10 @@ import './MenuItem.css';
 import { cardColors, ColorName } from '../modules_common/color';
 import {
   GlobalContext,
+  GlobalProvider,
   SettingsDialogAction,
   SettingsDialogContext,
   SettingsDialogProvider,
-  GlobalProvider,
 } from './StoreProvider';
 import { MessageLabel } from '../modules_common/i18n';
 import { getRandomInt } from '../modules_common/utils';

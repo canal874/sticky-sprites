@@ -20,13 +20,22 @@ import { getSettings } from './store';
 var cardsDB: PouchDB.Database<{}>;
 
 class CardIOClass implements ICardIO {
+  isClosed = true;
   open = () => {
-    if (cardsDB === undefined) {
+    if (cardsDB === undefined || this.isClosed) {
       cardsDB = new PouchDB(getSettings().cardDir);
+      this.isClosed = false;
     }
   };
 
   public close = () => {
+    if (this.isClosed) {
+      return;
+    }
+    this.isClosed = true;
+    if (cardsDB === undefined || cardsDB === null) {
+      return Promise.resolve();
+    }
     return cardsDB.close();
   };
 

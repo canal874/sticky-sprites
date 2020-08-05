@@ -5,9 +5,19 @@
 
 .saveFilePath {
   float: left;
-  height: 18px;
   padding: 6px;
   margin-left: 10px;  
+  width: 400px;
+}
+
+.saveFilePathLabel {
+  float:left;
+  margin-top: 5px;
+}
+
+.saveFilePathValue {
+  float:left;
+  margin-top: 5px;  
 }
 
 .saveChangeFilePathButton {
@@ -15,5 +25,10 @@
   height: 30px;
   margin-left: 20px;
   margin-top: 0px;
+  border-radius: 7px;
+  border: 0px;
+  cursor: pointer;
+  box-shadow: 3px 3px 10px 0 rgba(196, 173, 173, 0.5);
+  font-weight: bold;  
 }
 
