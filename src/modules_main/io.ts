@@ -13,6 +13,7 @@ import PouchDB from 'pouchdb';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
 import { getSettings } from './store';
+
 /**
  * Module specific part
  */
@@ -54,21 +55,15 @@ class CardIOClass implements ICardIO {
     });
   };
 
-  public deleteCardData = (id: string): Promise<string> => {
+  public deleteCardData = async (id: string): Promise<string> => {
     // for debug
     // await sleep(60000);
     this.open();
-    return new Promise((resolve, reject) => {
-      cardsDB
-        .get(id)
-        .then(res => {
-          cardsDB.remove(res);
-          resolve(id);
-        })
-        .catch(e => {
-          reject(e);
-        });
+    const card = await cardsDB.get(id);
+    await cardsDB.remove(card).catch(e => {
+      throw e;
     });
+    return id;
   };
 
   public readCardData = (id: string, prop: CardProp): Promise<void> => {

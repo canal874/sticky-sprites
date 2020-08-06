@@ -83,6 +83,35 @@ const globalReducer = (state: GlobalState = initialState, action: GlobalAction) 
       i18n: { language: action.payload, messages: translations.messages() },
     };
   }
+  else if (action.type === 'navigationAllowedURLs') {
+    const url = action.payload;
+    if (action.operation === 'add') {
+      if (typeof url === 'string') {
+        state.navigationAllowedURLs.push(url);
+      }
+      else if (Array.isArray(url)) {
+        url.forEach(item => {
+          state.navigationAllowedURLs.push(item);
+        });
+      }
+    }
+    else if (action.operation === 'remove') {
+      if (typeof url === 'string') {
+        state.navigationAllowedURLs.splice(state.navigationAllowedURLs.indexOf(url), 1);
+      }
+      else if (Array.isArray(url)) {
+        url.forEach(item => {
+          state.navigationAllowedURLs.splice(state.navigationAllowedURLs.indexOf(item), 1);
+        });
+      }
+    }
+    electronStore.set(action.type, state.navigationAllowedURLs);
+    return {
+      ...state,
+      navigationAllowedURLs: state.navigationAllowedURLs,
+    };
+  }
+
   return state;
 };
 
@@ -133,16 +162,24 @@ export const globalDispatch = (action: GlobalAction) => {
 export const initializeGlobalStore = (preferredLanguage: string) => {
   const loadOrCreate = (key: GlobalStateKeys, defaultValue: any) => {
     const value: any = electronStore.get(key, defaultValue);
-    globalDispatch({ type: key, payload: value });
+    globalDispatch({ type: key, operation: 'add', payload: value });
   };
 
   loadOrCreate('cardDir', defaultCardDir);
   loadOrCreate('i18n', preferredLanguage);
+  loadOrCreate('navigationAllowedURLs', []);
 };
 
 /**
  * Utility for i18n
  */
-export const MESSAGE = (label: MessageLabel) => {
-  return getSettings().i18n.messages[label];
+export const MESSAGE = (label: MessageLabel, ...args: string[]) => {
+  let message: string = getSettings().i18n.messages[label];
+  if (args) {
+    args.forEach((replacement, index) => {
+      const variable = '$' + (index + 1); // $1, $2, ...
+      message = message.replace(variable, replacement);
+    });
+  }
+  return message;
 };

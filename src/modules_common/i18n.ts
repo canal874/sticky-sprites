@@ -8,9 +8,13 @@ type MessagesMain = {
   confirmClosing: string;
   confirmWaitMore: string;
   pleaseRestartErrorInOpeningEditor: string;
+  securityPageNavigationAlert: string;
+  securityLocalNavigationError: string;
   btnCloseCard: string;
   btnOK: string;
+  btnAllow: string;
   btnCancel: string;
+  btnRemove: string;
   settings: string;
   trayToolTip: string;
   white: string;
@@ -90,9 +94,15 @@ export const English: Messages = {
     'It takes a long time to save. Do you want to wait a little longer?\n\nIf you press Cancel, your changes will not be saved.',
   pleaseRestartErrorInOpeningEditor:
     'The card cannot be edited.\nPlease close this app and any other apps, and then open this app again.',
+  securityPageNavigationAlert:
+    'Trying to open external website $1. Allow if you think it is safe, otherwise it must be removed.',
+  securityLocalNavigationError:
+    'Script is trying to open $1, but it cannot be allowed. The card will be removed.',
   btnCloseCard: 'Close',
   btnOK: 'OK',
+  btnAllow: 'Allow',
   btnCancel: 'Cancel',
+  btnRemove: 'Remove',
   settings: 'Settings...',
   trayToolTip: 'Media Stickies',
   white: 'white',
@@ -138,9 +148,15 @@ export const Japanese: Messages = {
     '保存に時間が掛かっています。もう少し待ちますか？\n\nキャンセルを押すと、変更した内容は保存されない場合があります。',
   pleaseRestartErrorInOpeningEditor:
     'カードを編集できません。\n本アプリと他のアプリを全て閉じた後、本アプリをもう一度開いてください。',
+  securityPageNavigationAlert:
+    '外部サイト $1 を開こうとしています。安全な場合のみ許可してください。\n許可しない場合、このカードは削除されます。',
+  securityLocalNavigationError:
+    'スクリプトが $1 を開こうとしていますが、許可できません。このカードを削除します。',
   btnCloseCard: '閉じる',
   btnOK: 'はい',
+  btnAllow: '許可する',
   btnCancel: 'キャンセル',
+  btnRemove: '削除する',
   settings: '設定...',
   trayToolTip: 'Media Stickies',
   white: '白',

@@ -8,15 +8,17 @@
 
 import url from 'url';
 import path from 'path';
+import { settings } from 'cluster';
 import { v4 as uuidv4 } from 'uuid';
 import { BrowserWindow, dialog, ipcMain, shell, WebContents } from 'electron';
 import contextMenu from 'electron-context-menu';
 import { CardProp } from '../modules_common/cardprop';
 import { CardIO } from './io';
-import { getCurrentDateAndTime } from '../modules_common/utils';
+import { getCurrentDateAndTime, sleep } from '../modules_common/utils';
 import { CardInitializeType } from '../modules_common/types';
-import { MESSAGE } from './store';
+import { getSettings, globalDispatch, MESSAGE } from './store';
 import { cardColors, ColorName } from '../modules_common/color';
+import { DialogButton } from '../modules_common/const';
 
 /**
  * Const
@@ -52,21 +54,59 @@ const generateNewCardId = (): string => {
 
 export const cards: Map<string, Card> = new Map<string, Card>();
 
+const deleteCardWithRetry = async (id: string) => {
+  let doRetry = false;
+  await deleteCard(id).catch(e => {
+    console.error(e);
+    doRetry = true;
+  });
+  if (!doRetry) {
+    return;
+  }
+  doRetry = false;
+  await sleep(1000);
+  console.debug('retrying delete card ...');
+  await deleteCard(id).catch(e => {
+    console.error(e);
+    doRetry = true;
+  });
+  if (!doRetry) {
+    return;
+  }
+  // eslint-disable-next-line require-atomic-updates
+  doRetry = false;
+  await sleep(1000);
+  console.debug('retrying delete card ...');
+  await deleteCard(id).catch(e => {
+    console.error(e);
+    doRetry = true;
+  });
+  if (!doRetry) {
+    return;
+  }
+  await sleep(1000);
+  console.debug('retrying delete card ...');
+  await deleteCard(id).catch(e => {
+    console.error(e);
+  });
+};
+
 export const deleteCard = async (id: string) => {
   await CardIO.deleteCardData(id)
     .catch((e: Error) => {
-      console.error(`delete-card: ${e.message}`);
+      throw new Error(`Error in delete-card: ${e.message}`);
     })
     .then(() => {
       console.debug(`deleted : ${id}`);
       // eslint-disable-next-line no-unused-expressions
       const card = cards.get(id);
       if (card) {
+        cards.delete(id);
         card.window.destroy();
       }
     })
     .catch((e: Error) => {
-      console.error(`card destroy: ${e.message}`);
+      throw new Error(`Error in destroy window: ${e.message}`);
     });
 };
 
@@ -289,7 +329,7 @@ export class Card {
           // this.window.webContents.send('reload');
           const card = new Card('Load', this.prop.id);
           const prevWin = this.window;
-          const tmpCard = cards.get(this.prop.id);
+          cards.get(this.prop.id);
           card
             .render()
             .then(() => {
@@ -307,18 +347,53 @@ export class Card {
            * 3. Remove malicious card
            */
           this.renderingCompleted = true;
-          dialog.showMessageBoxSync(this.window, {
+
+          const domainMatch = navUrl.match(/https?:\/\/([^/]+?)\//);
+
+          if (!domainMatch) {
+            // not http, https
+
+            // Don't use BrowserWindow option because it invokes focus event on the indicated BrowserWindow
+            // (and the focus event causes saving data.)
+            dialog.showMessageBoxSync({
+              type: 'question',
+              buttons: ['OK'],
+              message: MESSAGE('securityLocalNavigationError', navUrl),
+            });
+            // Destroy
+
+            deleteCardWithRetry(this.prop.id);
+            return;
+          }
+
+          const domain = domainMatch[1];
+          if (getSettings().navigationAllowedURLs.includes(domain)) {
+            console.debug(`Navigation to ${navUrl} is allowed.`);
+            return;
+          }
+
+          // Don't use BrowserWindow option because it invokes focus event on the indicated BrowserWindow
+          // (and the focus event causes saving data.)
+          const res = dialog.showMessageBoxSync({
             type: 'question',
-            buttons: ['OK'],
-            message: 'Page navigation is not permitted. The card is removed.',
+            buttons: [MESSAGE('btnAllow'), MESSAGE('btnCancel')],
+            defaultId: DialogButton.Default,
+            cancelId: DialogButton.Cancel,
+            message: MESSAGE('securityPageNavigationAlert', navUrl),
           });
-          // Reload if permitted
-          // Destroy if not permitted
-          /*
-          await deleteCard(this.prop.id);
-          cards.delete(this.prop.id);
-          this.window.destroy();
-        */
+          if (res === DialogButton.Default) {
+            // Reload if permitted
+            globalDispatch({
+              type: 'navigationAllowedURLs',
+              operation: 'add',
+              payload: domain,
+            });
+            this.window.webContents.reload();
+          }
+          else if (res === DialogButton.Cancel) {
+            // Destroy if not permitted
+            deleteCardWithRetry(this.prop.id);
+          }
         }
       };
       console.debug('did-finish-load: ' + this.window.webContents.getURL());
@@ -367,11 +442,15 @@ export class Card {
     return new Promise((resolve, reject) => {
       const finishLoadListener = (event: Electron.IpcMainInvokeEvent) => {
         console.debug('loadHTML  ' + this.prop.id);
+        const _finishReloadListener = () => {
+          console.debug('Reloaded: ' + this.prop.id);
+          this.window.webContents.send('render-card', this.prop.toObject());
+        };
 
         // Don't use 'did-finish-load' event.
         // loadHTML resolves after loading HTML and processing required script are finished.
         //     this.window.webContents.on('did-finish-load', () => {
-        // ipcMain.handle('finish-load-' + this.prop.id, this._finishReloadListener);
+        ipcMain.handle('finish-load-' + this.prop.id, _finishReloadListener);
         resolve();
       };
       ipcMain.handleOnce('finish-load-' + this.prop.id, finishLoadListener);

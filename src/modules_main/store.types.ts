@@ -17,6 +17,7 @@ export const cardDirName = 'media_stickies_data';
  */
 export interface GlobalState {
   cardDir: string;
+  navigationAllowedURLs: string[];
   i18n: {
     language: string;
     messages: Messages; // 'messages' is not serialized. It is set and updated when 'language' is changed.
@@ -31,12 +32,20 @@ export type GlobalStateKeys = keyof GlobalState;
 
 export type CardDirSettingAction = {
   type: 'cardDir';
+  operation?: 'add' | 'remove';
   payload: string;
 };
 
 export type I18nSettingAction = {
   type: 'i18n';
+  operation?: 'add' | 'remove';
   payload: string;
+};
+
+export type NavigationAllowedURLsSettingAction = {
+  type: 'navigationAllowedURLs';
+  operation: 'add' | 'remove';
+  payload: string | string[];
 };
 
 // CopyStateAction is used only in the localReducer of Renderer process
@@ -45,9 +54,14 @@ export type CopyStateAction = {
   payload: GlobalState;
 };
 
-export type GlobalAction = CardDirSettingAction | I18nSettingAction | CopyStateAction;
+export type GlobalAction =
+  | CardDirSettingAction
+  | I18nSettingAction
+  | NavigationAllowedURLsSettingAction
+  | CopyStateAction;
 
 export const initialState: GlobalState = {
   cardDir: '',
+  navigationAllowedURLs: [],
   i18n: { language: '', messages: English },
 };

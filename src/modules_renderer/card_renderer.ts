@@ -221,7 +221,9 @@ export const render = async (
    */
   if (options.includes('ContentsData')) {
     options = options.filter(opt => opt !== 'ContentsData');
-    await renderContentsData();
+    await renderContentsData().catch(e =>
+      console.error('Error in renderContentsData: ' + e)
+    );
   }
 
   for (const opt of options) {
