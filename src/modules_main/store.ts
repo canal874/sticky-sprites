@@ -18,7 +18,13 @@ import {
   MessageLabel,
 } from '../modules_common/i18n';
 import { emitter } from './event';
-import { GlobalAction, GlobalState, GlobalStateKeys, initialState } from './store.types';
+import {
+  cardDirName,
+  GlobalAction,
+  GlobalState,
+  GlobalStateKeys,
+  initialState,
+} from './store.types';
 
 /**
  * i18n
@@ -33,10 +39,9 @@ const translations = translate(English).supporting('ja', Japanese);
  *
  * TODO: Default path for Mac / Linux is needed.
  */
-
 const defaultCardDir = app.isPackaged
-  ? path.join(__dirname, '../../../../../../media_stickies_data')
-  : path.join(__dirname, '../..//media_stickies_data');
+  ? path.join(__dirname, `../../../../../../${cardDirName}`)
+  : path.join(__dirname, `../../${cardDirName}`);
 
 /**
  * electron-store for individual settings (a.k.a local machine settings)

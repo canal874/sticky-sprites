@@ -5,6 +5,7 @@
  * This source code is licensed under the Mozilla Public License Version 2.0
  * found in the LICENSE file in the root directory of this source tree.
  */
+import path from 'path';
 import * as React from 'react';
 import { ipcRenderer } from 'electron';
 import fs from 'fs-extra';
@@ -14,6 +15,8 @@ import { MenuItemProps } from './MenuItem';
 import { SettingPageTemplate } from './SettingPageTemplate';
 import { MessageLabel } from '../modules_common/i18n';
 import { cardColors, ColorName } from '../modules_common/color';
+import { cardDirName } from '../modules_main/store.types';
+import { DialogButton } from '../modules_common/const';
 
 export interface SettingPageSaveProps {
   item: MenuItemProps;
@@ -21,7 +24,7 @@ export interface SettingPageSaveProps {
 }
 
 export const SettingPageSave = (props: SettingPageSaveProps) => {
-  const [globalState] = React.useContext(GlobalContext) as GlobalProvider;
+  const [globalState, globalDispatch] = React.useContext(GlobalContext) as GlobalProvider;
   const MESSAGE = (label: MessageLabel) => {
     return globalState.i18n.messages[label];
   };
@@ -33,9 +36,39 @@ export const SettingPageSave = (props: SettingPageSaveProps) => {
       await ipcRenderer.invoke('close-cardio').catch(e => {
         console.error(`Failed to close cardio: ${e.me}`);
       });
-
-      console.debug(file);
-      fs.copySync(globalState.cardDir, file[0]);
+      //      console.debug(file);
+      const newPath = file[0];
+      ipcRenderer
+        .invoke(
+          'confirm-dialog',
+          'settingsDialog',
+          ['btnOK', 'btnCancel'],
+          'saveChangeFilePathAlert'
+        )
+        .then((res: number) => {
+          if (res === DialogButton.Default) {
+            // OK
+            const saveDir = path.join(newPath, cardDirName);
+            try {
+              fs.ensureDirSync(saveDir, 0o700); // owner のみ rwx
+              fs.copySync(globalState.cardDir, saveDir);
+              globalDispatch({ type: 'cardDir', payload: saveDir });
+            } catch (e) {
+              console.error(e);
+              ipcRenderer.invoke(
+                'alert-dialog',
+                'settingsDialog',
+                'saveChangeFilePathError'
+              );
+            }
+          }
+          else if (res === DialogButton.Cancel) {
+            // Cancel
+          }
+        })
+        .catch((e: Error) => {
+          console.error(e.message);
+        });
     }
   };
   const buttonStyle = (color: ColorName) => ({

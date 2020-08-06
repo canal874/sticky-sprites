@@ -7,7 +7,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { app, dialog, ipcMain, MouseInputEvent } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, MouseInputEvent } from 'electron';
 import { CardIO } from './modules_main/io';
 import { DialogButton } from './modules_common/const';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
@@ -20,7 +20,7 @@ import {
 } from './modules_main/card';
 import { initializeGlobalStore, MESSAGE, subscribeStore } from './modules_main/store';
 import { destroyTray, initializeTaskTray } from './modules_main/tray';
-import { openSettings } from './modules_main/settings';
+import { openSettings, settingsDialog } from './modules_main/settings';
 
 // process.on('unhandledRejection', console.dir);
 
@@ -220,12 +220,19 @@ ipcMain.handle('set-title', (event, id: string, title: string) => {
 });
 
 ipcMain.handle('alert-dialog', (event, id: string, label: MessageLabel) => {
-  const card = cards.get(id);
-  if (!card) {
-    return;
+  let win: BrowserWindow;
+  if (id === 'settingsDialog') {
+    win = settingsDialog;
+  }
+  else {
+    const card = cards.get(id);
+    if (!card) {
+      return;
+    }
+    win = card.window;
   }
 
-  dialog.showMessageBoxSync(card.window, {
+  dialog.showMessageBoxSync(win, {
     type: 'question',
     buttons: ['OK'],
     message: MESSAGE(label),
@@ -235,12 +242,20 @@ ipcMain.handle('alert-dialog', (event, id: string, label: MessageLabel) => {
 ipcMain.handle(
   'confirm-dialog',
   (event, id: string, buttonLabels: MessageLabel[], label: MessageLabel) => {
-    const card = cards.get(id);
-    if (!card) {
-      return;
+    let win: BrowserWindow;
+    if (id === 'settingsDialog') {
+      win = settingsDialog;
     }
+    else {
+      const card = cards.get(id);
+      if (!card) {
+        return;
+      }
+      win = card.window;
+    }
+
     const buttons: string[] = buttonLabels.map(buttonLabel => MESSAGE(buttonLabel));
-    return dialog.showMessageBoxSync(card.window, {
+    return dialog.showMessageBoxSync(win, {
       type: 'question',
       buttons: buttons,
       defaultId: DialogButton.Default,

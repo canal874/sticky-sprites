@@ -33,6 +33,8 @@ type MessagesSettings = {
   saveFilePath: string;
   saveChangeFilePathButton: string;
   chooseSaveFilePath: string;
+  saveChangeFilePathAlert: string;
+  saveChangeFilePathError: string;
   languageDetailedText: string;
   currentLanguage: string;
   selectableLanguages: string;
@@ -65,6 +67,9 @@ const SettingsEnglish: MessagesSettings = {
   saveFilePath: 'Save in the folder of',
   saveChangeFilePathButton: 'Change',
   chooseSaveFilePath: 'Select the place for saving data',
+  saveChangeFilePathAlert:
+    'Save data will be copied from the old folder to the new folder.\n(The data in the old folder is not removed.) \n[media_stickies_data] folder will be created in the new folder,\n  and save data is saved in this folder.',
+  saveChangeFilePathError: 'Data cannot be copied here. Please select another location.',
   languageDetailedText: 'Select the Language in which you want this App to appear',
   currentLanguage: 'Current Language',
   selectableLanguages: 'Selectable Languages',
@@ -110,6 +115,9 @@ const SettingsJapanese: MessagesSettings = {
   saveFilePath: 'このフォルダに保存',
   saveChangeFilePathButton: '変更',
   chooseSaveFilePath: 'データの保存先を選んでください',
+  saveChangeFilePathAlert:
+    'データは新しい保存先へコピーされます（元の保存先からは削除されません）\n保存先には「media_stickies_data」という名前のフォルダが作成され、\nデータはこのフォルダの中に保存されます。',
+  saveChangeFilePathError: 'データをコピーできませんでした。他の保存先を選んでください。',
   languageDetailedText: 'このアプリのメニュー表示のために使用する言語を選んでください。',
   currentLanguage: '使用中の言語',
   selectableLanguages: '選択可能な言語',

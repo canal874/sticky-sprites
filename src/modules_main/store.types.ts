@@ -8,6 +8,8 @@
 
 import { English, Messages } from '../modules_common/i18n';
 
+export const cardDirName = 'media_stickies_data';
+
 /**
  * Redux State
  * ! A key of the GlobalState (that is deserialized data) must be same as
