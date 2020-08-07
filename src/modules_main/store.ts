@@ -105,6 +105,7 @@ const globalReducer = (state: GlobalState = initialState, action: GlobalAction) 
         });
       }
     }
+    state.navigationAllowedURLs.sort();
     electronStore.set(action.type, state.navigationAllowedURLs);
     return {
       ...state,
