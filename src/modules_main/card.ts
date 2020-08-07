@@ -55,40 +55,20 @@ const generateNewCardId = (): string => {
 export const cards: Map<string, Card> = new Map<string, Card>();
 
 const deleteCardWithRetry = async (id: string) => {
-  let doRetry = false;
-  await deleteCard(id).catch(e => {
-    console.error(e);
-    doRetry = true;
-  });
-  if (!doRetry) {
-    return;
+  for (let i = 0; i < 5; i++) {
+    let doRetry = false;
+    // eslint-disable-next-line no-await-in-loop
+    await deleteCard(id).catch(e => {
+      console.error(e);
+      doRetry = true;
+    });
+    if (!doRetry) {
+      break;
+    }
+    // eslint-disable-next-line no-await-in-loop
+    await sleep(1000);
+    console.debug('retrying delete card ...');
   }
-  doRetry = false;
-  await sleep(1000);
-  console.debug('retrying delete card ...');
-  await deleteCard(id).catch(e => {
-    console.error(e);
-    doRetry = true;
-  });
-  if (!doRetry) {
-    return;
-  }
-  // eslint-disable-next-line require-atomic-updates
-  doRetry = false;
-  await sleep(1000);
-  console.debug('retrying delete card ...');
-  await deleteCard(id).catch(e => {
-    console.error(e);
-    doRetry = true;
-  });
-  if (!doRetry) {
-    return;
-  }
-  await sleep(1000);
-  console.debug('retrying delete card ...');
-  await deleteCard(id).catch(e => {
-    console.error(e);
-  });
 };
 
 export const deleteCard = async (id: string) => {
@@ -348,7 +328,10 @@ export class Card {
            */
           this.renderingCompleted = true;
 
-          const domainMatch = navUrl.match(/https?:\/\/([^/]+?)\//);
+          let domainMatch = navUrl.match(/https?:\/\/([^/]+?)\//);
+          if (!domainMatch) {
+            domainMatch = navUrl.match(/https?:\/\/([^/]+?)$/);
+          }
 
           if (!domainMatch) {
             // not http, https
@@ -371,7 +354,6 @@ export class Card {
             console.debug(`Navigation to ${navUrl} is allowed.`);
             return;
           }
-
           // Don't use BrowserWindow option because it invokes focus event on the indicated BrowserWindow
           // (and the focus event causes saving data.)
           const res = dialog.showMessageBoxSync({
@@ -383,6 +365,7 @@ export class Card {
           });
           if (res === DialogButton.Default) {
             // Reload if permitted
+            console.debug(`Allow ${domain}`);
             globalDispatch({
               type: 'navigationAllowedURLs',
               operation: 'add',
@@ -392,6 +375,7 @@ export class Card {
           }
           else if (res === DialogButton.Cancel) {
             // Destroy if not permitted
+            console.debug(`Deny ${domain}`);
             deleteCardWithRetry(this.prop.id);
           }
         }
