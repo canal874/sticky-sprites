@@ -27,6 +27,9 @@ export const destroyTray = () => {
 let currentLanguage: string;
 
 export const setTrayContextMenu = () => {
+  if (!tray) {
+    return;
+  }
   const contextMenu = Menu.buildFromTemplate([
     {
       label: MESSAGE('settings'),
