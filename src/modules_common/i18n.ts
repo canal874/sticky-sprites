@@ -43,6 +43,7 @@ type MessagesSettings = {
   currentLanguage: string;
   selectableLanguages: string;
   securityDetailedText: string;
+  securityNoUrl: string;
 };
 
 type MessagesLanguage = {
@@ -77,7 +78,9 @@ const SettingsEnglish: MessagesSettings = {
   languageDetailedText: 'Select the Language in which you want this App to appear',
   currentLanguage: 'Current Language',
   selectableLanguages: 'Selectable Languages',
-  securityDetailedText: 'Only following URLs are allowed to load into a card:',
+  securityDetailedText:
+    'Only following websites are allowed to load into a card. Remove by clicking \u00D7 if not needed.',
+  securityNoUrl: 'No URL allowed',
 };
 export const English: Messages = {
   ...LanguagesCommon,
@@ -131,7 +134,9 @@ const SettingsJapanese: MessagesSettings = {
   languageDetailedText: 'このアプリのメニュー表示のために使用する言語を選んでください。',
   currentLanguage: '使用中の言語',
   selectableLanguages: '選択可能な言語',
-  securityDetailedText: '次の URL のみカードに読み込むことができます:',
+  securityDetailedText:
+    '次のドメインのサイトのみカードに読み込むことができます。不要なサイトは×ボタンを押して削除してください。',
+  securityNoUrl: '許可されたサイトはありません',
 };
 export const Japanese: Messages = {
   ...LanguagesCommon,
