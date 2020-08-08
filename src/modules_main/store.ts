@@ -84,32 +84,33 @@ const globalReducer = (state: GlobalState = initialState, action: GlobalAction) 
     };
   }
   else if (action.type === 'navigationAllowedURLs') {
-    const url = action.payload;
+    const targetUrl = action.payload;
+    const urls = state.navigationAllowedURLs.slice();
     if (action.operation === 'add') {
-      if (typeof url === 'string') {
-        state.navigationAllowedURLs.push(url);
+      if (typeof targetUrl === 'string') {
+        urls.push(targetUrl);
       }
-      else if (Array.isArray(url)) {
-        url.forEach(item => {
-          state.navigationAllowedURLs.push(item);
+      else if (Array.isArray(targetUrl)) {
+        targetUrl.forEach(item => {
+          urls.push(item);
         });
       }
     }
     else if (action.operation === 'remove') {
-      if (typeof url === 'string') {
-        state.navigationAllowedURLs.splice(state.navigationAllowedURLs.indexOf(url), 1);
+      if (typeof targetUrl === 'string') {
+        urls.splice(urls.indexOf(targetUrl), 1);
       }
-      else if (Array.isArray(url)) {
-        url.forEach(item => {
-          state.navigationAllowedURLs.splice(state.navigationAllowedURLs.indexOf(item), 1);
+      else if (Array.isArray(targetUrl)) {
+        targetUrl.forEach(item => {
+          urls.splice(urls.indexOf(item), 1);
         });
       }
     }
-    state.navigationAllowedURLs.sort();
-    electronStore.set(action.type, state.navigationAllowedURLs);
+    urls.sort();
+    electronStore.set(action.type, urls);
     return {
       ...state,
-      navigationAllowedURLs: state.navigationAllowedURLs,
+      navigationAllowedURLs: urls,
     };
   }
 
