@@ -10,16 +10,6 @@ import * as React from 'react';
 import { ipcRenderer } from 'electron';
 import { GlobalAction, GlobalState, initialState } from '../modules_main/store.types';
 
-/**
- * The function of localReducer is just copying GlobalState from Main process to Renderer process.
- */
-const localReducer = (state: GlobalState, action: GlobalAction) => {
-  if (action.type === 'CopyState') {
-    return action.payload;
-  }
-  return state;
-};
-
 // 'GlobalState' is used both Main process and this Renderer process.
 // ! Notice that it is not shared with Main and Renderer processes by reference,
 // ! but individually bound to each process.
