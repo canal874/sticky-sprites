@@ -21,11 +21,11 @@ export interface SettingPageLanguageProps {
 export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
   const [globalState, globalDispatch] = React.useContext(GlobalContext) as GlobalProvider;
   const MESSAGE = (label: MessageLabel) => {
-    return globalState.i18n.messages[label];
+    return globalState.temporal.messages[label];
   };
 
   const handleClick = (value: string) => {
-    globalDispatch({ type: 'i18n', payload: value });
+    globalDispatch({ type: 'language-put', payload: value });
   };
 
   const languages = availableLanguages.map(lang => (
@@ -33,7 +33,7 @@ export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
       click={handleClick}
       label={MESSAGE(lang as MessageLabel)}
       value={lang}
-      selected={globalState.i18n.language === lang}
+      selected={globalState.persistent.language === lang}
     ></SelectableTag>
   ));
 
@@ -44,8 +44,8 @@ export const SettingPageLanguage = (props: SettingPageLanguageProps) => {
         <div styleName='currentLanguageLabel'>{MESSAGE('currentLanguage')}:</div>
         <SelectableTag
           click={handleClick}
-          label={MESSAGE(globalState.i18n.language as MessageLabel)}
-          value={globalState.i18n.language}
+          label={MESSAGE(globalState.persistent.language as MessageLabel)}
+          value={globalState.persistent.language}
           selected={true}
         ></SelectableTag>
       </p>

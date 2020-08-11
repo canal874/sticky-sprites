@@ -12,56 +12,81 @@ export const cardDirName = 'media_stickies_data';
 
 /**
  * Redux State
- * ! A key of the GlobalState (that is deserialized data) must be same as
+ * ! A key of the PersistentSettingsState (that is deserialized data) must be same as
  * ! a key of the electron-store (that is serialized data)
  */
-export interface GlobalState {
-  cardDir: string;
-  navigationAllowedURLs: string[];
-  i18n: {
-    language: string;
-    messages: Messages; // 'messages' is not serialized. It is set and updated when 'language' is changed.
+
+export interface PersistentSettingsState {
+  storage: {
+    type: string;
+    path: string;
   };
+  navigationAllowedURLs: string[];
+  language: string;
 }
-export type GlobalStateKeys = keyof GlobalState;
+
+export interface TemporalSettingsState {
+  messages: Messages; // It is set and updated when 'settings.language' is changed.
+}
+
+export interface SettingsState {
+  persistent: PersistentSettingsState; // serialized to storage
+  temporal: TemporalSettingsState; // not serialized
+}
+export type PersistentSettingsStateKeys = keyof PersistentSettingsState;
 
 /**
  * Redux Actions
- * ! 'type' for updating GlobalState must be same as one of GlobalStateKeys
+ * ! 'type' for PersistentSettingsAction must be key of serialized data + '-put/-delete'
  */
 
-export type CardDirSettingAction = {
-  type: 'cardDir';
-  operation?: 'add' | 'remove';
+export type StoragePutAction = {
+  type: 'storage-put';
+  payload: { type: string; path: string };
+};
+
+export type LanguagePutAction = {
+  type: 'language-put';
   payload: string;
 };
 
-export type I18nSettingAction = {
-  type: 'i18n';
-  operation?: 'add' | 'remove';
-  payload: string;
-};
-
-export type NavigationAllowedURLsSettingAction = {
-  type: 'navigationAllowedURLs';
-  operation: 'add' | 'remove';
+export type NavigationAllowedURLsPutAction = {
+  type: 'navigationAllowedURLs-put';
   payload: string | string[];
 };
 
-// CopyStateAction is used only in the localReducer of Renderer process
-export type CopyStateAction = {
-  type: 'CopyState';
-  payload: GlobalState;
+export type NavigationAllowedURLsDeleteAction = {
+  type: 'navigationAllowedURLs-delete';
+  payload: string | string[];
 };
 
-export type GlobalAction =
-  | CardDirSettingAction
-  | I18nSettingAction
-  | NavigationAllowedURLsSettingAction
-  | CopyStateAction;
+export type PersistentSettingsAction =
+  | StoragePutAction
+  | LanguagePutAction
+  | NavigationAllowedURLsPutAction
+  | NavigationAllowedURLsDeleteAction;
 
-export const initialState: GlobalState = {
-  cardDir: '',
+export type MessagesPutAction = {
+  type: 'messages-put';
+  payload: Messages;
+};
+
+export type TemporalSettingsAction = MessagesPutAction;
+
+export const initialPersistentSettingsState: PersistentSettingsState = {
+  storage: {
+    type: '',
+    path: '',
+  },
   navigationAllowedURLs: [],
-  i18n: { language: '', messages: English },
+  language: '',
+};
+
+export const initialTemporalSettingsState: TemporalSettingsState = {
+  messages: English,
+};
+
+export const initialSettingsState: SettingsState = {
+  persistent: initialPersistentSettingsState,
+  temporal: initialTemporalSettingsState,
 };

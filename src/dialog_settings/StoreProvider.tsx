@@ -8,13 +8,19 @@
 
 import * as React from 'react';
 import { ipcRenderer } from 'electron';
-import { GlobalAction, GlobalState, initialState } from '../modules_main/store.types';
+import {
+  initialPersistentSettingsState,
+  initialSettingsState,
+  PersistentSettingsAction,
+  PersistentSettingsState,
+  SettingsState,
+} from '../modules_main/store.types';
 
 // 'GlobalState' is used both Main process and this Renderer process.
 // ! Notice that it is not shared with Main and Renderer processes by reference,
 // ! but individually bound to each process.
-export type GlobalProvider = [GlobalState, (action: GlobalAction) => void];
-export const GlobalContext = React.createContext<GlobalState | any>(initialState);
+export type GlobalProvider = [SettingsState, (action: PersistentSettingsAction) => void];
+export const GlobalContext = React.createContext<SettingsState | any>(initialSettingsState);
 
 /**
  * Local Redux Store used only in this Renderer process
@@ -53,17 +59,17 @@ export const StoreProvider = (props: {
   defaultSettingId: string;
   children: React.ReactNode;
 }) => {
-  const [globalState, localDispatch] = React.useState(initialState);
+  const [globalState, localDispatch] = React.useState(initialSettingsState);
   // ! Proxy
   // Dispatcher to Main process
-  const globalDispatch = (action: GlobalAction) => {
+  const globalDispatch = (action: PersistentSettingsAction) => {
     // IPC
     ipcRenderer.invoke('globalDispatch', action);
   };
 
   React.useEffect(() => {
     // Add listener that is invoked when global store in Main process is changed
-    const dispatch = (event: Electron.IpcRendererEvent, state: GlobalState) => {
+    const dispatch = (event: Electron.IpcRendererEvent, state: SettingsState) => {
       // Copy GlobalState from Main process to this Renderer process
       localDispatch(state);
     };

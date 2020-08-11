@@ -101,10 +101,10 @@ export const English: Messages = {
     'Trying to open external website $1. Allow if you think it is safe, otherwise it must be removed.',
   securityLocalNavigationError:
     'Script is trying to open $1, but it cannot be allowed. The card will be removed.',
-  btnCloseCard: 'Close',
+  btnCloseCard: 'Close card',
   btnOK: 'OK',
   btnAllow: 'Allow',
-  btnCancel: 'Cancel',
+  btnCancel: 'Cancel ', // 'Cancel' is automatically translated to local language, so add use 'Cancel '.
   btnRemove: 'Remove',
   settings: 'Settings...',
   trayToolTip: 'Media Stickies',
@@ -157,7 +157,7 @@ export const Japanese: Messages = {
     '外部サイト $1 を開こうとしています。安全な場合のみ許可してください。\n許可しない場合、このカードは削除されます。',
   securityLocalNavigationError:
     'スクリプトが $1 を開こうとしていますが、許可できません。このカードを削除します。',
-  btnCloseCard: '閉じる',
+  btnCloseCard: 'カードを閉じる',
   btnOK: 'はい',
   btnAllow: '許可する',
   btnCancel: 'キャンセル',

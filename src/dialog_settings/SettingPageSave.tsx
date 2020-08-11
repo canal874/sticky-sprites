@@ -26,7 +26,7 @@ export interface SettingPageSaveProps {
 export const SettingPageSave = (props: SettingPageSaveProps) => {
   const [globalState, globalDispatch] = React.useContext(GlobalContext) as GlobalProvider;
   const MESSAGE = (label: MessageLabel) => {
-    return globalState.i18n.messages[label];
+    return globalState.temporal.messages[label];
   };
   const onChangeButtonClick = async () => {
     const file = await ipcRenderer.invoke('open-directory-selector-dialog').catch(e => {
@@ -51,8 +51,11 @@ export const SettingPageSave = (props: SettingPageSaveProps) => {
             const saveDir = path.join(newPath, cardDirName);
             try {
               fs.ensureDirSync(saveDir, 0o700); // owner のみ rwx
-              fs.copySync(globalState.cardDir, saveDir);
-              globalDispatch({ type: 'cardDir', payload: saveDir });
+              fs.copySync(globalState.persistent.storage.path, saveDir);
+              globalDispatch({
+                type: 'storage-put',
+                payload: { type: 'local', path: saveDir },
+              });
             } catch (e) {
               console.error(e);
               ipcRenderer.invoke(
@@ -87,7 +90,7 @@ export const SettingPageSave = (props: SettingPageSaveProps) => {
         >
           {MESSAGE('saveChangeFilePathButton')}
         </button>
-        <div styleName='saveFilePathValue'>{globalState.cardDir}</div>
+        <div styleName='saveFilePathValue'>{globalState.persistent.storage.path}</div>
       </div>
     </SettingPageTemplate>
   );

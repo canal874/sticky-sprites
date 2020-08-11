@@ -35,7 +35,7 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
   const [state, dispatch]: SettingsDialogProvider = React.useContext(SettingsDialogContext);
 
   const MESSAGE = (label: MessageLabel) => {
-    return globalState.i18n.messages[label];
+    return globalState.temporal.messages[label];
   };
 
   const isActive = state.activeSettingId === props.id;

@@ -8,7 +8,7 @@
 import path from 'path';
 import Store from 'electron-store';
 import { app, BrowserWindow, ipcMain } from 'electron';
-import { createStore } from 'redux';
+import { combineReducers, createStore } from 'redux';
 import { selectPreferredLanguage, translate } from 'typed-intl';
 import {
   availableLanguages,
@@ -20,10 +20,13 @@ import {
 import { emitter } from './event';
 import {
   cardDirName,
-  GlobalAction,
-  GlobalState,
-  GlobalStateKeys,
-  initialState,
+  initialPersistentSettingsState,
+  initialTemporalSettingsState,
+  PersistentSettingsAction,
+  PersistentSettingsState,
+  PersistentSettingsStateKeys,
+  TemporalSettingsAction,
+  TemporalSettingsState,
 } from './store.types';
 
 /**
@@ -42,6 +45,11 @@ const translations = translate(English).supporting('ja', Japanese);
 const defaultCardDir = app.isPackaged
   ? path.join(__dirname, `../../../../../../${cardDirName}`)
   : path.join(__dirname, `../../${cardDirName}`);
+
+const defaultStorage = {
+  type: 'local',
+  path: defaultCardDir,
+};
 
 /**
  * electron-store for individual settings (a.k.a local machine settings)
@@ -68,58 +76,79 @@ const electronStore = new Store({
  * * The reducer for the global Redux store is globalReducer.
  * * The function of localReducer is just copying GlobalState from Main process to Renderer process.
  */
-const globalReducer = (state: GlobalState = initialState, action: GlobalAction) => {
-  if (action.type === 'cardDir') {
-    electronStore.set(action.type, action.payload);
-    return { ...state, cardDir: action.payload };
-  }
-  else if (action.type === 'i18n') {
-    const language = action.payload;
-    electronStore.set(action.type, language);
-    selectPreferredLanguage(availableLanguages, [language, defaultLanguage]);
 
+const persistent = (
+  state: PersistentSettingsState = initialPersistentSettingsState,
+  action: PersistentSettingsAction
+) => {
+  if (action.type === 'storage-put') {
+    return { ...state, storage: action.payload };
+  }
+  else if (action.type === 'language-put') {
     return {
       ...state,
-      i18n: { language: action.payload, messages: translations.messages() },
+      language: action.payload,
     };
   }
-  else if (action.type === 'navigationAllowedURLs') {
+  else if (action.type === 'navigationAllowedURLs-put') {
     const targetUrl = action.payload;
     const urls = state.navigationAllowedURLs.slice();
-    if (action.operation === 'add') {
-      if (typeof targetUrl === 'string') {
-        urls.push(targetUrl);
-      }
-      else if (Array.isArray(targetUrl)) {
-        targetUrl.forEach(item => {
-          urls.push(item);
-        });
-      }
+    if (typeof targetUrl === 'string') {
+      urls.push(targetUrl);
     }
-    else if (action.operation === 'remove') {
-      if (typeof targetUrl === 'string') {
-        urls.splice(urls.indexOf(targetUrl), 1);
-      }
-      else if (Array.isArray(targetUrl)) {
-        targetUrl.forEach(item => {
-          urls.splice(urls.indexOf(item), 1);
-        });
-      }
+    else if (Array.isArray(targetUrl)) {
+      targetUrl.forEach(item => {
+        urls.push(item);
+      });
     }
     urls.sort();
-    electronStore.set(action.type, urls);
     return {
       ...state,
       navigationAllowedURLs: urls,
     };
   }
-
+  else if (action.type === 'navigationAllowedURLs-delete') {
+    const targetUrl = action.payload;
+    const urls = state.navigationAllowedURLs.slice();
+    if (typeof targetUrl === 'string') {
+      urls.splice(urls.indexOf(targetUrl), 1);
+    }
+    else if (Array.isArray(targetUrl)) {
+      targetUrl.forEach(item => {
+        urls.splice(urls.indexOf(item), 1);
+      });
+    }
+    urls.sort();
+    return {
+      ...state,
+      navigationAllowedURLs: urls,
+    };
+  }
   return state;
 };
+
+const temporal = (
+  state: TemporalSettingsState = initialTemporalSettingsState,
+  action: TemporalSettingsAction
+) => {
+  if (action.type === 'messages-put') {
+    return {
+      ...state,
+      messages: action.payload,
+    };
+  }
+  return state;
+};
+
+const globalReducer = combineReducers({
+  persistent,
+  temporal,
+});
 
 /**
  * Global Redux Store
  */
+
 const store = createStore(globalReducer);
 
 /**
@@ -127,15 +156,55 @@ const store = createStore(globalReducer);
  */
 
 // Dispatch request from Renderer process
-ipcMain.handle('globalDispatch', (event, action: GlobalAction) => {
+ipcMain.handle('globalDispatch', (event, action: PersistentSettingsAction) => {
   store.dispatch(action);
 });
 
 /**
- * Subscriber
+ * Add electron-store as as subscriber
+ */
+let previousState = initialPersistentSettingsState;
+store.subscribe(() => {
+  const currentState = store.getState().persistent;
+  const updateIfChanged = (key: PersistentSettingsStateKeys) => {
+    const isChanged = () => {
+      const prevValue = previousState[key];
+      const currentValue = currentState[key];
+      if (typeof prevValue === 'string' && typeof currentValue === 'string') {
+        return prevValue !== currentValue;
+      }
+      else if (Array.isArray(prevValue) && Array.isArray(currentValue)) {
+        return JSON.stringify(prevValue) !== JSON.stringify(currentValue);
+      }
+      else if (typeof prevValue === 'object' && typeof currentValue === 'object') {
+        return JSON.stringify(prevValue) !== JSON.stringify(currentValue);
+      }
+      console.error(
+        `Error in updateIfChanged: Cannot handle ${key} : ${typeof prevValue} and ${typeof currentValue}`
+      );
+    };
+    if (isChanged()) {
+      previousState = currentState;
+      electronStore.set(key, currentState[key]);
+      return true;
+    }
+    return false;
+  };
+  updateIfChanged('storage');
+  updateIfChanged('navigationAllowedURLs');
+  if (updateIfChanged('language')) {
+    selectPreferredLanguage(availableLanguages, [
+      store.getState().persistent.language,
+      defaultLanguage,
+    ]);
+    store.dispatch({ type: 'messages-put', payload: translations.messages() });
+  }
+});
+
+/**
  * Add Renderer process as a subscriber
  */
-export const subscribeStore = (subscriber: BrowserWindow) => {
+export const subscribeStoreFromSettings = (subscriber: BrowserWindow) => {
   subscriber.webContents.send('globalStoreChanged', store.getState());
   const unsubscribe = store.subscribe(() => {
     emitter.emit('updateTrayContextMenu');
@@ -154,7 +223,7 @@ export const getSettings = () => {
 };
 
 // API for globalDispatch
-export const globalDispatch = (action: GlobalAction) => {
+export const globalDispatch = (action: PersistentSettingsAction) => {
   store.dispatch(action);
 };
 
@@ -162,13 +231,16 @@ export const globalDispatch = (action: GlobalAction) => {
  * Deserializing data from electron-store
  */
 export const initializeGlobalStore = (preferredLanguage: string) => {
-  const loadOrCreate = (key: GlobalStateKeys, defaultValue: any) => {
+  const loadOrCreate = (key: string, defaultValue: any) => {
     const value: any = electronStore.get(key, defaultValue);
-    globalDispatch({ type: key, operation: 'add', payload: value });
+    store.dispatch({
+      type: key + '-put',
+      payload: value,
+    } as PersistentSettingsAction);
   };
 
-  loadOrCreate('cardDir', defaultCardDir);
-  loadOrCreate('i18n', preferredLanguage);
+  loadOrCreate('storage', defaultStorage);
+  loadOrCreate('language', preferredLanguage);
   loadOrCreate('navigationAllowedURLs', []);
 };
 
@@ -176,7 +248,7 @@ export const initializeGlobalStore = (preferredLanguage: string) => {
  * Utility for i18n
  */
 export const MESSAGE = (label: MessageLabel, ...args: string[]) => {
-  let message: string = getSettings().i18n.messages[label];
+  let message: string = getSettings().temporal.messages[label];
   if (args) {
     args.forEach((replacement, index) => {
       const variable = '$' + (index + 1); // $1, $2, ...

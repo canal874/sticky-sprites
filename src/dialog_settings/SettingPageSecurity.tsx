@@ -21,19 +21,18 @@ export interface SettingPageSecurityProps {
 export const SettingPageSecurity = (props: SettingPageSecurityProps) => {
   const [globalState, globalDispatcher] = React.useContext(GlobalContext) as GlobalProvider;
   const MESSAGE = (label: MessageLabel) => {
-    return globalState.i18n.messages[label];
+    return globalState.temporal.messages[label];
   };
   const handleClick = (value: string) => {
     globalDispatcher({
-      type: 'navigationAllowedURLs',
-      operation: 'remove',
+      type: 'navigationAllowedURLs-delete',
       payload: value,
     });
   };
   // globalState.navigationAllowedURLs is always sorted by alphabetical order in Reducer
   let urls = [<span>{MESSAGE('securityNoUrl')}</span>];
-  if (globalState.navigationAllowedURLs.length > 0) {
-    urls = globalState.navigationAllowedURLs.map(url => (
+  if (globalState.persistent.navigationAllowedURLs.length > 0) {
+    urls = globalState.persistent.navigationAllowedURLs.map(url => (
       <RemovableTag value={url} click={handleClick}></RemovableTag>
     ));
   }

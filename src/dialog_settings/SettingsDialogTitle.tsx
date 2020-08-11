@@ -10,9 +10,9 @@ import './SettingsDialogTitle.css';
 import { MessageLabel } from '../modules_common/i18n';
 import {
   GlobalContext,
+  GlobalProvider,
   SettingsDialogContext,
   SettingsDialogProvider,
-  GlobalProvider,
 } from './StoreProvider';
 import { MenuItemProps } from './MenuItem';
 import { cardColors, darkenHexColor } from '../modules_common/color';
@@ -28,7 +28,7 @@ export const SettingsDialogTitle = (props: SettingsDialogTitleProps) => {
     SettingsDialogContext
   );
   const MESSAGE = (label: MessageLabel) => {
-    return globalState.i18n.messages[label];
+    return globalState.temporal.messages[label];
   };
 
   const activeItem: MenuItemProps | undefined = props.items.find(

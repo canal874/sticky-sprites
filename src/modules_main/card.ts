@@ -350,7 +350,7 @@ export class Card {
           }
 
           const domain = domainMatch[1];
-          if (getSettings().navigationAllowedURLs.includes(domain)) {
+          if (getSettings().persistent.navigationAllowedURLs.includes(domain)) {
             console.debug(`Navigation to ${navUrl} is allowed.`);
             return;
           }
@@ -367,8 +367,7 @@ export class Card {
             // Reload if permitted
             console.debug(`Allow ${domain}`);
             globalDispatch({
-              type: 'navigationAllowedURLs',
-              operation: 'add',
+              type: 'navigationAllowedURLs-put',
               payload: domain,
             });
             this.window.webContents.reload();

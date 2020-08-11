@@ -24,7 +24,7 @@ class CardIOClass implements ICardIO {
   isClosed = true;
   open = () => {
     if (cardsDB === undefined || this.isClosed) {
-      cardsDB = new PouchDB(getSettings().cardDir);
+      cardsDB = new PouchDB(getSettings().persistent.storage.path);
       this.isClosed = false;
     }
   };

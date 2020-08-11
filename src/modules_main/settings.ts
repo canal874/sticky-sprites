@@ -8,7 +8,7 @@
 import path from 'path';
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import electronConnect from 'electron-connect';
-import { MESSAGE, subscribeStore } from './store';
+import { MESSAGE, subscribeStoreFromSettings } from './store';
 import { CardIO } from './io';
 
 // eslint-disable-next-line import/no-mutable-exports
@@ -42,7 +42,7 @@ export const openSettings = () => {
 
   settingsDialog.loadURL(path.join(__dirname, '../settings/settings.html'));
   settingsDialog.webContents.on('did-finish-load', () => {
-    const unsubscribe = subscribeStore(settingsDialog);
+    const unsubscribe = subscribeStoreFromSettings(settingsDialog);
     settingsDialog.on('close', () => {
       unsubscribe();
     });

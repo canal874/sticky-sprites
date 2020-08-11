@@ -57,7 +57,7 @@ export const setTrayContextMenu = () => {
 
 export const initializeTaskTray = () => {
   tray = new Tray(path.join(__dirname, '../assets/media_stickies_grad_icon.ico'));
-  currentLanguage = getSettings().i18n.language;
+  currentLanguage = getSettings().persistent.language;
   setTrayContextMenu();
   tray.on('click', () => {
     openSettings();
@@ -65,7 +65,7 @@ export const initializeTaskTray = () => {
 };
 
 emitter.on('updateTrayContextMenu', () => {
-  const newLanguage = getSettings().i18n.language;
+  const newLanguage = getSettings().persistent.language;
   if (currentLanguage !== newLanguage) {
     currentLanguage = newLanguage;
     setTrayContextMenu();

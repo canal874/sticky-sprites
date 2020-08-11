@@ -18,7 +18,7 @@ import {
   deleteCard,
   setGlobalFocusEventListenerPermission,
 } from './modules_main/card';
-import { initializeGlobalStore, MESSAGE, subscribeStore } from './modules_main/store';
+import { initializeGlobalStore, MESSAGE } from './modules_main/store';
 import { destroyTray, initializeTaskTray } from './modules_main/tray';
 import { openSettings, settingsDialog } from './modules_main/settings';
 
