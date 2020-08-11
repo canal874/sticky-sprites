@@ -7,7 +7,7 @@
  */
 
 import { getCurrentDateAndTime } from './utils';
-import { darkenHexColor, cardColors } from './color';
+import { cardColors, darkenHexColor } from './color';
 // Dragging is shaky when _DRAG_IMAGE_MARGIN is too small, especially just after loading a card.
 //  private _DRAG_IMAGE_MARGIN = 20;
 export const DRAG_IMAGE_MARGIN = 50;

@@ -111,6 +111,10 @@ const initializeUIEvents = () => {
       z: geometry.z + 1,
       width: geometry.width,
       height: geometry.height,
+      uiColor: cardProp.style.uiColor,
+      backgroundColor: cardProp.style.backgroundColor,
+      opacity: cardProp.style.opacity,
+      zoom: cardProp.style.zoom,
     });
     window.api.focus(newId);
   });
