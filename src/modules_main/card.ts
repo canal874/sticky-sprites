@@ -8,9 +8,8 @@
 
 import url from 'url';
 import path from 'path';
-import { settings } from 'cluster';
 import { v4 as uuidv4 } from 'uuid';
-import { BrowserWindow, dialog, ipcMain, shell, WebContents } from 'electron';
+import { BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import contextMenu from 'electron-context-menu';
 import { CardProp } from '../modules_common/cardprop';
 import { CardIO } from './io';
@@ -47,12 +46,12 @@ export const getGlobalFocusEventListenerPermission = () => {
  * Card
  * A small sticky windows is called 'card'.
  */
+export const cards: Map<string, Card> = new Map<string, Card>();
+
 const generateNewCardId = (): string => {
   // YYYY-MM-DD-UUID4
   return `${getCurrentDateAndTime().replace(/^(.+?)\s.+?$/, '$1')}-${uuidv4()}`;
 };
-
-export const cards: Map<string, Card> = new Map<string, Card>();
 
 const deleteCardWithRetry = async (id: string) => {
   for (let i = 0; i < 5; i++) {

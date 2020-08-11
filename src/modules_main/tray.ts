@@ -9,8 +9,15 @@ import path from 'path';
 import { app, Menu, Tray } from 'electron';
 import { openSettings, settingsDialog } from './settings';
 import { getSettings, MESSAGE } from './store';
-import { cards } from './card';
+import { Card, cards } from './card';
 import { emitter } from './event';
+import {
+  CardProp,
+  CardPropSerializable,
+  DEFAULT_CARD_GEOMETRY,
+  Geometry,
+} from '../modules_common/cardprop';
+import { getRandomInt } from '../modules_common/utils';
 
 /**
  * Task tray
@@ -26,11 +33,34 @@ export const destroyTray = () => {
 
 let currentLanguage: string;
 
+const createNewCard = () => {
+  const geometry = JSON.parse(JSON.stringify(DEFAULT_CARD_GEOMETRY));
+  geometry.x += getRandomInt(30, 100);
+  geometry.y += getRandomInt(30, 100);
+  const propObject: Geometry = {
+    x: geometry.x,
+    y: geometry.y,
+    z: geometry.z + 1,
+    width: geometry.width,
+    height: geometry.height,
+  };
+  const card = new Card('New', CardProp.fromObject(propObject as CardPropSerializable));
+  cards.set(card.prop.id, card);
+  card.render();
+  card.window.focus();
+};
+
 export const setTrayContextMenu = () => {
   if (!tray) {
     return;
   }
   const contextMenu = Menu.buildFromTemplate([
+    {
+      label: MESSAGE('newCard'),
+      click: () => {
+        createNewCard();
+      },
+    },
     {
       label: MESSAGE('settings'),
       click: () => {
@@ -60,7 +90,7 @@ export const initializeTaskTray = () => {
   currentLanguage = getSettings().persistent.language;
   setTrayContextMenu();
   tray.on('click', () => {
-    openSettings();
+    createNewCard();
   });
 };
 
