@@ -158,7 +158,7 @@ const renderCardStyle = () => {
   );
   // document.getElementById('contents')!.style.backgroundColor = backgroundRgba;
   const darkerRgba = convertHexColorToRgba(
-    darkenHexColor(cardProp.style.backgroundColor, 0.95),
+    darkenHexColor(cardProp.style.backgroundColor),
     cardProp.style.opacity
   );
   document.getElementById(

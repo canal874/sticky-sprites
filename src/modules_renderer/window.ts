@@ -7,7 +7,7 @@
  */
 
 import { MessageLabel } from '../modules_common/i18n';
-import { CardPropSerializable } from './cardprop';
+import { CardPropSerializable } from '../modules_common/cardprop';
 
 interface WindowWithAPI extends Window {
   api: {

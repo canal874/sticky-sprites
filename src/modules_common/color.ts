@@ -6,6 +6,8 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
+export const UI_COLOR_DARKENING_RATE = 0.95;
+
 export interface CardColors {
   yellow: string;
   red: string;
@@ -32,7 +34,10 @@ export const cardColors: CardColors = {
   transparent: '#ffffff',
 };
 
-export const darkenHexColor = (colorHEX: string, darkRate: number): string => {
+export const darkenHexColor = (
+  colorHEX: string,
+  darkRate = UI_COLOR_DARKENING_RATE
+): string => {
   if (darkRate > 1 || darkRate < 0) {
     console.error(`Invalid darkRate: ${darkRate}`);
     return '#000000';

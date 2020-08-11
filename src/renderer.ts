@@ -28,7 +28,7 @@ import {
   initCardRenderer,
   render,
 } from './modules_renderer/card_renderer';
-import { darkenHexColor } from './modules_common/color';
+import { darkenHexColor, UI_COLOR_DARKENING_RATE } from './modules_common/color';
 import {
   deleteCard,
   saveCard,
@@ -36,8 +36,6 @@ import {
   waitUnfinishedTasks,
 } from './modules_renderer/save';
 import window from './modules_renderer/window';
-
-const UI_COLOR_DARKENING_RATE = 0.9;
 
 let cardProp: CardProp = new CardProp('');
 
@@ -362,7 +360,7 @@ const onCardBlurred = () => {
 };
 
 const onChangeCardColor = (backgroundColor: string, opacity = 1.0) => {
-  const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
+  const uiColor = darkenHexColor(backgroundColor);
   saveCardColor(cardProp, backgroundColor, uiColor, opacity);
   render(['CardStyle', 'EditorStyle']);
 };
