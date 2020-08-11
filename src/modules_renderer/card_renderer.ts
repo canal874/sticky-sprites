@@ -15,8 +15,10 @@ let cardCssStyle: CardCssStyle;
 let cardProp: CardProp;
 let cardEditor: ICardEditor;
 
-let renderOffsetHeight = 0; // Offset of card height from actual window height;
-let renderOffsetWidth = 0; // Offset of card height from actual window width;
+export const defaultRenderOffsetHeight = -5;
+export const defaultRenderOffsetWidth = -5;
+let renderOffsetHeight = defaultRenderOffsetWidth; // Offset of card height from actual window height;
+let renderOffsetWidth = defaultRenderOffsetWidth; // Offset of card height from actual window width;
 
 export const getRenderOffsetWidth = () => {
   return renderOffsetWidth;
@@ -55,13 +57,13 @@ const setWindowTitle = () => {
 };
 
 const renderTitleBar = () => {
-  document.getElementById('title')!.style.width =
-    cardProp.geometry.width - cardCssStyle.border.left - cardCssStyle.border.right + 'px';
-  const closeBtnLeft =
+  const titleWidth =
     cardProp.geometry.width -
     cardCssStyle.border.left -
-    cardCssStyle.border.right -
-    document.getElementById('closeBtn')!.offsetWidth;
+    cardCssStyle.border.right +
+    getRenderOffsetWidth();
+  document.getElementById('title')!.style.width = titleWidth + 'px';
+  const closeBtnLeft = titleWidth - document.getElementById('closeBtn')!.offsetWidth;
   document.getElementById('closeBtn')!.style.left = closeBtnLeft + 'px';
   const titleBarLeft =
     document.getElementById('codeBtn')!.offsetLeft +
@@ -134,6 +136,7 @@ const renderContentsRect = () => {
     cardCssStyle.border.right -
     cardCssStyle.padding.left -
     cardCssStyle.padding.right +
+    getRenderOffsetWidth() +
     'px';
 
   document.getElementById('contents')!.style.height =
@@ -143,6 +146,7 @@ const renderContentsRect = () => {
     document.getElementById('titleBar')!.offsetHeight -
     cardCssStyle.padding.top -
     cardCssStyle.padding.bottom +
+    getRenderOffsetHeight() +
     'px';
 };
 

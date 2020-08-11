@@ -370,8 +370,8 @@ const onChangeCardColor = (backgroundColor: string, opacity = 1.0) => {
 };
 
 const onResizeByHand = (newBounds: Electron.Rectangle) => {
-  cardProp.geometry.width = Math.round(newBounds.width + getRenderOffsetWidth());
-  cardProp.geometry.height = Math.round(newBounds.height + getRenderOffsetHeight());
+  cardProp.geometry.width = Math.round(newBounds.width);
+  cardProp.geometry.height = Math.round(newBounds.height);
 
   render(['TitleBar', 'ContentsRect', 'EditorRect']);
 

@@ -8,7 +8,14 @@
 
 import { CardProp, DRAG_IMAGE_MARGIN } from '../modules_common/cardprop';
 import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
-import { render, setRenderOffsetHeight } from './card_renderer';
+import {
+  defaultRenderOffsetHeight,
+  defaultRenderOffsetWidth,
+  getRenderOffsetHeight,
+  getRenderOffsetWidth,
+  render,
+  setRenderOffsetHeight,
+} from './card_renderer';
 import { sleep } from '../modules_common/utils';
 import { convertHexColorToRgba, darkenHexColor } from '../modules_common/color';
 import { saveCard, saveCardColor } from './save';
@@ -390,6 +397,8 @@ export class CardEditor implements ICardEditor {
     const toolbar = document.getElementById('cke_1_bottom');
     if (toolbar) {
       toolbar.style.visibility = 'visible';
+      toolbar.style.bottom =
+        -defaultRenderOffsetHeight + this._cardCssStyle.border.bottom + 'px';
     }
 
     await this.waitUntilActivationComplete();
@@ -411,7 +420,7 @@ export class CardEditor implements ICardEditor {
       this._cardProp.geometry.width,
       this._cardProp.geometry.height
     );
-    setRenderOffsetHeight(0);
+    setRenderOffsetHeight(defaultRenderOffsetHeight);
 
     // Reset editor color to card color
     render(['TitleBar', 'EditorStyle']);
@@ -484,10 +493,12 @@ export class CardEditor implements ICardEditor {
   setSize = (
     width: number = this._cardProp.geometry.width -
       this._cardCssStyle.border.left -
-      this._cardCssStyle.border.right,
+      this._cardCssStyle.border.right +
+      getRenderOffsetWidth(),
     height: number = this._cardProp.geometry.height -
       this._cardCssStyle.border.top -
-      this._cardCssStyle.border.bottom -
+      this._cardCssStyle.border.bottom +
+      getRenderOffsetHeight() -
       document.getElementById('titleBar')!.offsetHeight
   ): void => {
     // width of BrowserWindow (namely cardProp.geometry.width) equals border + padding + content.
