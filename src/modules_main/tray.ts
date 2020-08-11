@@ -14,10 +14,12 @@ import { emitter } from './event';
 import {
   CardProp,
   CardPropSerializable,
+  CardStyle,
   DEFAULT_CARD_GEOMETRY,
   Geometry,
 } from '../modules_common/cardprop';
 import { getRandomInt } from '../modules_common/utils';
+import { cardColors, ColorName, darkenHexColor } from '../modules_common/color';
 
 /**
  * Task tray
@@ -32,21 +34,44 @@ export const destroyTray = () => {
 };
 
 let currentLanguage: string;
+let color = { ...cardColors };
+delete color.transparent;
 
-const createNewCard = () => {
-  const geometry = JSON.parse(JSON.stringify(DEFAULT_CARD_GEOMETRY));
+const createNewCard = async () => {
+  const geometry = { ...DEFAULT_CARD_GEOMETRY };
   geometry.x += getRandomInt(30, 100);
   geometry.y += getRandomInt(30, 100);
-  const propObject: Geometry = {
+
+  let colorList = Object.entries(color);
+  if (colorList.length === 0) {
+    color = { ...cardColors };
+    delete color.transparent;
+    colorList = Object.entries(color);
+  }
+  const newColor: ColorName = colorList[getRandomInt(0, colorList.length)][0] as ColorName;
+  delete color[newColor];
+
+  const bgColor: string = cardColors[newColor];
+
+  const newGeometry: Geometry = {
     x: geometry.x,
     y: geometry.y,
-    z: geometry.z + 1,
+    z: geometry.z,
     width: geometry.width,
     height: geometry.height,
   };
-  const card = new Card('New', CardProp.fromObject(propObject as CardPropSerializable));
+  const newStyle: CardStyle = {
+    uiColor: darkenHexColor(bgColor),
+    backgroundColor: bgColor,
+    opacity: 1.0,
+    zoom: 1.0,
+  };
+  const card = new Card(
+    'New',
+    CardProp.fromObject({ ...newGeometry, ...newStyle } as CardPropSerializable)
+  );
   cards.set(card.prop.id, card);
-  card.render();
+  await card.render();
   card.window.focus();
 };
 
