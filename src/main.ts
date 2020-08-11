@@ -65,11 +65,11 @@ ipcMain.handle('finish-render-card', (event, id: string) => {
   }
 });
 
-ipcMain.handle('create-card', (event, propObject: CardPropSerializable) => {
+ipcMain.handle('create-card', async (event, propObject: CardPropSerializable) => {
   const prop = CardProp.fromObject(propObject);
   const card = new Card('New', prop);
   cards.set(card.prop.id, card);
-  card.render();
+  await card.render();
   return card.prop.id;
 });
 
