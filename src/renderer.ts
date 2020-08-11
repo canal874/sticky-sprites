@@ -366,7 +366,7 @@ const onCardBlurred = () => {
 const onChangeCardColor = (backgroundColor: string, opacity = 1.0) => {
   const uiColor = darkenHexColor(backgroundColor);
   saveCardColor(cardProp, backgroundColor, uiColor, opacity);
-  render(['CardStyle', 'EditorStyle']);
+  render(['CardStyle', 'TitleBarStyle', 'EditorStyle']);
 };
 
 const onResizeByHand = (newBounds: Electron.Rectangle) => {

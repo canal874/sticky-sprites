@@ -439,7 +439,7 @@ export class CardEditor implements ICardEditor {
   startCodeMode = () => {
     this.isCodeMode = true;
     this.startEdit();
-    render(['TitleBar']);
+    render(['TitleBar', 'TitleBarStyle']);
 
     CKEDITOR.instances.editor.setMode('source', () => {});
     CKEDITOR.instances.editor.focus();
@@ -457,7 +457,7 @@ export class CardEditor implements ICardEditor {
      * Reset editor color to card color
      * and reset width and height of cke_wysiwyg_frame
      */
-    render(['TitleBar', 'EditorStyle', 'EditorRect']);
+    render(['TitleBar', 'TitleBarStyle', 'EditorStyle', 'EditorRect']);
 
     CKEDITOR.instances.editor.focus();
   };

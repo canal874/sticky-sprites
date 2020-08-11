@@ -43,6 +43,7 @@ export const initCardRenderer = (
 
 export type CardRenderOptions =
   | 'TitleBar'
+  | 'TitleBarStyle'
   | 'CardStyle'
   | 'ContentsData'
   | 'ContentsRect'
@@ -71,12 +72,6 @@ const renderTitleBar = () => {
 
   if (cardEditor.isOpened) {
     document.getElementById('codeBtn')!.style.visibility = 'visible';
-    if (cardEditor.isCodeMode) {
-      document.getElementById('codeBtn')!.style.color = '#ff0000';
-    }
-    else {
-      document.getElementById('codeBtn')!.style.color = '#000000';
-    }
   }
   else {
     document.getElementById('codeBtn')!.style.visibility = 'hidden';
@@ -85,6 +80,19 @@ const renderTitleBar = () => {
    * TODO: Update title when cardProp.data changes
    */
   setWindowTitle();
+};
+
+const renderTitleBarStyle = () => {
+  const darkerColor = darkenHexColor(cardProp.style.backgroundColor, 0.6);
+  document.getElementById('newBtn')!.style.color = darkerColor;
+  document.getElementById('closeBtn')!.style.color = darkerColor;
+
+  if (cardEditor.isCodeMode) {
+    document.getElementById('codeBtn')!.style.color = '#ff0000';
+  }
+  else {
+    document.getElementById('codeBtn')!.style.color = darkerColor;
+  }
 };
 
 const renderContentsData = () => {
@@ -209,6 +217,7 @@ export const setTitleMessage = (msg: string) => {
 export const render = async (
   options: CardRenderOptions[] = [
     'TitleBar',
+    'TitleBarStyle',
     'ContentsData',
     'ContentsRect',
     'CardStyle',
@@ -229,6 +238,9 @@ export const render = async (
   for (const opt of options) {
     if (opt === 'TitleBar') {
       renderTitleBar();
+    }
+    else if (opt === 'TitleBarStyle') {
+      renderTitleBarStyle();
     }
     else if (opt === 'ContentsRect') {
       renderContentsRect();
