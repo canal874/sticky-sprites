@@ -173,9 +173,6 @@ const renderCardStyle = () => {
     darkenHexColor(cardProp.style.backgroundColor),
     cardProp.style.opacity
   );
-  document.getElementById(
-    'contents'
-  )!.style.background = `linear-gradient(135deg, ${backgroundRgba} 94%, ${darkerRgba})`;
 
   const uiRgba = convertHexColorToRgba(cardProp.style.uiColor);
 

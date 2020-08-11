@@ -559,7 +559,6 @@ export class CardEditor implements ICardEditor {
     ) as HTMLElement;
     if (contents) {
       contents.style.backgroundColor = backgroundRgba;
-      // contents.style.background = `linear-gradient(135deg, ${backgroundRgba} 94%, ${darkerRgba})`;
     }
 
     const doc = CKEDITOR.instances.editor.document;
