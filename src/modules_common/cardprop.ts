@@ -7,7 +7,7 @@
  */
 
 import { getCurrentDateAndTime } from './utils';
-import { darkenHexColor } from './color';
+import { darkenHexColor, cardColors } from './color';
 // Dragging is shaky when _DRAG_IMAGE_MARGIN is too small, especially just after loading a card.
 //  private _DRAG_IMAGE_MARGIN = 20;
 export const DRAG_IMAGE_MARGIN = 50;
@@ -48,7 +48,7 @@ export const DEFAULT_CARD_GEOMETRY: Geometry = {
 };
 export const DEFAULT_CARD_STYLE: CardStyle = {
   uiColor: '',
-  backgroundColor: '#ffffa0',
+  backgroundColor: cardColors.yellow,
   opacity: 1.0,
   zoom: 1.0,
 };
