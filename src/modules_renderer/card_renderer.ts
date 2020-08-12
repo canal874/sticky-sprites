@@ -205,6 +205,12 @@ const renderCardStyle = () => {
 
   document.getElementById('title')!.style.backgroundColor = uiRgba;
 
+  let boxShadow = 'none';
+  if (cardProp.style.opacity !== 0 || cardProp.status === 'Focused') {
+    boxShadow = '5px 5px 3px 0px rgba(0,0,0, .2)';
+  }
+  document.getElementById('card')!.style.boxShadow = boxShadow;
+
   // eslint-disable-next-line no-useless-catch
   try {
     const iframeDoc = (document.getElementById('contentsFrame') as HTMLIFrameElement)
