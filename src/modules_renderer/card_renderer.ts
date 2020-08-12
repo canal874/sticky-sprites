@@ -15,10 +15,12 @@ let cardCssStyle: CardCssStyle;
 let cardProp: CardProp;
 let cardEditor: ICardEditor;
 
-export const defaultRenderOffsetHeight = -5;
-export const defaultRenderOffsetWidth = -5;
-let renderOffsetHeight = defaultRenderOffsetWidth; // Offset of card height from actual window height;
-let renderOffsetWidth = defaultRenderOffsetWidth; // Offset of card height from actual window width;
+const cardBorderWidth = 3;
+
+export const shadowOffsetHeight = -5;
+export const shadowOffsetWidth = -5;
+let renderOffsetHeight = 0; // Offset of card height from actual window height;
+let renderOffsetWidth = 0; // Offset of card height from actual window width;
 
 export const getRenderOffsetWidth = () => {
   return renderOffsetWidth;
@@ -61,7 +63,7 @@ const renderTitleBar = () => {
     cardProp.geometry.width -
     cardCssStyle.border.left -
     cardCssStyle.border.right +
-    getRenderOffsetWidth();
+    shadowOffsetWidth;
   document.getElementById('title')!.style.width = titleWidth + 'px';
   const closeBtnLeft = titleWidth - document.getElementById('closeBtn')!.offsetWidth;
   document.getElementById('closeBtn')!.style.left = closeBtnLeft + 'px';
@@ -128,7 +130,30 @@ const renderContentsData = () => {
   });
 };
 
-const renderContentsRect = () => {
+const renderCardAndContentsRect = () => {
+  // cardOffset is adjustment for box-shadow
+  let cardOffset = 0;
+  if (cardProp.status === 'Blurred') {
+    cardOffset = cardBorderWidth;
+  }
+  document.getElementById('card')!.style.width =
+    cardProp.geometry.width -
+    cardOffset -
+    cardCssStyle.padding.left -
+    cardCssStyle.padding.right +
+    shadowOffsetWidth -
+    getRenderOffsetWidth() +
+    'px';
+
+  document.getElementById('card')!.style.height =
+    cardProp.geometry.height -
+    cardOffset -
+    cardCssStyle.padding.top -
+    cardCssStyle.padding.bottom +
+    shadowOffsetHeight -
+    getRenderOffsetHeight() +
+    'px';
+
   // width of BrowserWindow (namely cardProp.geometry.width) equals border + padding + content.
   document.getElementById('contents')!.style.width =
     cardProp.geometry.width -
@@ -136,7 +161,7 @@ const renderContentsRect = () => {
     cardCssStyle.border.right -
     cardCssStyle.padding.left -
     cardCssStyle.padding.right +
-    getRenderOffsetWidth() +
+    shadowOffsetWidth +
     'px';
 
   document.getElementById('contents')!.style.height =
@@ -146,16 +171,18 @@ const renderContentsRect = () => {
     document.getElementById('titleBar')!.offsetHeight -
     cardCssStyle.padding.top -
     cardCssStyle.padding.bottom +
-    getRenderOffsetHeight() +
+    shadowOffsetHeight +
     'px';
 };
 
 const renderCardStyle = () => {
   if (cardProp.status === 'Focused') {
-    document.getElementById('card')!.style.border = '3px solid red';
+    document.getElementById('card')!.style.border = `${cardBorderWidth}px solid red`;
   }
   else if (cardProp.status === 'Blurred') {
-    document.getElementById('card')!.style.border = '3px solid transparent';
+    document.getElementById(
+      'card'
+    )!.style.border = `${cardBorderWidth}px solid transparent`;
   }
 
   document.getElementById('title')!.style.visibility = 'visible';
@@ -168,7 +195,7 @@ const renderCardStyle = () => {
     cardProp.style.backgroundColor,
     cardProp.style.opacity
   );
-  // document.getElementById('contents')!.style.backgroundColor = backgroundRgba;
+  document.getElementById('contents')!.style.backgroundColor = backgroundRgba;
   const darkerRgba = convertHexColorToRgba(
     darkenHexColor(cardProp.style.backgroundColor),
     cardProp.style.opacity
@@ -244,7 +271,7 @@ export const render = async (
       renderTitleBarStyle();
     }
     else if (opt === 'ContentsRect') {
-      renderContentsRect();
+      renderCardAndContentsRect();
     }
     else if (opt === 'CardStyle') {
       renderCardStyle();

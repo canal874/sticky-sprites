@@ -9,12 +9,12 @@
 import { CardProp, DRAG_IMAGE_MARGIN } from '../modules_common/cardprop';
 import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
 import {
-  defaultRenderOffsetHeight,
-  defaultRenderOffsetWidth,
   getRenderOffsetHeight,
   getRenderOffsetWidth,
   render,
   setRenderOffsetHeight,
+  shadowOffsetHeight,
+  shadowOffsetWidth,
 } from './card_renderer';
 import { sleep } from '../modules_common/utils';
 import { convertHexColorToRgba, darkenHexColor } from '../modules_common/color';
@@ -393,12 +393,12 @@ export class CardEditor implements ICardEditor {
       expandedHeight
     );
     setRenderOffsetHeight(-this._TOOLBAR_HEIGHT);
+    render(['ContentsRect']);
 
     const toolbar = document.getElementById('cke_1_bottom');
     if (toolbar) {
       toolbar.style.visibility = 'visible';
-      toolbar.style.bottom =
-        -defaultRenderOffsetHeight + this._cardCssStyle.border.bottom + 'px';
+      toolbar.style.bottom = -shadowOffsetHeight + this._cardCssStyle.border.bottom + 'px';
     }
 
     await this.waitUntilActivationComplete();
@@ -420,7 +420,8 @@ export class CardEditor implements ICardEditor {
       this._cardProp.geometry.width,
       this._cardProp.geometry.height
     );
-    setRenderOffsetHeight(defaultRenderOffsetHeight);
+    setRenderOffsetHeight(0);
+    render(['ContentsRect']);
 
     // Reset editor color to card color
     render(['TitleBar', 'EditorStyle']);
@@ -494,11 +495,11 @@ export class CardEditor implements ICardEditor {
     width: number = this._cardProp.geometry.width -
       this._cardCssStyle.border.left -
       this._cardCssStyle.border.right +
-      getRenderOffsetWidth(),
+      shadowOffsetWidth,
     height: number = this._cardProp.geometry.height -
       this._cardCssStyle.border.top -
       this._cardCssStyle.border.bottom +
-      getRenderOffsetHeight() -
+      shadowOffsetHeight -
       document.getElementById('titleBar')!.offsetHeight
   ): void => {
     // width of BrowserWindow (namely cardProp.geometry.width) equals border + padding + content.

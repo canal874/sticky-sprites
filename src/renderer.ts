@@ -28,7 +28,7 @@ import {
   initCardRenderer,
   render,
 } from './modules_renderer/card_renderer';
-import { darkenHexColor, UI_COLOR_DARKENING_RATE } from './modules_common/color';
+import { darkenHexColor } from './modules_common/color';
 import {
   deleteCard,
   saveCard,
@@ -327,7 +327,7 @@ const onCardClose = () => {
 
 const onCardFocused = async () => {
   cardProp.status = 'Focused';
-  render(['CardStyle']);
+  render(['CardStyle', 'ContentsRect']);
 
   if (cardEditor.editorType === 'WYSIWYG') {
     cardEditor.startEdit();
@@ -340,7 +340,7 @@ const onCardFocused = async () => {
 
 const onCardBlurred = () => {
   cardProp.status = 'Blurred';
-  render(['CardStyle']);
+  render(['CardStyle', 'ContentsRect']);
 
   if (cardEditor.isOpened) {
     if (cardEditor.editorType === 'Markup') {
@@ -369,18 +369,28 @@ const onChangeCardColor = (backgroundColor: string, opacity = 1.0) => {
   render(['CardStyle', 'TitleBarStyle', 'EditorStyle']);
 };
 
-const onResizeByHand = (newBounds: Electron.Rectangle) => {
-  cardProp.geometry.width = Math.round(newBounds.width);
-  cardProp.geometry.height = Math.round(newBounds.height);
+const onResizeByHand = (newBounds: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}) => {
+  cardProp.geometry.width = Math.round(newBounds.width + getRenderOffsetWidth());
+  cardProp.geometry.height = Math.round(newBounds.height + getRenderOffsetHeight());
 
   render(['TitleBar', 'ContentsRect', 'EditorRect']);
 
   queueSaveCommand();
 };
 
-const onMoveByHand = (newBounds: Electron.Rectangle) => {
-  cardProp.geometry.x = Math.round(newBounds.x);
-  cardProp.geometry.y = Math.round(newBounds.y);
+const onMoveByHand = (newBounds: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}) => {
+  cardProp.geometry.width = Math.round(newBounds.width);
+  cardProp.geometry.height = Math.round(newBounds.height);
 
   queueSaveCommand();
 };
