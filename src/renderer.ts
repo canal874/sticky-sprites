@@ -162,6 +162,62 @@ const initializeUIEvents = () => {
         });
     }
   });
+
+  let prevMouseX: number;
+  let prevMouseY: number;
+  let isHorizontalMoving = false;
+  let isVerticalMoving = false;
+  const onMouseMove = async (event: MouseEvent) => {
+    let newWidth = cardProp.geometry.width - getRenderOffsetWidth();
+    let newHeight = cardProp.geometry.height - getRenderOffsetHeight();
+    if (isHorizontalMoving) {
+      newWidth += event.screenX - prevMouseX;
+    }
+    if (isVerticalMoving) {
+      newHeight += event.screenY - prevMouseY;
+    }
+    prevMouseX = event.screenX;
+    prevMouseY = event.screenY;
+
+    if (isHorizontalMoving || isVerticalMoving) {
+      const rect: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+      } = await window.api.setWindowSize(cardProp.id, newWidth, newHeight);
+      onResizeByHand(rect);
+    }
+  };
+  window.addEventListener('mousemove', onMouseMove);
+  window.addEventListener('mouseup', event => {
+    isHorizontalMoving = false;
+    isVerticalMoving = false;
+    document.getElementById('windowMask')!.style.display = 'none';
+  });
+  window.addEventListener('mouseleave', event => {});
+
+  document.getElementById('resizeAreaRight')!.addEventListener('mousedown', event => {
+    isHorizontalMoving = true;
+    document.getElementById('windowMask')!.style.display = 'block';
+    prevMouseX = event.screenX;
+    prevMouseY = event.screenY;
+  });
+
+  document.getElementById('resizeAreaBottom')!.addEventListener('mousedown', event => {
+    isVerticalMoving = true;
+    document.getElementById('windowMask')!.style.display = 'block';
+    prevMouseX = event.screenX;
+    prevMouseY = event.screenY;
+  });
+
+  document.getElementById('resizeAreaRightBottom')!.addEventListener('mousedown', event => {
+    isVerticalMoving = true;
+    isHorizontalMoving = true;
+    document.getElementById('windowMask')!.style.display = 'block';
+    prevMouseX = event.screenX;
+    prevMouseY = event.screenY;
+  });
 };
 
 const waitIframeInitializing = () => {

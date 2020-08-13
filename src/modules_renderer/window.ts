@@ -28,7 +28,16 @@ interface WindowWithAPI extends Window {
     getUuid: () => Promise<string>;
     saveCard: (cardPropSerializable: CardPropSerializable) => Promise<void>;
     sendLeftMouseDown: (id: string, x: number, y: number) => Promise<void>;
-    setWindowSize: (id: string, width: number, height: number) => Promise<void>;
+    setWindowSize: (
+      id: string,
+      width: number,
+      height: number
+    ) => Promise<{ x: number; y: number; width: number; height: number }>;
+    setWindowPosition: (
+      id: string,
+      x: number,
+      y: number
+    ) => Promise<{ x: number; y: number; width: number; height: number }>;
     setTitle: (id: string, title: string) => Promise<void>;
     sendToBack: (id: string) => Promise<number>;
   };

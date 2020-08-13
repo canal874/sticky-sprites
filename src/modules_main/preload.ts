@@ -63,6 +63,9 @@ contextBridge.exposeInMainWorld('api', {
   setWindowSize: (id: string, width: number, height: number) => {
     return ipcRenderer.invoke('set-window-size', id, width, height);
   },
+  setWindowPosition: (id: string, x: number, y: number) => {
+    return ipcRenderer.invoke('set-window-position', id, x, y);
+  },
   setTitle: (id: string, title: string) => {
     return ipcRenderer.invoke('set-title', id, title);
   },

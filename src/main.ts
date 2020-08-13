@@ -269,6 +269,14 @@ ipcMain.handle('set-window-size', (event, id: string, width: number, height: num
   const card = cards.get(id);
   // eslint-disable-next-line no-unused-expressions
   card?.window.setSize(width, height);
+  return card?.window.getBounds();
+});
+
+ipcMain.handle('set-window-position', (event, id: string, x: number, y: number) => {
+  const card = cards.get(id);
+  // eslint-disable-next-line no-unused-expressions
+  card?.window.setPosition(x, y);
+  return card?.window.getBounds();
 });
 
 ipcMain.handle('get-uuid', () => {
