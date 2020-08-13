@@ -17,8 +17,8 @@ let cardEditor: ICardEditor;
 
 const cardBorderWidth = 3;
 
-export const shadowOffsetHeight = -5;
-export const shadowOffsetWidth = -5;
+export const shadowHeight = 5;
+export const shadowWidth = 5;
 let renderOffsetHeight = 0; // Offset of card height from actual window height;
 let renderOffsetWidth = 0; // Offset of card height from actual window width;
 
@@ -62,8 +62,8 @@ const renderTitleBar = () => {
   const titleWidth =
     cardProp.geometry.width -
     cardCssStyle.border.left -
-    cardCssStyle.border.right +
-    shadowOffsetWidth;
+    cardCssStyle.border.right -
+    shadowWidth;
   document.getElementById('title')!.style.width = titleWidth + 'px';
   const closeBtnLeft = titleWidth - document.getElementById('closeBtn')!.offsetWidth;
   document.getElementById('closeBtn')!.style.left = closeBtnLeft + 'px';
@@ -140,8 +140,8 @@ const renderCardAndContentsRect = () => {
     cardProp.geometry.width -
     cardOffset -
     cardCssStyle.padding.left -
-    cardCssStyle.padding.right +
-    shadowOffsetWidth -
+    cardCssStyle.padding.right -
+    shadowWidth -
     getRenderOffsetWidth() +
     'px';
 
@@ -149,8 +149,8 @@ const renderCardAndContentsRect = () => {
     cardProp.geometry.height -
     cardOffset -
     cardCssStyle.padding.top -
-    cardCssStyle.padding.bottom +
-    shadowOffsetHeight -
+    cardCssStyle.padding.bottom -
+    shadowHeight -
     getRenderOffsetHeight() +
     'px';
 
@@ -160,8 +160,8 @@ const renderCardAndContentsRect = () => {
     cardCssStyle.border.left -
     cardCssStyle.border.right -
     cardCssStyle.padding.left -
-    cardCssStyle.padding.right +
-    shadowOffsetWidth +
+    cardCssStyle.padding.right -
+    shadowWidth +
     'px';
 
   document.getElementById('contents')!.style.height =
@@ -170,8 +170,8 @@ const renderCardAndContentsRect = () => {
     cardCssStyle.border.bottom -
     document.getElementById('titleBar')!.offsetHeight -
     cardCssStyle.padding.top -
-    cardCssStyle.padding.bottom +
-    shadowOffsetHeight +
+    cardCssStyle.padding.bottom -
+    shadowHeight +
     'px';
 };
 
