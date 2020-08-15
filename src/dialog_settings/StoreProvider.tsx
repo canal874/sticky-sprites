@@ -9,14 +9,12 @@
 import * as React from 'react';
 import { ipcRenderer } from 'electron';
 import {
-  initialPersistentSettingsState,
   initialSettingsState,
   PersistentSettingsAction,
-  PersistentSettingsState,
   SettingsState,
 } from '../modules_main/store.types';
 
-// 'GlobalState' is used both Main process and this Renderer process.
+// 'SettingsState' is used both Main process and this Renderer process.
 // ! Notice that it is not shared with Main and Renderer processes by reference,
 // ! but individually bound to each process.
 export type GlobalProvider = [SettingsState, (action: PersistentSettingsAction) => void];
@@ -64,7 +62,7 @@ export const StoreProvider = (props: {
   // Dispatcher to Main process
   const globalDispatch = (action: PersistentSettingsAction) => {
     // IPC
-    ipcRenderer.invoke('globalDispatch', action);
+    ipcRenderer.invoke('global-dispatch', action);
   };
 
   React.useEffect(() => {

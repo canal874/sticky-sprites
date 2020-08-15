@@ -72,11 +72,16 @@ const electronStore = new Store({
 
 /**
  * Redux globalReducer
- * * Main process has globalReducer, while Renderer process has localReducer.
- * * The reducer for the global Redux store is globalReducer.
- * * The function of localReducer is just copying GlobalState from Main process to Renderer process.
+ * * The main process has a global store with globalReducer,
+ * * while each renderer process has a local store with a localReducer such as SettingsDialogReducer.
+ * * The state of the global store is proxied to the renderer processes.
+ * * The state of the local store is used only in the renderer process.
  */
 
+/**
+ * persistent reducer
+ * operates serializable states
+ */
 const persistent = (
   state: PersistentSettingsState = initialPersistentSettingsState,
   action: PersistentSettingsAction
@@ -127,6 +132,10 @@ const persistent = (
   return state;
 };
 
+/**
+ * temporal reducer
+ * operates temporal states
+ */
 const temporal = (
   state: TemporalSettingsState = initialTemporalSettingsState,
   action: TemporalSettingsAction
@@ -156,7 +165,7 @@ const store = createStore(globalReducer);
  */
 
 // Dispatch request from Renderer process
-ipcMain.handle('globalDispatch', (event, action: PersistentSettingsAction) => {
+ipcMain.handle('global-dispatch', (event, action: PersistentSettingsAction) => {
   store.dispatch(action);
 });
 
@@ -214,21 +223,8 @@ export const subscribeStoreFromSettings = (subscriber: BrowserWindow) => {
 };
 
 /**
- * Utilities
- */
-
-// API for getting local settings
-export const getSettings = () => {
-  return store.getState();
-};
-
-// API for globalDispatch
-export const globalDispatch = (action: PersistentSettingsAction) => {
-  store.dispatch(action);
-};
-
-/**
- * Deserializing data from electron-store
+ * Initializing
+ * deserializes data from electron-store
  */
 export const initializeGlobalStore = (preferredLanguage: string) => {
   const loadOrCreate = (key: string, defaultValue: any) => {
@@ -245,8 +241,20 @@ export const initializeGlobalStore = (preferredLanguage: string) => {
 };
 
 /**
- * Utility for i18n
+ * Utilities
  */
+
+// API for getting local settings
+export const getSettings = () => {
+  return store.getState();
+};
+
+// API for globalDispatch
+export const globalDispatch = (action: PersistentSettingsAction) => {
+  store.dispatch(action);
+};
+
+// Utility for i18n
 export const MESSAGE = (label: MessageLabel, ...args: string[]) => {
   let message: string = getSettings().temporal.messages[label];
   if (args) {
