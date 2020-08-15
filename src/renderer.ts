@@ -40,8 +40,7 @@ import window from './modules_renderer/window';
 let cardProp: CardProp = new CardProp('');
 
 let cardCssStyle: CardCssStyle = {
-  padding: { left: 0, right: 0, top: 0, bottom: 0 },
-  border: { left: 0, right: 0, top: 0, bottom: 0 },
+  borderWidth: 0,
 };
 
 let canClose = false;
@@ -168,8 +167,8 @@ const initializeUIEvents = () => {
   let isHorizontalMoving = false;
   let isVerticalMoving = false;
   const onMouseMove = async (event: MouseEvent) => {
-    let newWidth = cardProp.geometry.width - getRenderOffsetWidth();
-    let newHeight = cardProp.geometry.height - getRenderOffsetHeight();
+    let newWidth = cardProp.geometry.width + getRenderOffsetWidth();
+    let newHeight = cardProp.geometry.height + getRenderOffsetHeight();
     if (isHorizontalMoving) {
       newWidth += event.screenX - prevMouseX;
     }
@@ -287,42 +286,10 @@ const onload = async () => {
   }
 
   cardCssStyle = {
-    padding: {
-      left: parseInt(
-        window.getComputedStyle(document.getElementById('contents')!).paddingLeft,
-        10
-      ),
-      right: parseInt(
-        window.getComputedStyle(document.getElementById('contents')!).paddingRight,
-        10
-      ),
-      top: parseInt(
-        window.getComputedStyle(document.getElementById('contents')!).paddingTop,
-        10
-      ),
-      bottom: parseInt(
-        window.getComputedStyle(document.getElementById('contents')!).paddingBottom,
-        10
-      ),
-    },
-    border: {
-      left: parseInt(
-        window.getComputedStyle(document.getElementById('card')!).borderLeft,
-        10
-      ),
-      right: parseInt(
-        window.getComputedStyle(document.getElementById('card')!).borderRight,
-        10
-      ),
-      top: parseInt(
-        window.getComputedStyle(document.getElementById('card')!).borderTop,
-        10
-      ),
-      bottom: parseInt(
-        window.getComputedStyle(document.getElementById('card')!).borderBottom,
-        10
-      ),
-    },
+    borderWidth: parseInt(
+      window.getComputedStyle(document.getElementById('card')!).borderLeft,
+      10
+    ),
   };
 
   initializeUIEvents();
@@ -431,8 +398,8 @@ const onResizeByHand = (newBounds: {
   width: number;
   height: number;
 }) => {
-  cardProp.geometry.width = Math.round(newBounds.width + getRenderOffsetWidth());
-  cardProp.geometry.height = Math.round(newBounds.height + getRenderOffsetHeight());
+  cardProp.geometry.width = Math.round(newBounds.width - getRenderOffsetWidth());
+  cardProp.geometry.height = Math.round(newBounds.height - getRenderOffsetHeight());
 
   render(['TitleBar', 'ContentsRect', 'EditorRect']);
 
@@ -548,7 +515,7 @@ const startEditorByClick = async (clickEvent: InnerClickEvent) => {
   const scrollLeft = iframe.contentWindow!.scrollX;
   cardEditor.setScrollPosition(scrollLeft, scrollTop);
 
-  const offsetY = document.getElementById('titleBar')!.offsetHeight;
+  const offsetY = document.getElementById('title')!.offsetHeight;
   cardEditor.execAfterMouseDown(cardEditor.startEdit);
   window.api.sendLeftMouseDown(cardProp.id, clickEvent.x, clickEvent.y + offsetY);
 };
@@ -577,10 +544,7 @@ const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
     let newImageWidth =
       cardProp.geometry.width -
       (imageOnly ? DRAG_IMAGE_MARGIN : 0) -
-      cardCssStyle.border.left -
-      cardCssStyle.border.right -
-      cardCssStyle.padding.left -
-      cardCssStyle.padding.right;
+      cardCssStyle.borderWidth * 2;
 
     let newImageHeight = height;
     if (newImageWidth < width) {
@@ -605,11 +569,8 @@ const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
       cardProp.geometry.height =
         newImageHeight +
         DRAG_IMAGE_MARGIN +
-        cardCssStyle.border.top +
-        cardCssStyle.border.bottom +
-        cardCssStyle.padding.top +
-        cardCssStyle.padding.bottom +
-        document.getElementById('titleBar')!.offsetHeight;
+        cardCssStyle.borderWidth * 2 +
+        document.getElementById('title')!.offsetHeight;
 
       cardProp.data = imgTag;
     }

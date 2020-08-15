@@ -111,22 +111,12 @@ export class CardEditor implements ICardEditor {
     if (toolbar) {
       toolbar.style.visibility = 'hidden';
     }
-    width =
-      width +
-      DRAG_IMAGE_MARGIN +
-      this._cardCssStyle.border.left +
-      this._cardCssStyle.border.right +
-      this._cardCssStyle.padding.left +
-      this._cardCssStyle.padding.right;
+    width = width + DRAG_IMAGE_MARGIN + this._cardCssStyle.borderWidth * 2;
     height =
       height +
       DRAG_IMAGE_MARGIN +
-      this._cardCssStyle.border.top +
-      this._cardCssStyle.border.bottom +
-      this._cardCssStyle.padding.top +
-      this._cardCssStyle.padding.bottom +
-      //      (this.isEditing ? this.TOOLBAR_HEIGHT : 0) +
-      document.getElementById('titleBar')!.offsetHeight;
+      this._cardCssStyle.borderWidth * 2 +
+      document.getElementById('title')!.offsetHeight;
 
     if (width < 200) {
       /**
@@ -243,10 +233,7 @@ export class CardEditor implements ICardEditor {
             let newImageWidth =
               this._cardProp.geometry.width -
               (this._cardProp.data === '' ? DRAG_IMAGE_MARGIN : 0) -
-              this._cardCssStyle.border.left -
-              this._cardCssStyle.border.right -
-              this._cardCssStyle.padding.left -
-              this._cardCssStyle.padding.right;
+              this._cardCssStyle.borderWidth * 2;
 
             let newImageHeight = height;
             if (newImageWidth < width) {
@@ -270,11 +257,8 @@ export class CardEditor implements ICardEditor {
               this._cardProp.geometry.height =
                 newImageHeight +
                 DRAG_IMAGE_MARGIN +
-                this._cardCssStyle.border.top +
-                this._cardCssStyle.border.bottom +
-                this._cardCssStyle.padding.top +
-                this._cardCssStyle.padding.bottom +
-                document.getElementById('titleBar')!.offsetHeight;
+                this._cardCssStyle.borderWidth * 2 +
+                document.getElementById('title')!.offsetHeight;
             }
             else {
               this._cardProp.geometry.height =
@@ -385,13 +369,13 @@ export class CardEditor implements ICardEditor {
       this._cardProp.geometry.width,
       expandedHeight
     );
-    setRenderOffsetHeight(-this._TOOLBAR_HEIGHT);
+    setRenderOffsetHeight(this._TOOLBAR_HEIGHT);
     render(['ContentsRect']);
 
     const toolbar = document.getElementById('cke_1_bottom');
     if (toolbar) {
       toolbar.style.visibility = 'visible';
-      toolbar.style.bottom = shadowHeight + this._cardCssStyle.border.bottom + 'px';
+      toolbar.style.bottom = shadowHeight + this._cardCssStyle.borderWidth + 'px';
     }
 
     await this.waitUntilActivationComplete();
@@ -486,14 +470,12 @@ export class CardEditor implements ICardEditor {
 
   setSize = (
     width: number = this._cardProp.geometry.width -
-      this._cardCssStyle.border.left -
-      this._cardCssStyle.border.right -
+      this._cardCssStyle.borderWidth * 2 -
       shadowWidth,
     height: number = this._cardProp.geometry.height -
-      this._cardCssStyle.border.top -
-      this._cardCssStyle.border.bottom -
+      this._cardCssStyle.borderWidth * 2 -
       shadowHeight -
-      document.getElementById('titleBar')!.offsetHeight
+      document.getElementById('title')!.offsetHeight
   ): void => {
     // width of BrowserWindow (namely cardProp.geometry.width) equals border + padding + content.
     const editor = CKEDITOR.instances.editor;

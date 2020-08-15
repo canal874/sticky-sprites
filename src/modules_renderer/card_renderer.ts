@@ -15,8 +15,6 @@ let cardCssStyle: CardCssStyle;
 let cardProp: CardProp;
 let cardEditor: ICardEditor;
 
-const cardBorderWidth = 3;
-
 export const shadowHeight = 5;
 export const shadowWidth = 5;
 let renderOffsetHeight = 0; // Offset of card height from actual window height;
@@ -59,11 +57,7 @@ const setWindowTitle = () => {
 };
 
 const renderTitleBar = () => {
-  const titleWidth =
-    cardProp.geometry.width -
-    cardCssStyle.border.left -
-    cardCssStyle.border.right -
-    shadowWidth;
+  const titleWidth = cardProp.geometry.width - cardCssStyle.borderWidth * 2 - shadowWidth;
   document.getElementById('title')!.style.width = titleWidth + 'px';
   const closeBtnLeft = titleWidth - document.getElementById('closeBtn')!.offsetWidth;
   document.getElementById('closeBtn')!.style.left = closeBtnLeft + 'px';
@@ -134,33 +128,29 @@ const renderCardAndContentsRect = () => {
   // cardOffset is adjustment for box-shadow
   let cardOffset = 0;
   if (cardProp.status === 'Blurred') {
-    cardOffset = cardBorderWidth;
+    cardOffset = cardCssStyle.borderWidth;
   }
   const cardWidth =
-    cardProp.geometry.width - cardOffset - shadowWidth - getRenderOffsetWidth();
+    cardProp.geometry.width - cardOffset - shadowWidth + getRenderOffsetWidth();
 
   const cardHeight =
-    cardProp.geometry.height - cardOffset - shadowHeight - getRenderOffsetHeight();
+    cardProp.geometry.height - cardOffset - shadowHeight + getRenderOffsetHeight();
 
   document.getElementById('card')!.style.width = cardWidth + 'px';
   document.getElementById('card')!.style.height = cardHeight + 'px';
 
   // width of BrowserWindow (namely cardProp.geometry.width) equals border + padding + content.
   const contentsWidth =
-    cardProp.geometry.width -
-    cardCssStyle.border.left -
-    cardCssStyle.border.right -
-    cardCssStyle.padding.left -
-    cardCssStyle.padding.right -
+    cardProp.geometry.width +
+    renderOffsetWidth -
+    cardCssStyle.borderWidth * 2 -
     shadowWidth;
 
   const contentsHeight =
-    cardProp.geometry.height -
-    cardCssStyle.border.top -
-    cardCssStyle.border.bottom -
-    cardCssStyle.padding.top -
-    cardCssStyle.padding.bottom -
-    document.getElementById('titleBar')!.offsetHeight -
+    cardProp.geometry.height +
+    renderOffsetHeight -
+    cardCssStyle.borderWidth * 2 -
+    document.getElementById('title')!.offsetHeight -
     shadowHeight;
 
   document.getElementById('contents')!.style.width = contentsWidth + 'px';
@@ -168,34 +158,36 @@ const renderCardAndContentsRect = () => {
 
   document.getElementById('resizeAreaRight')!.style.top = '0px';
   document.getElementById('resizeAreaRight')!.style.left =
-    cardWidth - cardBorderWidth + 'px';
+    cardWidth - cardCssStyle.borderWidth + 'px';
   document.getElementById('resizeAreaRight')!.style.width = shadowWidth + 'px';
   document.getElementById('resizeAreaRight')!.style.height =
-    cardHeight + cardBorderWidth + 'px';
+    cardHeight + cardCssStyle.borderWidth + 'px';
 
   document.getElementById('resizeAreaBottom')!.style.top =
-    cardHeight - cardBorderWidth + 'px';
+    cardHeight - cardCssStyle.borderWidth + 'px';
   document.getElementById('resizeAreaBottom')!.style.left = '0px';
   document.getElementById('resizeAreaBottom')!.style.width =
-    cardWidth + cardBorderWidth + 'px';
+    cardWidth + cardCssStyle.borderWidth + 'px';
   document.getElementById('resizeAreaBottom')!.style.height = shadowHeight + 'px';
 
   document.getElementById('resizeAreaRightBottom')!.style.top =
-    cardHeight - cardBorderWidth + 'px';
+    cardHeight - cardCssStyle.borderWidth + 'px';
   document.getElementById('resizeAreaRightBottom')!.style.left =
-    cardWidth - cardBorderWidth + 'px';
+    cardWidth - cardCssStyle.borderWidth + 'px';
   document.getElementById('resizeAreaRightBottom')!.style.width = shadowWidth + 'px';
   document.getElementById('resizeAreaRightBottom')!.style.height = shadowHeight + 'px';
 };
 
 const renderCardStyle = () => {
   if (cardProp.status === 'Focused') {
-    document.getElementById('card')!.style.border = `${cardBorderWidth}px solid red`;
+    document.getElementById(
+      'card'
+    )!.style.border = `${cardCssStyle.borderWidth}px solid red`;
   }
   else if (cardProp.status === 'Blurred') {
     document.getElementById(
       'card'
-    )!.style.border = `${cardBorderWidth}px solid transparent`;
+    )!.style.border = `${cardCssStyle.borderWidth}px solid transparent`;
   }
 
   document.getElementById('title')!.style.visibility = 'visible';
