@@ -21,14 +21,15 @@ partition Redux(in_MainProcess) {
   "loadOrCreate()" --> [globalDispatch\n(action)] "Global Store"
   "Global Store" --> [prev state,\naction] "globalReducer"
   "globalReducer" --> [new state] "Global Store"
-  "globalReducer" --> [serialize] JSON
-  "subscriber" -down-> [subscribe\nstate changes] "Global Store"
+  "subscribeStoreFromSettings\n(Proxy)" -down-> [subscribe\nstate changes] "Global Store"
+  "subscriber" -up-> [subscribe\nstate changes] "Global Store"
+  "subscriber" --> [serialize] JSON  
 }
 
 partition StoreProvider(in_RendererProcess) {
-  "subscriber" --> [IPC:globalStoreChanged(state)] "listener"
-  "listener" --> [localDispatch(state)] "State"
-  "State" --> [state] "GlobalContext.Provider" as Provider
+  "subscribeStoreFromSettings\n(Proxy)" --> [IPC:globalStoreChanged(state)] "listener"
+  "listener" --> [localDispatch(state)] "useState"
+  "useState" --> [state] "GlobalContext.Provider" as Provider
   Provider --> [state, globalDispatch] "React Component" as React
   note bottom
     View uses state.
