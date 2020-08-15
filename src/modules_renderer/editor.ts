@@ -8,7 +8,7 @@
 
 import { CardProp, DRAG_IMAGE_MARGIN } from '../modules_common/cardprop';
 import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
-import { render, setRenderOffsetHeight } from './card_renderer';
+import { render, setRenderOffsetHeight, shadowHeight, shadowWidth } from './card_renderer';
 import { sleep } from '../modules_common/utils';
 import { convertHexColorToRgba, darkenHexColor } from '../modules_common/color';
 import { saveCard, saveCardColor } from './save';
@@ -111,22 +111,12 @@ export class CardEditor implements ICardEditor {
     if (toolbar) {
       toolbar.style.visibility = 'hidden';
     }
-    width =
-      width +
-      DRAG_IMAGE_MARGIN +
-      this._cardCssStyle.border.left +
-      this._cardCssStyle.border.right +
-      this._cardCssStyle.padding.left +
-      this._cardCssStyle.padding.right;
+    width = width + DRAG_IMAGE_MARGIN + this._cardCssStyle.borderWidth * 2;
     height =
       height +
       DRAG_IMAGE_MARGIN +
-      this._cardCssStyle.border.top +
-      this._cardCssStyle.border.bottom +
-      this._cardCssStyle.padding.top +
-      this._cardCssStyle.padding.bottom +
-      //      (this.isEditing ? this.TOOLBAR_HEIGHT : 0) +
-      document.getElementById('titleBar')!.offsetHeight;
+      this._cardCssStyle.borderWidth * 2 +
+      document.getElementById('title')!.offsetHeight;
 
     if (width < 200) {
       /**
@@ -243,10 +233,7 @@ export class CardEditor implements ICardEditor {
             let newImageWidth =
               this._cardProp.geometry.width -
               (this._cardProp.data === '' ? DRAG_IMAGE_MARGIN : 0) -
-              this._cardCssStyle.border.left -
-              this._cardCssStyle.border.right -
-              this._cardCssStyle.padding.left -
-              this._cardCssStyle.padding.right;
+              this._cardCssStyle.borderWidth * 2;
 
             let newImageHeight = height;
             if (newImageWidth < width) {
@@ -270,11 +257,8 @@ export class CardEditor implements ICardEditor {
               this._cardProp.geometry.height =
                 newImageHeight +
                 DRAG_IMAGE_MARGIN +
-                this._cardCssStyle.border.top +
-                this._cardCssStyle.border.bottom +
-                this._cardCssStyle.padding.top +
-                this._cardCssStyle.padding.bottom +
-                document.getElementById('titleBar')!.offsetHeight;
+                this._cardCssStyle.borderWidth * 2 +
+                document.getElementById('title')!.offsetHeight;
             }
             else {
               this._cardProp.geometry.height =
@@ -385,11 +369,13 @@ export class CardEditor implements ICardEditor {
       this._cardProp.geometry.width,
       expandedHeight
     );
-    setRenderOffsetHeight(-this._TOOLBAR_HEIGHT);
+    setRenderOffsetHeight(this._TOOLBAR_HEIGHT);
+    render(['ContentsRect']);
 
     const toolbar = document.getElementById('cke_1_bottom');
     if (toolbar) {
       toolbar.style.visibility = 'visible';
+      toolbar.style.bottom = shadowHeight + this._cardCssStyle.borderWidth + 'px';
     }
 
     await this.waitUntilActivationComplete();
@@ -412,6 +398,7 @@ export class CardEditor implements ICardEditor {
       this._cardProp.geometry.height
     );
     setRenderOffsetHeight(0);
+    render(['ContentsRect']);
 
     // Reset editor color to card color
     render(['TitleBar', 'EditorStyle']);
@@ -439,7 +426,7 @@ export class CardEditor implements ICardEditor {
   startCodeMode = () => {
     this.isCodeMode = true;
     this.startEdit();
-    render(['TitleBar']);
+    render(['TitleBar', 'TitleBarStyle']);
 
     CKEDITOR.instances.editor.setMode('source', () => {});
     CKEDITOR.instances.editor.focus();
@@ -457,7 +444,7 @@ export class CardEditor implements ICardEditor {
      * Reset editor color to card color
      * and reset width and height of cke_wysiwyg_frame
      */
-    render(['TitleBar', 'EditorStyle', 'EditorRect']);
+    render(['TitleBar', 'TitleBarStyle', 'EditorStyle', 'EditorRect']);
 
     CKEDITOR.instances.editor.focus();
   };
@@ -483,12 +470,12 @@ export class CardEditor implements ICardEditor {
 
   setSize = (
     width: number = this._cardProp.geometry.width -
-      this._cardCssStyle.border.left -
-      this._cardCssStyle.border.right,
+      this._cardCssStyle.borderWidth * 2 -
+      shadowWidth,
     height: number = this._cardProp.geometry.height -
-      this._cardCssStyle.border.top -
-      this._cardCssStyle.border.bottom -
-      document.getElementById('titleBar')!.offsetHeight
+      this._cardCssStyle.borderWidth * 2 -
+      shadowHeight -
+      document.getElementById('title')!.offsetHeight
   ): void => {
     // width of BrowserWindow (namely cardProp.geometry.width) equals border + padding + content.
     const editor = CKEDITOR.instances.editor;
@@ -548,7 +535,6 @@ export class CardEditor implements ICardEditor {
     ) as HTMLElement;
     if (contents) {
       contents.style.backgroundColor = backgroundRgba;
-      // contents.style.background = `linear-gradient(135deg, ${backgroundRgba} 94%, ${darkerRgba})`;
     }
 
     const doc = CKEDITOR.instances.editor.document;

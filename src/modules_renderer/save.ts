@@ -70,13 +70,15 @@ const execTask = async () => {
 
     // Execute the first task
     if (task.type === 'Save') {
-      await window.api.saveCard(task.prop).catch(() => {
+      await window.api.saveCard(task.prop).catch(e => {
         // TODO: Handle save error.
+        console.error('Error in execTask:' + e);
       });
     }
     else if (task.type === 'Delete') {
-      await window.api.deleteCard(task.prop.id).catch(() => {
+      await window.api.deleteCard(task.prop.id).catch(e => {
         // TODO: Handle save error.
+        console.error('Error in execTask:' + e);
       });
     }
 

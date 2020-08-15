@@ -9,7 +9,7 @@
 /**
  * ATTENTION: Only types can be import for type checking in iframe.
  */
-import { contentsFrameCommand, ContentsFrameMessage } from '../modules_common/types';
+import { ContentsFrameMessage } from '../modules_common/types';
 
 window.addEventListener('message', (event: MessageEvent) => {
   const msg: ContentsFrameMessage = event.data;
@@ -23,4 +23,18 @@ window.addEventListener('message', (event: MessageEvent) => {
     default:
       break;
   }
+});
+
+window.addEventListener('load', () => {
+  /**
+   * Remove APIs
+   **/
+  // eslint-disable-next-line prefer-const
+  let disableAPIList = ['open', 'alert', 'confirm', 'prompt', 'print'];
+  disableAPIList.forEach(prop => {
+    // @ts-ignore
+    window[prop] = () => {
+      console.error(prop + ' is disabled.');
+    };
+  });
 });

@@ -7,7 +7,7 @@ body
 {
 	/* Font */
 	/* Emoji fonts are added to visualize them nicely in Internet Explorer. */
-	font-family: sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+	font-family:  'メイリオ', 'Meiryo', sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 	font-size: 16px;
 
 	/* Text color */
@@ -15,8 +15,9 @@ body
 
 	/* Remove the background color to make it transparent. */
 	background-color: transparent;
-	margin: 0px;
+	margin: 3px 7px 3px 7px;
   padding: 2px;
+
   word-wrap: break-word;
 }
 

@@ -2,11 +2,10 @@
 <html>
 
 <head>
-  <meta charset='utf-8'>
+  <meta charset='utf-8'> 
   <link type='text/css' href='fontawesome/css/all.min.css' rel='stylesheet'>
   <link type='text/css' href='css/card.css?20200629' rel='stylesheet'>
-  <script> var exports = {}; </script>
-  <script type='text/javascript' src='bundle.js'></script>
+  <script type='text/javascript' src='renderer.js'></script>
   <script type='text/javascript' src='ckeditor/ckeditor.js?20200701'></script>
 </head>
 
@@ -20,12 +19,14 @@
       <div id='closeBtn' class='close-btn title-btn'><i class='fas fa-minus-circle title-btn-icon'></i></div>
     </div>
     <div id='contents' class='contents'>
-      <iframe id='contentsFrame' sandbox='allow-forms allow-modals allow-presentation allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox' frameborder=0 class='contentsFrame' src='iframe/contents_frame.html'></iframe>
+      <iframe id='contentsFrame' sandbox='allow-forms allow-same-origin allow-scripts allow-popups' frameborder=0 class='contentsFrame' src='iframe/contents_frame.html'></iframe>
     </div>
-
-    <textarea id='editor'></textarea>
+    <textarea id='editor'></textarea>   
   </div>
-
+  <div id='windowMask' class='window-mask'></div>
+  <div id='resizeAreaRight' class='resize-area resize-area-ew'></div>
+  <div id='resizeAreaBottom' class='resize-area resize-area-ns'></div>
+  <div id='resizeAreaRightBottom' class='resize-area resize-area-nwse'></div>    
 </body>
 
 </html>

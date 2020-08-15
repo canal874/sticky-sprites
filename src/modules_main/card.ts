@@ -9,14 +9,15 @@
 import url from 'url';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { BrowserWindow, ipcMain, shell } from 'electron';
+import { BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import contextMenu from 'electron-context-menu';
 import { CardProp } from '../modules_common/cardprop';
 import { CardIO } from './io';
-import { getCurrentDateAndTime } from '../modules_common/utils';
-import { logger } from './logger';
+import { getCurrentDateAndTime, sleep } from '../modules_common/utils';
 import { CardInitializeType } from '../modules_common/types';
-import { MESSAGE } from '../modules_common/i18n';
+import { getSettings, globalDispatch, MESSAGE } from './store';
+import { cardColors, ColorName } from '../modules_common/color';
+import { DialogButton } from '../modules_common/const';
 
 /**
  * Const
@@ -45,18 +46,68 @@ export const getGlobalFocusEventListenerPermission = () => {
  * Card
  * A small sticky windows is called 'card'.
  */
+export const cards: Map<string, Card> = new Map<string, Card>();
+
 const generateNewCardId = (): string => {
   // YYYY-MM-DD-UUID4
   return `${getCurrentDateAndTime().replace(/^(.+?)\s.+?$/, '$1')}-${uuidv4()}`;
 };
 
-export const cards: Map<string, Card> = new Map<string, Card>();
+const deleteCardWithRetry = async (id: string) => {
+  for (let i = 0; i < 5; i++) {
+    let doRetry = false;
+    // eslint-disable-next-line no-await-in-loop
+    await deleteCard(id).catch(e => {
+      console.error(e);
+      doRetry = true;
+    });
+    if (!doRetry) {
+      break;
+    }
+    // eslint-disable-next-line no-await-in-loop
+    await sleep(1000);
+    console.debug('retrying delete card ...');
+  }
+};
+
+export const deleteCard = async (id: string) => {
+  await CardIO.deleteCardData(id)
+    .catch((e: Error) => {
+      throw new Error(`Error in delete-card: ${e.message}`);
+    })
+    .then(() => {
+      console.debug(`deleted : ${id}`);
+      // eslint-disable-next-line no-unused-expressions
+      const card = cards.get(id);
+      if (card) {
+        cards.delete(id);
+        card.window.destroy();
+      }
+    })
+    .catch((e: Error) => {
+      throw new Error(`Error in destroy window: ${e.message}`);
+    });
+};
 
 /**
  * Context Menu
  */
 
 const setContextMenu = (win: BrowserWindow) => {
+  const setColor = (name: ColorName) => {
+    return {
+      label: MESSAGE(name),
+      click: () => {
+        if (name === 'transparent') {
+          win.webContents.send('change-card-color', cardColors[name], 0.0);
+        }
+        else {
+          win.webContents.send('change-card-color', cardColors[name]);
+        }
+      },
+    };
+  };
+
   contextMenu({
     window: win,
     showSaveImageAs: true,
@@ -94,60 +145,15 @@ const setContextMenu = (win: BrowserWindow) => {
       },
     ],
     append: () => [
-      {
-        label: MESSAGE('yellow'),
-        click: () => {
-          win.webContents.send('change-card-color', '#ffffa0');
-        },
-      },
-      {
-        label: MESSAGE('red'),
-        click: () => {
-          win.webContents.send('change-card-color', '#ffb0b0');
-        },
-      },
-      {
-        label: MESSAGE('green'),
-        click: () => {
-          win.webContents.send('change-card-color', '#d0ffd0');
-        },
-      },
-      {
-        label: MESSAGE('blue'),
-        click: () => {
-          win.webContents.send('change-card-color', '#d0d0ff');
-        },
-      },
-      {
-        label: MESSAGE('orange'),
-        click: () => {
-          win.webContents.send('change-card-color', '#ffb000');
-        },
-      },
-      {
-        label: MESSAGE('purple'),
-        click: () => {
-          win.webContents.send('change-card-color', '#ffd0ff');
-        },
-      },
-      {
-        label: MESSAGE('white'),
-        click: () => {
-          win.webContents.send('change-card-color', '#ffffff');
-        },
-      },
-      {
-        label: MESSAGE('gray'),
-        click: () => {
-          win.webContents.send('change-card-color', '#d0d0d0');
-        },
-      },
-      {
-        label: MESSAGE('transparent'),
-        click: () => {
-          win.webContents.send('change-card-color', '#ffffff', 0.0);
-        },
-      },
+      setColor('yellow'),
+      setColor('red'),
+      setColor('green'),
+      setColor('blue'),
+      setColor('orange'),
+      setColor('purple'),
+      setColor('white'),
+      setColor('gray'),
+      setColor('transparent'),
     ],
   });
 };
@@ -155,6 +161,7 @@ const setContextMenu = (win: BrowserWindow) => {
 export class Card {
   public prop: CardProp; // ! is Definite assignment assertion
   public window: BrowserWindow;
+  public indexUrl: string;
 
   public suppressFocusEventOnce = false;
   public suppressBlurEventOnce = false;
@@ -197,7 +204,7 @@ export class Card {
         return new Promise((resolve, reject) => {
           CardIO.readCardData(id, this.prop)
             .then(() => {
-              // logger.debug('loadCardData  ' + arg);
+              // console.debug('loadCardData  ' + arg);
               resolve();
             })
             .catch((e: Error) => {
@@ -207,9 +214,19 @@ export class Card {
       };
     }
 
+    this.indexUrl = url.format({
+      pathname: path.join(__dirname, '../index.html'),
+      protocol: 'file:',
+      slashes: true,
+      query: {
+        id: this.prop.id,
+      },
+    });
+
     this.window = new BrowserWindow({
       webPreferences: {
-        preload: path.join(__dirname, '../modules_renderer/preload.js'),
+        preload: path.join(__dirname, './preload.js'),
+        sandbox: true,
         contextIsolation: true,
       },
       minWidth: MINIMUM_WINDOW_WIDTH,
@@ -259,23 +276,139 @@ export class Card {
     this.window.on('blur', this._blurListener);
 
     setContextMenu(this.window);
+
+    this.window.webContents.on('did-finish-load', () => {
+      const checkNavigation = (_event: Electron.Event, navUrl: string) => {
+        console.debug('did-start-navigate : ' + navUrl);
+        // Check top frame
+        const topFrameURL = this.indexUrl.replace(/\\/g, '/');
+        if (navUrl === topFrameURL) {
+          // Top frame is reloaded
+          this.window.webContents.off('did-start-navigation', checkNavigation);
+          console.debug('Top frame is reloaded.');
+          return true;
+        }
+
+        // Check iframe
+        const iframeRex = new RegExp(
+          topFrameURL.replace(/index.html\?.+$/, 'iframe/contents_frame.html$')
+        );
+        const isValid = iframeRex.test(navUrl);
+        if (navUrl === 'about:blank') {
+          // skip
+        }
+        else if (isValid) {
+          // console.debug(`Block navigation to valid url: ${url}`);
+          // When iframe is reloaded, cardWindow must be also reloaded not to apply tampered sandbox attributes to iframe.
+          console.error(`Block navigation to valid url: ${navUrl}`);
+          this.window.webContents.off('did-start-navigation', checkNavigation);
+
+          // Same origin policy between top frame and iframe is failed after reload(). (Cause unknown)
+          // Create and destroy card for workaround.
+          // this.window.webContents.send('reload');
+          const card = new Card('Load', this.prop.id);
+          const prevWin = this.window;
+          cards.get(this.prop.id);
+          card
+            .render()
+            .then(() => {
+              prevWin.destroy();
+              cards.set(this.prop.id, card);
+            })
+            .catch(() => {});
+        }
+        else {
+          console.error(`Block navigation to invalid url: ${navUrl}`);
+          this.window.webContents.off('did-start-navigation', checkNavigation);
+          /**
+           * 1. Call window.api.finishRenderCard(cardProp.id) to tell initialize process the error
+           * 2. Show alert dialog
+           * 3. Remove malicious card
+           */
+          this.renderingCompleted = true;
+
+          let domainMatch = navUrl.match(/https?:\/\/([^/]+?)\//);
+          if (!domainMatch) {
+            domainMatch = navUrl.match(/https?:\/\/([^/]+?)$/);
+          }
+
+          if (!domainMatch) {
+            // not http, https
+
+            // Don't use BrowserWindow option because it invokes focus event on the indicated BrowserWindow
+            // (and the focus event causes saving data.)
+            dialog.showMessageBoxSync({
+              type: 'question',
+              buttons: ['OK'],
+              message: MESSAGE('securityLocalNavigationError', navUrl),
+            });
+            // Destroy
+
+            deleteCardWithRetry(this.prop.id);
+            return;
+          }
+
+          const domain = domainMatch[1];
+          if (getSettings().persistent.navigationAllowedURLs.includes(domain)) {
+            console.debug(`Navigation to ${navUrl} is allowed.`);
+            return;
+          }
+          // Don't use BrowserWindow option because it invokes focus event on the indicated BrowserWindow
+          // (and the focus event causes saving data.)
+          const res = dialog.showMessageBoxSync({
+            type: 'question',
+            buttons: [MESSAGE('btnAllow'), MESSAGE('btnCancel')],
+            defaultId: DialogButton.Default,
+            cancelId: DialogButton.Cancel,
+            message: MESSAGE('securityPageNavigationAlert', navUrl),
+          });
+          if (res === DialogButton.Default) {
+            // Reload if permitted
+            console.debug(`Allow ${domain}`);
+            globalDispatch({
+              type: 'navigationAllowedURLs-put',
+              payload: domain,
+            });
+            this.window.webContents.reload();
+          }
+          else if (res === DialogButton.Cancel) {
+            // Destroy if not permitted
+            console.debug(`Deny ${domain}`);
+            deleteCardWithRetry(this.prop.id);
+          }
+        }
+      };
+      console.debug('did-finish-load: ' + this.window.webContents.getURL());
+      this.window.webContents.on('did-start-navigation', checkNavigation);
+    });
+
+    this.window.webContents.on('will-navigate', (event, navUrl) => {
+      // block page transition
+      const prevUrl = this.indexUrl.replace(/\\/g, '/');
+      if (navUrl === prevUrl) {
+        // console.debug('reload() in top frame is permitted');
+      }
+      else {
+        console.error('Page navigation in top frame is not permitted.');
+        event.preventDefault();
+      }
+    });
   }
 
-  public render = () => {
-    return Promise.all([this._loadOrCreateCardData(), this._loadHTML()])
-      .then(() => {
-        this._renderCard(this.prop);
-      })
-      .catch(e => {
-        throw new Error(`Error in render(): ${e.message}`);
-      });
+  public render = async () => {
+    await Promise.all([this._loadOrCreateCardData(), this._loadHTML()]).catch(e => {
+      throw new Error(`Error in render(): ${e.message}`);
+    });
+    await this._renderCard(this.prop).catch(e => {
+      throw new Error(`Error in _renderCard(): ${e.message}`);
+    });
   };
 
   _renderCard = (_prop: CardProp) => {
     return new Promise(resolve => {
       this.window.setSize(_prop.geometry.width, _prop.geometry.height);
       this.window.setPosition(_prop.geometry.x, _prop.geometry.y);
-      logger.debug(`renderCard in main [${_prop.id}] ${_prop.data.substr(0, 40)}`);
+      console.debug(`renderCard in main [${_prop.id}] ${_prop.data.substr(0, 40)}`);
       this.window.showInactive();
       this.window.webContents.send('render-card', _prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
       const checkTimer = setInterval(() => {
@@ -287,20 +420,19 @@ export class Card {
     });
   };
 
-  private _finishReloadListener = (event: Electron.IpcMainInvokeEvent) => {
-    console.log(`reloaded in main: ${this.prop.id}`);
-    this.window.webContents.send('render-card', this.prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
-  };
-
   private _loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
       const finishLoadListener = (event: Electron.IpcMainInvokeEvent) => {
-        logger.debug('loadHTML  ' + this.prop.id);
+        console.debug('loadHTML  ' + this.prop.id);
+        const _finishReloadListener = () => {
+          console.debug('Reloaded: ' + this.prop.id);
+          this.window.webContents.send('render-card', this.prop.toObject());
+        };
 
         // Don't use 'did-finish-load' event.
         // loadHTML resolves after loading HTML and processing required script are finished.
         //     this.window.webContents.on('did-finish-load', () => {
-        ipcMain.handle('finish-load-' + this.prop.id, this._finishReloadListener);
+        ipcMain.handle('finish-load-' + this.prop.id, _finishReloadListener);
         resolve();
       };
       ipcMain.handleOnce('finish-load-' + this.prop.id, finishLoadListener);
@@ -311,16 +443,8 @@ export class Card {
           reject(new Error(`Error in loadHTML: ${validatedURL} ${errorDescription}`));
         }
       );
-      this.window.loadURL(
-        url.format({
-          pathname: path.join(__dirname, '../index.html'),
-          protocol: 'file:',
-          slashes: true,
-          query: {
-            id: this.prop.id,
-          },
-        })
-      );
+
+      this.window.loadURL(this.indexUrl);
     });
   };
 
@@ -331,25 +455,25 @@ export class Card {
       setGlobalFocusEventListenerPermission(true);
     }
     if (this.suppressFocusEventOnce) {
-      logger.debug(`skip focus event listener ${this.prop.id}`);
+      console.debug(`skip focus event listener ${this.prop.id}`);
       this.suppressFocusEventOnce = false;
     }
     else if (!getGlobalFocusEventListenerPermission()) {
-      logger.debug(`focus event listener is suppressed ${this.prop.id}`);
+      console.debug(`focus event listener is suppressed ${this.prop.id}`);
     }
     else {
-      logger.debug(`focus ${this.prop.id}`);
+      console.debug(`focus ${this.prop.id}`);
       this.window.webContents.send('card-focused');
     }
   };
 
   private _blurListener = () => {
     if (this.suppressBlurEventOnce) {
-      logger.debug(`skip blur event listener ${this.prop.id}`);
+      console.debug(`skip blur event listener ${this.prop.id}`);
       this.suppressBlurEventOnce = false;
     }
     else {
-      logger.debug(`blur ${this.prop.id}`);
+      console.debug(`blur ${this.prop.id}`);
       this.window.webContents.send('card-blurred');
     }
   };

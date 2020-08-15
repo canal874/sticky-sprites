@@ -37,13 +37,10 @@ import {
 } from './modules_renderer/save';
 import window from './modules_renderer/window';
 
-const UI_COLOR_DARKENING_RATE = 0.8;
-
 let cardProp: CardProp = new CardProp('');
 
 let cardCssStyle: CardCssStyle = {
-  padding: { left: 0, right: 0, top: 0, bottom: 0 },
-  border: { left: 0, right: 0, top: 0, bottom: 0 },
+  borderWidth: 0,
 };
 
 let canClose = false;
@@ -113,6 +110,10 @@ const initializeUIEvents = () => {
       z: geometry.z + 1,
       width: geometry.width,
       height: geometry.height,
+      uiColor: cardProp.style.uiColor,
+      backgroundColor: cardProp.style.backgroundColor,
+      opacity: cardProp.style.opacity,
+      zoom: cardProp.style.zoom,
     });
     window.api.focus(newId);
   });
@@ -123,7 +124,7 @@ const initializeUIEvents = () => {
   });
 
   // eslint-disable-next-line no-unused-expressions
-  document.getElementById('closeBtn')?.addEventListener('click', () => {
+  document.getElementById('closeBtn')?.addEventListener('click', event => {
     if (cardEditor.isOpened) {
       if (cardEditor.editorType === 'Markup') {
         cardEditor.hideEditor();
@@ -135,7 +136,7 @@ const initializeUIEvents = () => {
         saveCard(cardProp);
       }
     }
-    if (cardProp.data === '' || isCtrlDown) {
+    if (cardProp.data === '' || event.ctrlKey) {
       deleteCard(cardProp);
     }
     else {
@@ -159,6 +160,62 @@ const initializeUIEvents = () => {
           console.error(e.message);
         });
     }
+  });
+
+  let prevMouseX: number;
+  let prevMouseY: number;
+  let isHorizontalMoving = false;
+  let isVerticalMoving = false;
+  const onMouseMove = async (event: MouseEvent) => {
+    let newWidth = cardProp.geometry.width + getRenderOffsetWidth();
+    let newHeight = cardProp.geometry.height + getRenderOffsetHeight();
+    if (isHorizontalMoving) {
+      newWidth += event.screenX - prevMouseX;
+    }
+    if (isVerticalMoving) {
+      newHeight += event.screenY - prevMouseY;
+    }
+    prevMouseX = event.screenX;
+    prevMouseY = event.screenY;
+
+    if (isHorizontalMoving || isVerticalMoving) {
+      const rect: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+      } = await window.api.setWindowSize(cardProp.id, newWidth, newHeight);
+      onResizeByHand(rect);
+    }
+  };
+  window.addEventListener('mousemove', onMouseMove);
+  window.addEventListener('mouseup', event => {
+    isHorizontalMoving = false;
+    isVerticalMoving = false;
+    document.getElementById('windowMask')!.style.display = 'none';
+  });
+  window.addEventListener('mouseleave', event => {});
+
+  document.getElementById('resizeAreaRight')!.addEventListener('mousedown', event => {
+    isHorizontalMoving = true;
+    document.getElementById('windowMask')!.style.display = 'block';
+    prevMouseX = event.screenX;
+    prevMouseY = event.screenY;
+  });
+
+  document.getElementById('resizeAreaBottom')!.addEventListener('mousedown', event => {
+    isVerticalMoving = true;
+    document.getElementById('windowMask')!.style.display = 'block';
+    prevMouseX = event.screenX;
+    prevMouseY = event.screenY;
+  });
+
+  document.getElementById('resizeAreaRightBottom')!.addEventListener('mousedown', event => {
+    isVerticalMoving = true;
+    isHorizontalMoving = true;
+    document.getElementById('windowMask')!.style.display = 'block';
+    prevMouseX = event.screenX;
+    prevMouseY = event.screenY;
   });
 };
 
@@ -229,42 +286,10 @@ const onload = async () => {
   }
 
   cardCssStyle = {
-    padding: {
-      left: parseInt(
-        window.getComputedStyle(document.getElementById('contents')!).paddingLeft,
-        10
-      ),
-      right: parseInt(
-        window.getComputedStyle(document.getElementById('contents')!).paddingRight,
-        10
-      ),
-      top: parseInt(
-        window.getComputedStyle(document.getElementById('contents')!).paddingTop,
-        10
-      ),
-      bottom: parseInt(
-        window.getComputedStyle(document.getElementById('contents')!).paddingBottom,
-        10
-      ),
-    },
-    border: {
-      left: parseInt(
-        window.getComputedStyle(document.getElementById('card')!).borderLeft,
-        10
-      ),
-      right: parseInt(
-        window.getComputedStyle(document.getElementById('card')!).borderRight,
-        10
-      ),
-      top: parseInt(
-        window.getComputedStyle(document.getElementById('card')!).borderTop,
-        10
-      ),
-      bottom: parseInt(
-        window.getComputedStyle(document.getElementById('card')!).borderBottom,
-        10
-      ),
-    },
+    borderWidth: parseInt(
+      window.getComputedStyle(document.getElementById('card')!).borderLeft,
+      10
+    ),
   };
 
   initializeUIEvents();
@@ -325,7 +350,7 @@ const onCardClose = () => {
 
 const onCardFocused = async () => {
   cardProp.status = 'Focused';
-  render(['CardStyle']);
+  render(['CardStyle', 'ContentsRect']);
 
   if (cardEditor.editorType === 'WYSIWYG') {
     cardEditor.startEdit();
@@ -338,7 +363,7 @@ const onCardFocused = async () => {
 
 const onCardBlurred = () => {
   cardProp.status = 'Blurred';
-  render(['CardStyle']);
+  render(['CardStyle', 'ContentsRect']);
 
   if (cardEditor.isOpened) {
     if (cardEditor.editorType === 'Markup') {
@@ -362,23 +387,33 @@ const onCardBlurred = () => {
 };
 
 const onChangeCardColor = (backgroundColor: string, opacity = 1.0) => {
-  const uiColor = darkenHexColor(backgroundColor, UI_COLOR_DARKENING_RATE);
+  const uiColor = darkenHexColor(backgroundColor);
   saveCardColor(cardProp, backgroundColor, uiColor, opacity);
-  render(['CardStyle', 'EditorStyle']);
+  render(['CardStyle', 'TitleBarStyle', 'EditorStyle']);
 };
 
-const onResizeByHand = (newBounds: Electron.Rectangle) => {
-  cardProp.geometry.width = Math.round(newBounds.width + getRenderOffsetWidth());
-  cardProp.geometry.height = Math.round(newBounds.height + getRenderOffsetHeight());
+const onResizeByHand = (newBounds: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}) => {
+  cardProp.geometry.width = Math.round(newBounds.width - getRenderOffsetWidth());
+  cardProp.geometry.height = Math.round(newBounds.height - getRenderOffsetHeight());
 
   render(['TitleBar', 'ContentsRect', 'EditorRect']);
 
   queueSaveCommand();
 };
 
-const onMoveByHand = (newBounds: Electron.Rectangle) => {
-  cardProp.geometry.x = Math.round(newBounds.x);
-  cardProp.geometry.y = Math.round(newBounds.y);
+const onMoveByHand = (newBounds: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}) => {
+  cardProp.geometry.width = Math.round(newBounds.width);
+  cardProp.geometry.height = Math.round(newBounds.height);
 
   queueSaveCommand();
 };
@@ -480,7 +515,7 @@ const startEditorByClick = async (clickEvent: InnerClickEvent) => {
   const scrollLeft = iframe.contentWindow!.scrollX;
   cardEditor.setScrollPosition(scrollLeft, scrollTop);
 
-  const offsetY = document.getElementById('titleBar')!.offsetHeight;
+  const offsetY = document.getElementById('title')!.offsetHeight;
   cardEditor.execAfterMouseDown(cardEditor.startEdit);
   window.api.sendLeftMouseDown(cardProp.id, clickEvent.x, clickEvent.y + offsetY);
 };
@@ -509,10 +544,7 @@ const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
     let newImageWidth =
       cardProp.geometry.width -
       (imageOnly ? DRAG_IMAGE_MARGIN : 0) -
-      cardCssStyle.border.left -
-      cardCssStyle.border.right -
-      cardCssStyle.padding.left -
-      cardCssStyle.padding.right;
+      cardCssStyle.borderWidth * 2;
 
     let newImageHeight = height;
     if (newImageWidth < width) {
@@ -537,11 +569,8 @@ const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
       cardProp.geometry.height =
         newImageHeight +
         DRAG_IMAGE_MARGIN +
-        cardCssStyle.border.top +
-        cardCssStyle.border.bottom +
-        cardCssStyle.padding.top +
-        cardCssStyle.padding.bottom +
-        document.getElementById('titleBar')!.offsetHeight;
+        cardCssStyle.borderWidth * 2 +
+        document.getElementById('title')!.offsetHeight;
 
       cardProp.data = imgTag;
     }
@@ -576,9 +605,22 @@ const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
 };
 
 window.addEventListener('load', onload, false);
-window.addEventListener('beforeunload', e => {
+window.addEventListener('beforeunload', async e => {
   if (!canClose) {
-    e.preventDefault();
-    e.returnValue = '';
+    await waitUnfinishedTasks(cardProp.id).catch((error: Error) => {
+      console.error(error.message);
+    });
+    //    e.preventDefault();
+    //    e.returnValue = '';
+    console.debug('Closing by operating system');
   }
+});
+
+// Remove APIs
+const disableAPIList = ['open', 'alert', 'confirm', 'prompt', 'print'];
+disableAPIList.forEach(prop => {
+  // @ts-ignore
+  window[prop] = () => {
+    console.error(prop + ' is disabled.');
+  };
 });

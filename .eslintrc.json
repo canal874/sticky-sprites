@@ -13,7 +13,7 @@
   "plugins": ["@typescript-eslint", "prettierx"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "project": "./tsconfig.json",
+    "project": "./tsconfig.eslint.json",
     "sourceType": "module"
   },
   "settings": {
@@ -42,6 +42,8 @@
     "@typescript-eslint/no-parameter-properties": "off",
     "@typescript-eslint/interface-name-prefix": [0],
     "prettierx/options": ["error", {
+       "singleQuote": true,
+       "jsxSingleQuote": true,
        "breakBeforeElse": true,
        "semi": true,
        "trailingComma": "es5"

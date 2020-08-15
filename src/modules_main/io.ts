@@ -9,19 +9,10 @@
 /**
  * Common part
  */
-import path from 'path';
 import PouchDB from 'pouchdb';
 import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
-import { logger } from './logger';
-
-// '../../../../../../media_stickies_data' is default path when using asar created by squirrels.windows.
-// './media_stickies_data' is default path when starting from command line (npm start).
-// They can be distinguished by using process.defaultApp
-// TODO: Default path for Mac / Linux is needed.
-const cardDir = process.defaultApp
-  ? './media_stickies_data'
-  : path.join(__dirname, '../../../../../../media_stickies_data');
+import { getSettings } from './store';
 
 /**
  * Module specific part
@@ -30,9 +21,28 @@ const cardDir = process.defaultApp
 var cardsDB: PouchDB.Database<{}>;
 
 class CardIOClass implements ICardIO {
+  isClosed = true;
+  open = () => {
+    if (cardsDB === undefined || this.isClosed) {
+      cardsDB = new PouchDB(getSettings().persistent.storage.path);
+      this.isClosed = false;
+    }
+  };
+
+  public close = () => {
+    if (this.isClosed) {
+      return;
+    }
+    this.isClosed = true;
+    if (cardsDB === undefined || cardsDB === null) {
+      return Promise.resolve();
+    }
+    return cardsDB.close();
+  };
+
   public getCardIdList = (): Promise<string[]> => {
     // returns all card ids.
-    cardsDB = new PouchDB(cardDir);
+    this.open();
     return new Promise((resolve, reject) => {
       cardsDB
         .allDocs()
@@ -45,27 +55,21 @@ class CardIOClass implements ICardIO {
     });
   };
 
-  public deleteCardData = (id: string): Promise<string> => {
+  public deleteCardData = async (id: string): Promise<string> => {
     // for debug
     // await sleep(60000);
-
-    return new Promise((resolve, reject) => {
-      cardsDB
-        .get(id)
-        .then(res => {
-          cardsDB.remove(res);
-          resolve(id);
-        })
-        .catch(e => {
-          reject(e);
-        });
+    this.open();
+    const card = await cardsDB.get(id);
+    await cardsDB.remove(card).catch(e => {
+      throw e;
     });
+    return id;
   };
 
   public readCardData = (id: string, prop: CardProp): Promise<void> => {
     // for debug
     // await sleep(60000);
-
+    this.open();
     return new Promise((resolve, reject) => {
       cardsDB
         .get(id)
@@ -80,7 +84,7 @@ class CardIOClass implements ICardIO {
             // Don't use doc.hasOwnProperty(key)
             // See eslint no-prototype-builtins
             else if (!Object.prototype.hasOwnProperty.call(doc, key)) {
-              logger.warn(`db entry id "${id}" lacks "${key}"`);
+              console.warn(`db entry id "${id}" lacks "${key}"`);
             }
             else {
               // Type of doc cannot be resolved by @types/pouchdb-core
@@ -117,7 +121,8 @@ class CardIOClass implements ICardIO {
   };
 
   public writeOrCreateCardData = async (prop: CardProp): Promise<string> => {
-    logger.debug('Saving card...: ' + JSON.stringify(prop.toObject()));
+    this.open();
+    console.debug('Saving card...: ' + JSON.stringify(prop.toObject()));
     // In PouchDB, _id must be used instead of id in document.
     // Convert class to Object to serialize.
     const propObj = Object.assign({ _id: prop.id, _rev: '' }, prop.toObject());
@@ -139,7 +144,7 @@ class CardIOClass implements ICardIO {
     return cardsDB
       .put(propObj)
       .then(res => {
-        logger.debug(`Saved: ${res.id}`);
+        console.debug(`Saved: ${res.id}`);
         return res.id;
       })
       .catch(e => {

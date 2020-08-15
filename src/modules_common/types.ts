@@ -16,6 +16,7 @@ import { CardProp } from './cardprop';
 export type CardInitializeType = 'Load' | 'New';
 
 export interface ICardIO {
+  close(): void;
   getCardIdList(): Promise<string[]>;
   readCardData(id: string, prop: CardProp): Promise<void>;
   writeOrCreateCardData(prop: CardProp): Promise<string>;
@@ -52,18 +53,7 @@ export interface ICardEditor {
 }
 
 export type CardCssStyle = {
-  padding: {
-    left: number;
-    right: number;
-    top: number;
-    bottom: number;
-  };
-  border: {
-    left: number;
-    right: number;
-    top: number;
-    bottom: number;
-  };
+  borderWidth: number;
 };
 
 export type EditorType = 'WYSIWYG' | 'Markup';

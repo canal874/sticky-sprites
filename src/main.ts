@@ -7,23 +7,20 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { app, dialog, ipcMain, MouseInputEvent } from 'electron';
-import { selectPreferredLanguage, translate } from 'typed-intl';
+import { app, BrowserWindow, dialog, ipcMain, MouseInputEvent } from 'electron';
 import { CardIO } from './modules_main/io';
 import { DialogButton } from './modules_common/const';
 import { CardProp, CardPropSerializable } from './modules_common/cardprop';
+import { availableLanguages, defaultLanguage, MessageLabel } from './modules_common/i18n';
 import {
-  English,
-  Japanese,
-  MESSAGE,
-  MessageLabel,
-  setCurrentMessages,
-} from './modules_common/i18n';
-import { Card, cards, setGlobalFocusEventListenerPermission } from './modules_main/card';
-import { logger } from './modules_main/logger';
-
-// Most secure option
-app.enableSandbox();
+  Card,
+  cards,
+  deleteCard,
+  setGlobalFocusEventListenerPermission,
+} from './modules_main/card';
+import { initializeGlobalStore, MESSAGE } from './modules_main/store';
+import { destroyTray, initializeTaskTray } from './modules_main/tray';
+import { openSettings, settingsDialog } from './modules_main/settings';
 
 // process.on('unhandledRejection', console.dir);
 
@@ -35,12 +32,6 @@ if (require('electron-squirrel-startup')) {
 
 // Increase max listeners
 ipcMain.setMaxListeners(1000);
-
-/**
- * i18n
- */
-
-const translations = translate(English).supporting('ja', Japanese);
 
 /**
  * Card I/O
@@ -55,27 +46,16 @@ ipcMain.handle('save-card', async (event, cardPropObj: CardPropSerializable) => 
         card.prop = prop;
       }
       else {
-        throw new Error('The card is not registered in cards.');
+        throw new Error('The card is not registered in cards: ' + prop.id);
       }
     })
     .catch((e: Error) => {
-      logger.debug(e.message);
+      console.debug(e.message);
     });
 });
 
 ipcMain.handle('delete-card', async (event, id: string) => {
-  await CardIO.deleteCardData(id)
-    .catch((e: Error) => {
-      logger.error(`delete-card: ${e.message}`);
-    })
-    .then(() => {
-      logger.debug(`deleted : ${id}`);
-      // eslint-disable-next-line no-unused-expressions
-      cards.get(id)?.window.webContents.send('card-close');
-    })
-    .catch((e: Error) => {
-      logger.error(`send card-close: ${e.message}`);
-    });
+  await deleteCard(id);
 });
 
 ipcMain.handle('finish-render-card', (event, id: string) => {
@@ -85,11 +65,11 @@ ipcMain.handle('finish-render-card', (event, id: string) => {
   }
 });
 
-ipcMain.handle('create-card', (event, propObject: CardPropSerializable) => {
+ipcMain.handle('create-card', async (event, propObject: CardPropSerializable) => {
   const prop = CardProp.fromObject(propObject);
   const card = new Card('New', prop);
   cards.set(card.prop.id, card);
-  card.render();
+  await card.render();
   return card.prop.id;
 });
 
@@ -100,9 +80,18 @@ ipcMain.handle('create-card', (event, propObject: CardPropSerializable) => {
  */
 app.on('ready', async () => {
   // locale can be got after 'ready'
-  logger.debug('locale: ' + app.getLocale());
-  selectPreferredLanguage(['en', 'ja'], [app.getLocale(), 'en']);
-  setCurrentMessages(translations.messages());
+  const myLocale = app.getLocale();
+  console.debug(`locale: ${myLocale}`);
+  let preferredLanguage: string = defaultLanguage;
+  if (availableLanguages.includes(myLocale)) {
+    preferredLanguage = myLocale;
+  }
+  initializeGlobalStore(preferredLanguage as string);
+
+  // for debug
+  if (!app.isPackaged && process.env.NODE_ENV === 'development') {
+    openSettings();
+  }
 
   // load cards
   const cardArray: Card[] = await CardIO.getCardIdList()
@@ -122,7 +111,7 @@ app.on('ready', async () => {
       return cardArr;
     })
     .catch((e: Error) => {
-      logger.error(`Cannot load a list of cards: ${e.message}`);
+      console.error(`Cannot load a list of cards: ${e.message}`);
       return [];
     });
 
@@ -133,7 +122,7 @@ app.on('ready', async () => {
   }
 
   await Promise.all(renderers).catch((e: Error) => {
-    logger.error(`Error while rendering cards in ready event: ${e.message}`);
+    console.error(`Error while rendering cards in ready event: ${e.message}`);
   });
 
   const backToFront = [...cards.keys()].sort((a, b) => {
@@ -147,15 +136,27 @@ app.on('ready', async () => {
   });
 
   for (const key of backToFront) {
-    cards.get(key)!.window.moveTop();
+    const card = cards.get(key);
+    if (card) {
+      if (!card.window.isDestroyed()) {
+        card.window.moveTop();
+      }
+    }
   }
-  logger.debug(`Completed to load ${renderers.length} cards`);
+  console.debug(`Completed to load ${renderers.length} cards`);
+
+  /**
+   * Add task tray
+   **/
+  initializeTaskTray();
 });
 
 /**
  * Exit app
  */
 app.on('window-all-closed', () => {
+  CardIO.close();
+  destroyTray();
   app.quit();
 });
 
@@ -219,12 +220,19 @@ ipcMain.handle('set-title', (event, id: string, title: string) => {
 });
 
 ipcMain.handle('alert-dialog', (event, id: string, label: MessageLabel) => {
-  const card = cards.get(id);
-  if (!card) {
-    return;
+  let win: BrowserWindow;
+  if (id === 'settingsDialog') {
+    win = settingsDialog;
+  }
+  else {
+    const card = cards.get(id);
+    if (!card) {
+      return;
+    }
+    win = card.window;
   }
 
-  dialog.showMessageBoxSync(card.window, {
+  dialog.showMessageBoxSync(win, {
     type: 'question',
     buttons: ['OK'],
     message: MESSAGE(label),
@@ -234,12 +242,20 @@ ipcMain.handle('alert-dialog', (event, id: string, label: MessageLabel) => {
 ipcMain.handle(
   'confirm-dialog',
   (event, id: string, buttonLabels: MessageLabel[], label: MessageLabel) => {
-    const card = cards.get(id);
-    if (!card) {
-      return;
+    let win: BrowserWindow;
+    if (id === 'settingsDialog') {
+      win = settingsDialog;
     }
+    else {
+      const card = cards.get(id);
+      if (!card) {
+        return;
+      }
+      win = card.window;
+    }
+
     const buttons: string[] = buttonLabels.map(buttonLabel => MESSAGE(buttonLabel));
-    return dialog.showMessageBoxSync(card.window, {
+    return dialog.showMessageBoxSync(win, {
       type: 'question',
       buttons: buttons,
       defaultId: DialogButton.Default,
@@ -253,6 +269,14 @@ ipcMain.handle('set-window-size', (event, id: string, width: number, height: num
   const card = cards.get(id);
   // eslint-disable-next-line no-unused-expressions
   card?.window.setSize(width, height);
+  return card?.window.getBounds();
+});
+
+ipcMain.handle('set-window-position', (event, id: string, x: number, y: number) => {
+  const card = cards.get(id);
+  // eslint-disable-next-line no-unused-expressions
+  card?.window.setPosition(x, y);
+  return card?.window.getBounds();
 });
 
 ipcMain.handle('get-uuid', () => {
