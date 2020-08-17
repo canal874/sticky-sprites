@@ -6,6 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
+import { Cipher } from 'crypto';
 import {
   CardProp,
   CardPropSerializable,
@@ -331,6 +332,9 @@ window.addEventListener('message', event => {
     case 'send-to-back':
       onSendToBack();
       break;
+    case 'set-lock':
+      onSetLock(event.data.locked);
+      break;
     case 'zoom-in':
       onZoomIn();
       break;
@@ -364,19 +368,7 @@ const onCardBlurred = () => {
     if (cardEditor.isCodeMode) {
       return;
     }
-
-    cardEditor.hideEditor();
-
-    const { dataChanged, data } = cardEditor.endEdit();
-    if (dataChanged) {
-      cardProp.data = data;
-      render();
-      saveCard(cardProp);
-    }
-
-    const { left, top } = cardEditor.getScrollPosition();
-    const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
-    iframe.contentWindow!.scrollTo(left, top);
+    endEditor();
   }
 };
 
@@ -447,6 +439,13 @@ const onSendToBack = async () => {
   saveCard(cardProp);
 };
 
+const onSetLock = (locked: boolean) => {
+  cardProp.condition.locked = locked;
+  if (cardEditor.isOpened) {
+    endEditor();
+  }
+};
+
 const onZoomIn = () => {
   if (cardProp.style.zoom < 1.0) {
     cardProp.style.zoom += 0.2;
@@ -485,9 +484,9 @@ const filterContentsFrameMessage = (event: MessageEvent): ContentsFrameMessage =
   return msg;
 };
 
-const startEditorByClick = async (clickEvent: InnerClickEvent) => {
+const startEditor = async (x: number, y: number) => {
   await cardEditor.showEditor().catch((e: Error) => {
-    console.error(`Error in clicking contents: ${e.message}`);
+    console.error(`Error in startEditor: ${e.message}`);
   });
 
   // Set scroll position of editor to that of iframe
@@ -498,7 +497,29 @@ const startEditorByClick = async (clickEvent: InnerClickEvent) => {
 
   const offsetY = document.getElementById('title')!.offsetHeight;
   cardEditor.execAfterMouseDown(cardEditor.startEdit);
-  window.api.sendLeftMouseDown(cardProp.id, clickEvent.x, clickEvent.y + offsetY);
+  window.api.sendLeftMouseDown(cardProp.id, x, y + offsetY);
+};
+
+const endEditor = () => {
+  cardEditor.hideEditor();
+
+  const { dataChanged, data } = cardEditor.endEdit();
+  if (dataChanged) {
+    cardProp.data = data;
+    render();
+    saveCard(cardProp);
+  }
+
+  const { left, top } = cardEditor.getScrollPosition();
+  const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+  iframe.contentWindow!.scrollTo(left, top);
+};
+
+const startEditorByClick = (clickEvent: InnerClickEvent) => {
+  if (cardProp.condition.locked) {
+    return;
+  }
+  startEditor(clickEvent.x, clickEvent.y);
 };
 
 const addDroppedImage = async (fileDropEvent: FileDropEvent) => {

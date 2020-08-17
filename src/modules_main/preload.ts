@@ -112,5 +112,8 @@ ipcRenderer.on(
 ipcRenderer.on('send-to-back', () =>
   window.postMessage({ command: 'send-to-back' }, 'file://')
 );
+ipcRenderer.on('set-lock', (event: Electron.IpcRendererEvent, locked: boolean) => {
+  window.postMessage({ command: 'set-lock', locked: locked }, 'file://');
+});
 ipcRenderer.on('zoom-in', () => window.postMessage({ command: 'zoom-in' }, 'file://'));
 ipcRenderer.on('zoom-out', () => window.postMessage({ command: 'zoom-out' }, 'file://'));

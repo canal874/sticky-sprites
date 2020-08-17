@@ -23,19 +23,35 @@ export type CardBase = {
   id: string;
   data: string;
 };
+/**
+ * CardStyle
+ * Visual style of a card
+ */
 export type CardStyle = {
   uiColor: string;
   backgroundColor: string;
   opacity: number;
   zoom: number;
 };
+/**
+ * CardCondition
+ * Serializable condition of a card
+ */
+export type CardCondition = {
+  locked: boolean;
+};
 export type CardDate = {
   createdDate: string;
   modifiedDate: string;
 };
+
 // Properties of a card that must be serialized
 // Each of them must have unique name to be able to use as a key when serialize.
-export type CardPropSerializable = CardBase & Geometry & CardStyle & CardDate;
+export type CardPropSerializable = CardBase &
+  Geometry &
+  CardStyle &
+  CardCondition &
+  CardDate;
 
 export type CardStatus = 'Focused' | 'Blurred';
 
@@ -52,6 +68,9 @@ export const DEFAULT_CARD_STYLE: CardStyle = {
   opacity: 1.0,
   zoom: 1.0,
 };
+export const DEFAULT_CARD_CONDITION: CardCondition = {
+  locked: false,
+};
 DEFAULT_CARD_STYLE.uiColor = darkenHexColor(DEFAULT_CARD_STYLE.backgroundColor);
 
 export class CardProp implements CardBase {
@@ -64,6 +83,8 @@ export class CardProp implements CardBase {
     modifiedDate: getCurrentDateAndTime(),
   };
 
+  public condition: CardCondition = DEFAULT_CARD_CONDITION;
+
   public status: CardStatus = 'Blurred';
   // eslint-disable-next-line complexity
   constructor (
@@ -71,6 +92,7 @@ export class CardProp implements CardBase {
     _data?: string,
     _geometry?: Geometry,
     _style?: CardStyle,
+    _condition?: CardCondition,
     _date?: CardDate
   ) {
     if (_id !== undefined) {
@@ -103,6 +125,10 @@ export class CardProp implements CardBase {
       _style.zoom !== undefined
     ) {
       this.style = _style;
+    }
+
+    if (_condition !== undefined && _condition.locked !== undefined) {
+      this.condition = _condition;
     }
 
     if (
@@ -138,6 +164,7 @@ export class CardProp implements CardBase {
       backgroundColor: this.style.backgroundColor,
       opacity: this.style.opacity,
       zoom: this.style.zoom,
+      locked: this.condition.locked,
       createdDate: this.date.createdDate,
       modifiedDate: this.date.modifiedDate,
     };
@@ -153,6 +180,9 @@ export class CardProp implements CardBase {
         backgroundColor: json.backgroundColor,
         opacity: json.opacity,
         zoom: json.zoom,
+      },
+      {
+        locked: json.locked,
       },
       {
         createdDate: json.createdDate,

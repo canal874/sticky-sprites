@@ -17,6 +17,8 @@ type MessagesMain = {
   btnRemove: string;
   settings: string;
   trayToolTip: string;
+  lockCard: string;
+  unlockCard: string;
   white: string;
   yellow: string;
   red: string;
@@ -108,6 +110,8 @@ export const English: Messages = {
   btnRemove: 'Remove',
   settings: 'Settings...',
   trayToolTip: 'Media Stickies',
+  lockCard: 'Lock card',
+  unlockCard: 'Unlock card',
   white: 'white',
   yellow: 'yellow',
   red: 'red',
@@ -164,6 +168,8 @@ export const Japanese: Messages = {
   btnRemove: '削除する',
   settings: '設定...',
   trayToolTip: 'Media Stickies',
+  lockCard: 'Lock card',
+  unlockCard: 'Unlock card',
   white: '白',
   yellow: '黄',
   red: '赤',

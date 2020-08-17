@@ -93,7 +93,7 @@ export const deleteCard = async (id: string) => {
  * Context Menu
  */
 
-const setContextMenu = (win: BrowserWindow) => {
+const setContextMenu = (prop: CardProp, win: BrowserWindow) => {
   const setColor = (name: ColorName) => {
     return {
       label: MESSAGE(name),
@@ -108,7 +108,7 @@ const setContextMenu = (win: BrowserWindow) => {
     };
   };
 
-  contextMenu({
+  const dispose = contextMenu({
     window: win,
     showSaveImageAs: true,
     showInspectElement: false,
@@ -143,6 +143,14 @@ const setContextMenu = (win: BrowserWindow) => {
           win.webContents.send('send-to-back');
         },
       },
+      {
+        label: prop.condition.locked ? MESSAGE('unlockCard') : MESSAGE('lockCard'),
+        click: () => {
+          prop.condition.locked = !prop.condition.locked;
+          win.webContents.send('set-lock', prop.condition.locked);
+          resetContextMenu();
+        },
+      },
     ],
     append: () => [
       setColor('yellow'),
@@ -156,6 +164,12 @@ const setContextMenu = (win: BrowserWindow) => {
       setColor('transparent'),
     ],
   });
+
+  const resetContextMenu = () => {
+    // @ts-ignore
+    dispose();
+    setContextMenu(prop, win);
+  };
 };
 
 export class Card {
@@ -275,7 +289,7 @@ export class Card {
     this.window.on('focus', this._focusListener);
     this.window.on('blur', this._blurListener);
 
-    setContextMenu(this.window);
+    setContextMenu(this.prop, this.window);
 
     this.window.webContents.on('did-finish-load', () => {
       const checkNavigation = (_event: Electron.Event, navUrl: string) => {

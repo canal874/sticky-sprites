@@ -107,6 +107,9 @@ class CardIOClass implements ICardIO {
             opacity: propsRequired.opacity,
             zoom: propsRequired.zoom,
           };
+          prop.condition = {
+            locked: propsRequired.locked,
+          };
           prop.date = {
             createdDate: propsRequired.createdDate,
             modifiedDate: propsRequired.modifiedDate,
