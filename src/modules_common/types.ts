@@ -24,7 +24,6 @@ export interface ICardIO {
 }
 
 export interface ICardEditor {
-  readonly editorType: EditorType;
   readonly hasCodeMode: boolean;
   isCodeMode: boolean;
   isOpened: boolean;
@@ -55,8 +54,6 @@ export interface ICardEditor {
 export type CardCssStyle = {
   borderWidth: number;
 };
-
-export type EditorType = 'WYSIWYG' | 'Markup';
 
 /*
 export type ContentsFrameCommand =

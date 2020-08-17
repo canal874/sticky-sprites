@@ -126,9 +126,7 @@ const initializeUIEvents = () => {
   // eslint-disable-next-line no-unused-expressions
   document.getElementById('closeBtn')?.addEventListener('click', event => {
     if (cardEditor.isOpened) {
-      if (cardEditor.editorType === 'Markup') {
-        cardEditor.hideEditor();
-      }
+      cardEditor.hideEditor();
       const { dataChanged, data } = cardEditor.endEdit();
       cardProp.data = data;
       render(['TitleBar', 'ContentsData', 'ContentsRect']);
@@ -352,9 +350,6 @@ const onCardFocused = async () => {
   cardProp.status = 'Focused';
   render(['CardStyle', 'ContentsRect']);
 
-  if (cardEditor.editorType === 'WYSIWYG') {
-    cardEditor.startEdit();
-  }
   const newZ = await window.api.bringToFront(cardProp.id);
   // eslint-disable-next-line require-atomic-updates
   cardProp.geometry.z = newZ;
@@ -366,13 +361,12 @@ const onCardBlurred = () => {
   render(['CardStyle', 'ContentsRect']);
 
   if (cardEditor.isOpened) {
-    if (cardEditor.editorType === 'Markup') {
-      if (cardEditor.isCodeMode) {
-        return;
-      }
-
-      cardEditor.hideEditor();
+    if (cardEditor.isCodeMode) {
+      return;
     }
+
+    cardEditor.hideEditor();
+
     const { dataChanged, data } = cardEditor.endEdit();
     if (dataChanged) {
       cardProp.data = data;
@@ -440,23 +434,10 @@ const onRenderCard = (_prop: CardPropSerializable) => {
       console.error(`Error in render-card: ${e.message}`);
     });
 
-  if (cardEditor.editorType === 'WYSIWYG') {
-    cardEditor
-      .showEditor()
-      .then(() => {
-        window.api.finishRenderCard(cardProp.id);
-      })
-      .catch((e: Error) => {
-        // logger.error does not work in ipcRenderer event.
-        console.error(`Error in render-card: ${e.message}`);
-      });
-  }
-  else {
-    window.api.finishRenderCard(cardProp.id).catch((e: Error) => {
-      // logger.error does not work in ipcRenderer event.
-      console.error(`Error in render-card: ${e.message}`);
-    });
-  }
+  window.api.finishRenderCard(cardProp.id).catch((e: Error) => {
+    // logger.error does not work in ipcRenderer event.
+    console.error(`Error in render-card: ${e.message}`);
+  });
 };
 
 const onSendToBack = async () => {

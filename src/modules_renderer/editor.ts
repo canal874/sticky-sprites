@@ -7,7 +7,7 @@
  */
 
 import { CardProp, DRAG_IMAGE_MARGIN } from '../modules_common/cardprop';
-import { CardCssStyle, EditorType, ICardEditor } from '../modules_common/types';
+import { CardCssStyle, ICardEditor } from '../modules_common/types';
 import { render, setRenderOffsetHeight, shadowHeight, shadowWidth } from './card_renderer';
 import { sleep } from '../modules_common/utils';
 import { convertHexColorToRgba, darkenHexColor } from '../modules_common/color';
@@ -56,9 +56,6 @@ export class CardEditor implements ICardEditor {
   /**
    * Public
    */
-  // public editorType: EditorType = 'WYSIWYG'; // CKEditor should be WYSIWYG Editor Type
-  public editorType: EditorType = 'Markup'; // for testing Markup Editor Type
-
   public hasCodeMode = true;
   public isCodeMode = false;
 
