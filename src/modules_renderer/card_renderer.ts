@@ -190,9 +190,20 @@ const renderCardStyle = () => {
     )!.style.border = `${cardCssStyle.borderWidth}px solid transparent`;
   }
 
+  /**
+   * The card cannot be moved by mouse when #title is hidden.
+   * When hidden, #title changes to visible at the first mouse down.
+   * It can be moved by mouse after the second mouse down.
+   * So, the user need to click twice when #title is hidden.
+   * Use opacity instead of visible/hidden.
   document.getElementById('title')!.style.visibility = 'visible';
   if (cardProp.style.opacity === 0 && cardProp.status === 'Blurred') {
     document.getElementById('title')!.style.visibility = 'hidden';
+  }
+   */
+  document.getElementById('title')!.style.opacity = '1.0';
+  if (cardProp.style.opacity === 0 && cardProp.status === 'Blurred') {
+    document.getElementById('title')!.style.opacity = '0.01';
   }
 
   // Set card properties
