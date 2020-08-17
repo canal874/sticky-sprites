@@ -412,8 +412,8 @@ const onMoveByHand = (newBounds: {
   width: number;
   height: number;
 }) => {
-  cardProp.geometry.width = Math.round(newBounds.width);
-  cardProp.geometry.height = Math.round(newBounds.height);
+  cardProp.geometry.x = Math.round(newBounds.x);
+  cardProp.geometry.y = Math.round(newBounds.y);
 
   queueSaveCommand();
 };
