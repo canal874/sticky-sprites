@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardProp } from './cardprop';
+import { AvatarProp, CardProp } from './cardprop';
 
 /**
  * CardInitializeType
@@ -17,8 +17,9 @@ export type CardInitializeType = 'Load' | 'New';
 
 export interface ICardIO {
   close(): void;
+  getAvatarIdList(workspaceId: string): Promise<string[]>;
   getCardIdList(): Promise<string[]>;
-  readCardData(id: string, prop: CardProp): Promise<void>;
+  readCardData(id: string): Promise<CardProp>;
   writeOrCreateCardData(prop: CardProp): Promise<string>;
   deleteCardData(id: string): Promise<string>;
 }
@@ -31,7 +32,7 @@ export interface ICardEditor {
   getImageTag(id: string, src: string, width: number, height: number, alt: string): string;
 
   loadUI(cardCssStyle: CardCssStyle): Promise<void>; // A Promise resolves when required initialization is finished.
-  setCard(prop: CardProp): void; // Loading a card after loadUI().
+  setCard(prop: AvatarProp): void; // Loading a card after loadUI().
 
   showEditor(): Promise<void>;
   hideEditor(): void;

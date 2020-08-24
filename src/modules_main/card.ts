@@ -11,13 +11,22 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import contextMenu from 'electron-context-menu';
-import { CardProp } from '../modules_common/cardprop';
+import {
+  AvatarProp,
+  AvatarPropSerializable,
+  CardProp,
+  CardPropSerializable,
+  getAvatarLocation,
+  getIdFromUrl,
+  TransformableFeature,
+} from '../modules_common/cardprop';
 import { CardIO } from './io';
 import { getCurrentDateAndTime, sleep } from '../modules_common/utils';
 import { CardInitializeType } from '../modules_common/types';
 import { getSettings, globalDispatch, MESSAGE } from './store';
 import { cardColors, ColorName } from '../modules_common/color';
 import { DialogButton } from '../modules_common/const';
+import { getCurrentWorkspaceUrl } from './workspace';
 
 /**
  * Const
@@ -44,13 +53,54 @@ export const getGlobalFocusEventListenerPermission = () => {
 
 /**
  * Card
- * A small sticky windows is called 'card'.
+ * Content unit is called 'card'.
+ * A card is internally stored as an actual card (a.k.a Card class),
+ * and externally represented as one or multiple avatar cards (a.k.a. Avatar class).
  */
 export const cards: Map<string, Card> = new Map<string, Card>();
+export const avatars: Map<string, Avatar> = new Map<string, Avatar>();
+
+export const getCardFromUrl = (_url: string): Card | undefined => {
+  const id = getIdFromUrl(_url);
+  const card = cards.get(id);
+  return card;
+};
 
 const generateNewCardId = (): string => {
   // YYYY-MM-DD-UUID4
   return `${getCurrentDateAndTime().replace(/^(.+?)\s.+?$/, '$1')}-${uuidv4()}`;
+};
+
+export const getCardData = (avatarUrl: string) => {
+  return getCardFromUrl(avatarUrl)?.prop.data;
+};
+
+export const getAvatarProp = (avatarUrl: string) => {
+  return getCardFromUrl(avatarUrl)?.prop.avatars[getAvatarLocation(avatarUrl)];
+};
+
+export const createCard = async (propObject: CardPropSerializable) => {
+  const prop = CardProp.fromObject(propObject);
+  const card = new Card('New', prop);
+  cards.set(card.prop.id, card);
+
+  /**
+   * Render avatar if current workspace matches
+   */
+  const workspaceUrl = getCurrentWorkspaceUrl();
+  const renderers = [];
+  for (const _url in card.prop.avatars) {
+    if (_url.match(workspaceUrl)) {
+      const avatar = avatars.get(_url);
+      if (avatar) {
+        renderers.push(avatar.render());
+      }
+    }
+  }
+  await Promise.all(renderers).catch(e => {
+    console.error(`Error in createCard: ${e.message}`);
+  });
+  return prop.id;
 };
 
 const deleteCardWithRetry = async (id: string) => {
@@ -71,6 +121,24 @@ const deleteCardWithRetry = async (id: string) => {
 };
 
 export const deleteCard = async (id: string) => {
+  const card = cards.get(id);
+  if (!card) {
+    console.error(`Error in deleteCard: card does not exist: ${id}`);
+    return;
+  }
+  /**
+   * Delete all avatar cards
+   */
+  for (const key in card.prop.avatars) {
+    const avatar = avatars.get(key);
+    if (avatar) {
+      avatars.delete(key);
+      avatar.window.destroy();
+    }
+  }
+  /**
+   * Delete actual card
+   */
   await CardIO.deleteCardData(id)
     .catch((e: Error) => {
       throw new Error(`Error in delete-card: ${e.message}`);
@@ -78,22 +146,55 @@ export const deleteCard = async (id: string) => {
     .then(() => {
       console.debug(`deleted : ${id}`);
       // eslint-disable-next-line no-unused-expressions
-      const card = cards.get(id);
-      if (card) {
-        cards.delete(id);
-        card.window.destroy();
-      }
+      cards.delete(id);
     })
     .catch((e: Error) => {
       throw new Error(`Error in destroy window: ${e.message}`);
     });
 };
 
+export const deleteAvatar = async (_url: string) => {
+  const avatar = avatars.get(_url);
+  if (avatar) {
+    avatars.delete(_url);
+    avatar.window.destroy();
+  }
+  const card = getCardFromUrl(_url);
+  if (!card) {
+    return;
+  }
+  delete card.prop.avatars[_url];
+  await saveCard(card.prop);
+};
+
+export const updateAvatar = async (avatarPropObj: AvatarPropSerializable) => {
+  const prop = AvatarProp.fromObject(avatarPropObj);
+  const card = getCardFromUrl(prop.url);
+  if (!card) {
+    throw new Error('The card is not registered in cards: ' + prop.url);
+  }
+  const feature: TransformableFeature = {
+    geometry: prop.geometry,
+    style: prop.style,
+    condition: prop.condition,
+    date: prop.date,
+  };
+  card.prop.data = prop.data;
+  card.prop.avatars[prop.url] = feature;
+
+  await saveCard(card.prop);
+};
+
+const saveCard = async (cardProp: CardProp) => {
+  await CardIO.writeOrCreateCardData(cardProp).catch((e: Error) => {
+    console.error(e.message);
+  });
+};
+
 /**
  * Context Menu
  */
-
-const setContextMenu = (prop: CardProp, win: BrowserWindow) => {
+const setContextMenu = (prop: AvatarProp, win: BrowserWindow) => {
   const setColor = (name: ColorName) => {
     return {
       label: MESSAGE(name),
@@ -173,21 +274,16 @@ const setContextMenu = (prop: CardProp, win: BrowserWindow) => {
 };
 
 export class Card {
-  public prop: CardProp; // ! is Definite assignment assertion
-  public window: BrowserWindow;
-  public indexUrl: string;
-
-  public suppressFocusEventOnce = false;
-  public suppressBlurEventOnce = false;
-  public recaptureGlobalFocusEventAfterLocalFocusEvent = false;
-
-  public renderingCompleted = false;
-
-  private _loadOrCreateCardData: () => Promise<void>;
-
+  public prop!: CardProp;
+  public loadOrCreateCardData: () => Promise<void>;
+  /**
+   * constructor
+   * @param cardInitializeType New or Load
+   * @param arg CardProp or id
+   */
   constructor (public cardInitializeType: CardInitializeType, arg?: CardProp | string) {
     if (cardInitializeType === 'New') {
-      this._loadOrCreateCardData = () => {
+      this.loadOrCreateCardData = () => {
         return Promise.resolve();
       };
       if (arg === undefined) {
@@ -212,28 +308,35 @@ export class Card {
         throw new TypeError('Second parameter must be id string when loading the card.');
       }
       const id = arg;
-      this.prop = new CardProp(id);
 
-      this._loadOrCreateCardData = () => {
-        return new Promise((resolve, reject) => {
-          CardIO.readCardData(id, this.prop)
-            .then(() => {
-              // console.debug('loadCardData  ' + arg);
-              resolve();
-            })
-            .catch((e: Error) => {
-              reject(new Error(`Error in loadCardData: ${e.message}`));
-            });
+      this.loadOrCreateCardData = async () => {
+        this.prop = await CardIO.readCardData(id).catch(e => {
+          throw e;
         });
       };
     }
+  }
+}
 
+export class Avatar {
+  public prop: AvatarProp;
+  public window: BrowserWindow;
+  public indexUrl: string;
+
+  public suppressFocusEventOnce = false;
+  public suppressBlurEventOnce = false;
+  public recaptureGlobalFocusEventAfterLocalFocusEvent = false;
+
+  public renderingCompleted = false;
+
+  constructor (_prop: AvatarProp) {
+    this.prop = _prop;
     this.indexUrl = url.format({
       pathname: path.join(__dirname, '../index.html'),
       protocol: 'file:',
       slashes: true,
       query: {
-        id: this.prop.id,
+        avatarUrl: this.prop.url,
       },
     });
 
@@ -275,7 +378,7 @@ export class Card {
       // Dereference the window object, usually you would store windows
       // in an array if your app supports multi windows, this is the time
       // when you should delete the corresponding element.
-      cards.delete(this.prop.id);
+      avatars.delete(this.prop.url);
     });
 
     // Open hyperlink on external browser window
@@ -320,14 +423,14 @@ export class Card {
           // Same origin policy between top frame and iframe is failed after reload(). (Cause unknown)
           // Create and destroy card for workaround.
           // this.window.webContents.send('reload');
-          const card = new Card('Load', this.prop.id);
+          const avatar = new Avatar(this.prop);
           const prevWin = this.window;
-          cards.get(this.prop.id);
-          card
+          avatars.get(this.prop.url);
+          avatar
             .render()
             .then(() => {
               prevWin.destroy();
-              cards.set(this.prop.id, card);
+              avatars.set(this.prop.url, avatar);
             })
             .catch(() => {});
         }
@@ -357,8 +460,8 @@ export class Card {
               message: MESSAGE('securityLocalNavigationError', navUrl),
             });
             // Destroy
-
-            deleteCardWithRetry(this.prop.id);
+            const id = getIdFromUrl(this.prop.url);
+            deleteCardWithRetry(id);
             return;
           }
 
@@ -388,7 +491,8 @@ export class Card {
           else if (res === DialogButton.Cancel) {
             // Destroy if not permitted
             console.debug(`Deny ${domain}`);
-            deleteCardWithRetry(this.prop.id);
+            const id = getIdFromUrl(this.prop.url);
+            deleteCardWithRetry(id);
           }
         }
       };
@@ -410,7 +514,7 @@ export class Card {
   }
 
   public render = async () => {
-    await Promise.all([this._loadOrCreateCardData(), this._loadHTML()]).catch(e => {
+    await this._loadHTML().catch(e => {
       throw new Error(`Error in render(): ${e.message}`);
     });
     await this._renderCard(this.prop).catch(e => {
@@ -418,11 +522,11 @@ export class Card {
     });
   };
 
-  _renderCard = (_prop: CardProp) => {
+  _renderCard = (_prop: AvatarProp) => {
     return new Promise(resolve => {
       this.window.setSize(_prop.geometry.width, _prop.geometry.height);
       this.window.setPosition(_prop.geometry.x, _prop.geometry.y);
-      console.debug(`renderCard in main [${_prop.id}] ${_prop.data.substr(0, 40)}`);
+      console.debug(`renderCard in main [${_prop.url}] ${_prop.data.substr(0, 40)}`);
       this.window.showInactive();
       this.window.webContents.send('render-card', _prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
       const checkTimer = setInterval(() => {
@@ -437,19 +541,25 @@ export class Card {
   private _loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
       const finishLoadListener = (event: Electron.IpcMainInvokeEvent) => {
-        console.debug('loadHTML  ' + this.prop.id);
+        console.debug('loadHTML  ' + this.prop.url);
         const _finishReloadListener = () => {
-          console.debug('Reloaded: ' + this.prop.id);
+          console.debug('Reloaded: ' + this.prop.url);
           this.window.webContents.send('render-card', this.prop.toObject());
         };
 
         // Don't use 'did-finish-load' event.
         // loadHTML resolves after loading HTML and processing required script are finished.
         //     this.window.webContents.on('did-finish-load', () => {
-        ipcMain.handle('finish-load-' + this.prop.id, _finishReloadListener);
+        ipcMain.handle(
+          'finish-load-' + encodeURIComponent(this.prop.url),
+          _finishReloadListener
+        );
         resolve();
       };
-      ipcMain.handleOnce('finish-load-' + this.prop.id, finishLoadListener);
+      ipcMain.handleOnce(
+        'finish-load-' + encodeURIComponent(this.prop.url),
+        finishLoadListener
+      );
 
       this.window.webContents.on(
         'did-fail-load',
@@ -469,25 +579,25 @@ export class Card {
       setGlobalFocusEventListenerPermission(true);
     }
     if (this.suppressFocusEventOnce) {
-      console.debug(`skip focus event listener ${this.prop.id}`);
+      console.debug(`skip focus event listener ${this.prop.url}`);
       this.suppressFocusEventOnce = false;
     }
     else if (!getGlobalFocusEventListenerPermission()) {
-      console.debug(`focus event listener is suppressed ${this.prop.id}`);
+      console.debug(`focus event listener is suppressed ${this.prop.url}`);
     }
     else {
-      console.debug(`focus ${this.prop.id}`);
+      console.debug(`focus ${this.prop.url}`);
       this.window.webContents.send('card-focused');
     }
   };
 
   private _blurListener = () => {
     if (this.suppressBlurEventOnce) {
-      console.debug(`skip blur event listener ${this.prop.id}`);
+      console.debug(`skip blur event listener ${this.prop.url}`);
       this.suppressBlurEventOnce = false;
     }
     else {
-      console.debug(`blur ${this.prop.id}`);
+      console.debug(`blur ${this.prop.url}`);
       this.window.webContents.send('card-blurred');
     }
   };

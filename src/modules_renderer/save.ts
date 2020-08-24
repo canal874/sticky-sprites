@@ -6,14 +6,14 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
+import { AvatarProp, AvatarPropSerializable } from '../modules_common/cardprop';
 import { setTitleMessage } from './card_renderer';
 import { getCurrentDateAndTime } from '../modules_common/utils';
 import { DialogButton } from '../modules_common/const';
 import window from './window';
 
 type task = {
-  prop: CardPropSerializable;
+  prop: AvatarPropSerializable;
   type: 'Save' | 'Delete';
 };
 
@@ -70,13 +70,13 @@ const execTask = async () => {
 
     // Execute the first task
     if (task.type === 'Save') {
-      await window.api.saveCard(task.prop).catch(e => {
+      await window.api.updateAvatar(task.prop).catch(e => {
         // TODO: Handle save error.
         console.error('Error in execTask:' + e);
       });
     }
     else if (task.type === 'Delete') {
-      await window.api.deleteCard(task.prop.id).catch(e => {
+      await window.api.deleteAvatar(task.prop.url).catch(e => {
         // TODO: Handle save error.
         console.error('Error in execTask:' + e);
       });
@@ -84,7 +84,7 @@ const execTask = async () => {
 
     const finishedTask = unfinishedTasks.shift();
     console.debug(
-      `Dequeue unfinishedTask: [${finishedTask?.type}] ${finishedTask?.prop.modifiedDate}`
+      `Dequeue unfinishedTask: [${finishedTask?.type}] ${finishedTask?.prop.date.modifiedDate}`
     );
     clearTimeout(timeout);
     setTitleMessage('');
@@ -95,7 +95,7 @@ const execTask = async () => {
 };
 
 export const saveCardColor = (
-  cardProp: CardProp,
+  avatarProp: AvatarProp,
   bgColor: string,
   uiColor?: string,
   opacity = 1.0
@@ -103,39 +103,39 @@ export const saveCardColor = (
   if (uiColor === undefined) {
     uiColor = bgColor;
   }
-  cardProp.style.backgroundColor = bgColor;
-  cardProp.style.uiColor = uiColor;
-  cardProp.style.opacity = opacity;
+  avatarProp.style.backgroundColor = bgColor;
+  avatarProp.style.uiColor = uiColor;
+  avatarProp.style.opacity = opacity;
 
-  saveCard(cardProp);
+  saveCard(avatarProp);
 };
 
-export const deleteCard = (cardProp: CardProp) => {
-  cardProp.date.modifiedDate = getCurrentDateAndTime();
-  const propObject = cardProp.toObject();
+export const deleteCard = (avatarProp: AvatarProp) => {
+  avatarProp.date.modifiedDate = getCurrentDateAndTime();
+  const propObject = avatarProp.toObject();
   while (unfinishedTasks.length > 1) {
     const poppedTask = unfinishedTasks.pop();
     console.debug(
-      `Skip unfinishedTask: [${poppedTask?.type}] ${poppedTask?.prop.modifiedDate}`
+      `Skip unfinishedTask: [${poppedTask?.type}] ${poppedTask?.prop.date.modifiedDate}`
     );
   }
-  console.debug(`Enqueue unfinishedTask: [Delete] ${propObject.modifiedDate}`);
+  console.debug(`Enqueue unfinishedTask: [Delete] ${propObject.date.modifiedDate}`);
   // Here, current length of unfinishedTasks should be 0 or 1.
   unfinishedTasks.push({ prop: propObject, type: 'Delete' });
   // Here, current length of unfinishedTasks is 1 or 2.
   execTask();
 };
 
-export const saveCard = (cardProp: CardProp) => {
-  cardProp.date.modifiedDate = getCurrentDateAndTime();
-  const propObject = cardProp.toObject();
+export const saveCard = (avatarProp: AvatarProp) => {
+  avatarProp.date.modifiedDate = getCurrentDateAndTime();
+  const propObject = avatarProp.toObject();
   while (unfinishedTasks.length > 1) {
     const poppedTask = unfinishedTasks.pop();
     console.debug(
-      `Skip unfinishedTask: [${poppedTask?.type}] ${poppedTask?.prop.modifiedDate}`
+      `Skip unfinishedTask: [${poppedTask?.type}] ${poppedTask?.prop.date.modifiedDate}`
     );
   }
-  console.debug(`Enqueue unfinishedTask: [Save] ${propObject.modifiedDate}`);
+  console.debug(`Enqueue unfinishedTask: [Save] ${propObject.date.modifiedDate}`);
   // Here, current length of unfinishedTasks should be 0 or 1.
   unfinishedTasks.push({ prop: propObject, type: 'Save' });
   // Here, current length of unfinishedTasks is 1 or 2.

@@ -7,39 +7,39 @@
  */
 
 import { MessageLabel } from '../modules_common/i18n';
-import { CardPropSerializable } from '../modules_common/cardprop';
+import { AvatarPropSerializable } from '../modules_common/cardprop';
 
 interface WindowWithAPI extends Window {
   api: {
-    alertDialog: (id: string, label: MessageLabel) => Promise<void>;
-    blurAndFocusWithSuppressEvents: (id: string) => Promise<void>;
-    blurAndFocusWithSuppressFocusEvents: (id: string) => Promise<void>;
-    bringToFront: (id: string) => Promise<number>;
+    alertDialog: (url: string, label: MessageLabel) => Promise<void>;
+    blurAndFocusWithSuppressEvents: (url: string) => Promise<void>;
+    blurAndFocusWithSuppressFocusEvents: (url: string) => Promise<void>;
+    bringToFront: (url: string) => Promise<number>;
     createCard: (subsetOfCardPropSerializable: Record<string, any>) => Promise<string>;
     confirmDialog: (
-      id: string,
+      url: string,
       buttonLabels: MessageLabel[],
       label: MessageLabel
     ) => Promise<number>;
-    deleteCard: (id: string) => Promise<void>;
-    finishLoad: (id: string) => Promise<void>;
-    finishRenderCard: (id: string) => Promise<void>;
-    focus: (id: string) => Promise<void>;
+    deleteAvatar: (url: string) => Promise<void>;
+    finishLoad: (url: string) => Promise<void>;
+    finishRenderCard: (url: string) => Promise<void>;
+    focus: (url: string) => Promise<void>;
     getUuid: () => Promise<string>;
-    saveCard: (cardPropSerializable: CardPropSerializable) => Promise<void>;
-    sendLeftMouseDown: (id: string, x: number, y: number) => Promise<void>;
+    updateAvatar: (avatarPropSerializable: AvatarPropSerializable) => Promise<void>;
+    sendLeftMouseDown: (url: string, x: number, y: number) => Promise<void>;
+    sendToBack: (url: string) => Promise<number>;
+    setTitle: (url: string, title: string) => Promise<void>;
     setWindowSize: (
-      id: string,
+      url: string,
       width: number,
       height: number
     ) => Promise<{ x: number; y: number; width: number; height: number }>;
     setWindowPosition: (
-      id: string,
+      url: string,
       x: number,
       y: number
     ) => Promise<{ x: number; y: number; width: number; height: number }>;
-    setTitle: (id: string, title: string) => Promise<void>;
-    sendToBack: (id: string) => Promise<number>;
   };
 }
 declare const window: WindowWithAPI;

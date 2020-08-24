@@ -9,7 +9,7 @@ import path from 'path';
 import { app, Menu, Tray } from 'electron';
 import { openSettings, settingsDialog } from './settings';
 import { getSettings, MESSAGE } from './store';
-import { Card, cards } from './card';
+import { avatars, Card, cards, createCard, getCardFromUrl } from './card';
 import { emitter } from './event';
 import {
   CardProp,
@@ -20,6 +20,7 @@ import {
 } from '../modules_common/cardprop';
 import { getRandomInt } from '../modules_common/utils';
 import { cardColors, ColorName, darkenHexColor } from '../modules_common/color';
+import { getCurrentWorkspaceUrl } from './workspace';
 
 /**
  * Task tray
@@ -53,26 +54,28 @@ const createNewCard = async () => {
 
   const bgColor: string = cardColors[newColor];
 
-  const newGeometry: Geometry = {
+  const newAvatars: { [key: string]: Geometry & CardStyle } = {};
+  newAvatars[getCurrentWorkspaceUrl()] = {
     x: geometry.x,
     y: geometry.y,
     z: geometry.z,
     width: geometry.width,
     height: geometry.height,
-  };
-  const newStyle: CardStyle = {
     uiColor: darkenHexColor(bgColor),
     backgroundColor: bgColor,
     opacity: 1.0,
     zoom: 1.0,
   };
-  const card = new Card(
-    'New',
-    CardProp.fromObject({ ...newGeometry, ...newStyle } as CardPropSerializable)
+
+  const id = await createCard(
+    CardProp.fromObject(({
+      avatars: newAvatars,
+    } as unknown) as CardPropSerializable)
   );
-  cards.set(card.prop.id, card);
-  await card.render();
-  card.window.focus();
+  const newAvatar = avatars.get(getCurrentWorkspaceUrl() + id);
+  if (newAvatar) {
+    newAvatar.window.focus();
+  }
 };
 
 export const setTrayContextMenu = () => {
@@ -98,7 +101,7 @@ export const setTrayContextMenu = () => {
         if (settingsDialog && !settingsDialog.isDestroyed()) {
           settingsDialog.close();
         }
-        cards.forEach((card, key) => card.window.webContents.send('card-close'));
+        avatars.forEach(avatar => avatar.window.webContents.send('card-close'));
       },
     },
   ]);

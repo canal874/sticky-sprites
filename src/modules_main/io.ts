@@ -1,3 +1,4 @@
+/* eslint-disable dot-notation */
 /**
  * @license Media Stickies
  * Copyright (c) Hidekazu Kubota
@@ -9,10 +10,20 @@
 /**
  * Common part
  */
+import { Transform } from 'stream';
 import PouchDB from 'pouchdb';
-import { CardProp, CardPropSerializable } from '../modules_common/cardprop';
+import {
+  CardCondition,
+  CardDate,
+  CardProp,
+  CardPropSerializable,
+  CardStyle,
+  Geometry,
+  TransformableFeature,
+} from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
 import { getSettings } from './store';
+import { getCurrentWorkspaceUrl } from './workspace';
 
 /**
  * Module specific part
@@ -38,6 +49,28 @@ class CardIOClass implements ICardIO {
       return Promise.resolve();
     }
     return cardsDB.close();
+  };
+
+  public getAvatarIdList = (workspaceId: string): Promise<string[]> => {
+    // TODO: load workspaces
+    const workspaces = new Map<string, string[]>();
+    const avatarIds = workspaces.get(workspaceId);
+    if (avatarIds === undefined || avatarIds.length === 0) {
+      this.open();
+      return new Promise((resolve, reject) => {
+        cardsDB
+          .allDocs()
+          .then(res => {
+            resolve(res.rows.map(row => 'reactivedt://local/0/' + row.id));
+          })
+          .catch(err => {
+            reject(err);
+          });
+      });
+    }
+
+    // TODO: load avatars
+    return Promise.resolve(['']);
   };
 
   public getCardIdList = (): Promise<string[]> => {
@@ -66,7 +99,7 @@ class CardIOClass implements ICardIO {
     return id;
   };
 
-  public readCardData = (id: string, prop: CardProp): Promise<void> => {
+  public readCardData = (id: string): Promise<CardProp> => {
     // for debug
     // await sleep(60000);
     this.open();
@@ -75,6 +108,38 @@ class CardIOClass implements ICardIO {
         .get(id)
         .then(doc => {
           const propsRequired: CardPropSerializable = new CardProp('').toObject();
+
+          // Check versions and compatibility
+          if (!Object.prototype.hasOwnProperty.call(doc, 'version')) {
+            // The initial version has no version property.
+            propsRequired.version = '1.0';
+
+            const { x, y, z, width, height } = (doc as unknown) as Geometry;
+            const geometry: Geometry = { x, y, z, width, height };
+
+            const {
+              uiColor,
+              backgroundColor,
+              opacity,
+              zoom,
+            } = (doc as unknown) as CardStyle;
+            const style: CardStyle = { uiColor, backgroundColor, opacity, zoom };
+
+            const condition: CardCondition = {
+              locked: false,
+            };
+
+            const { createdDate, modifiedDate } = (doc as unknown) as CardDate;
+            const date: CardDate = { createdDate, modifiedDate };
+
+            propsRequired.avatars[getCurrentWorkspaceUrl()] = new TransformableFeature(
+              geometry,
+              style,
+              condition,
+              date
+            );
+          }
+
           // Checking properties retrieved from database
           for (const key in propsRequired) {
             if (key === 'id') {
@@ -93,29 +158,11 @@ class CardIOClass implements ICardIO {
             }
           }
 
+          const prop = new CardProp(id);
           prop.data = propsRequired.data;
-          prop.geometry = {
-            x: propsRequired.x,
-            y: propsRequired.y,
-            z: propsRequired.z,
-            width: propsRequired.width,
-            height: propsRequired.height,
-          };
-          prop.style = {
-            uiColor: propsRequired.uiColor,
-            backgroundColor: propsRequired.backgroundColor,
-            opacity: propsRequired.opacity,
-            zoom: propsRequired.zoom,
-          };
-          prop.condition = {
-            locked: propsRequired.locked,
-          };
-          prop.date = {
-            createdDate: propsRequired.createdDate,
-            modifiedDate: propsRequired.modifiedDate,
-          };
+          prop.avatars = propsRequired.avatars;
 
-          resolve();
+          resolve(prop);
         })
         .catch(e => {
           reject(e);

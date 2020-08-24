@@ -11,3 +11,5 @@ export const DialogButton = {
   Default: 0,
   Cancel: 1,
 };
+
+export const scheme = 'reactivedt';
