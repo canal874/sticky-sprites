@@ -16,8 +16,8 @@ import {
   AvatarPropSerializable,
   CardProp,
   CardPropSerializable,
-  getAvatarLocation,
   getIdFromUrl,
+  getLocationFromUrl,
   TransformableFeature,
 } from '../modules_common/cardprop';
 import { CardIO } from './io';
@@ -30,7 +30,6 @@ import {
   getCurrentWorkspace,
   getCurrentWorkspaceId,
   getCurrentWorkspaceUrl,
-  workspaces,
 } from './workspace';
 
 /**
@@ -65,14 +64,14 @@ export const getGlobalFocusEventListenerPermission = () => {
 export const cards: Map<string, Card> = new Map<string, Card>();
 export const avatars: Map<string, Avatar> = new Map<string, Avatar>();
 
-export const getCardFromUrl = (_url: string): Card | undefined => {
-  const id = getIdFromUrl(_url);
-  const card = cards.get(id);
-  return card;
-};
-
 const generateNewCardId = (): string => {
   return uuidv4();
+};
+
+export const getCardFromUrl = (avatarUrl: string): Card | undefined => {
+  const id = getIdFromUrl(avatarUrl);
+  const card = cards.get(id);
+  return card;
 };
 
 export const getCardData = (avatarUrl: string) => {
@@ -80,7 +79,7 @@ export const getCardData = (avatarUrl: string) => {
 };
 
 export const getAvatarProp = (avatarUrl: string) => {
-  return getCardFromUrl(avatarUrl)?.prop.avatars[getAvatarLocation(avatarUrl)];
+  return getCardFromUrl(avatarUrl)?.prop.avatars[getLocationFromUrl(avatarUrl)];
 };
 
 export const createCard = async (propObject: CardPropSerializable) => {
@@ -177,7 +176,7 @@ export const deleteAvatar = async (_url: string) => {
   if (!card) {
     return;
   }
-  delete card.prop.avatars[getAvatarLocation(_url)];
+  delete card.prop.avatars[getLocationFromUrl(_url)];
   await saveCard(card.prop);
 };
 
@@ -194,7 +193,7 @@ export const updateAvatar = async (avatarPropObj: AvatarPropSerializable) => {
     date: prop.date,
   };
   card.prop.data = prop.data;
-  card.prop.avatars[getAvatarLocation(prop.url)] = feature;
+  card.prop.avatars[getLocationFromUrl(prop.url)] = feature;
 
   await saveCard(card.prop);
 };

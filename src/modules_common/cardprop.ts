@@ -244,7 +244,7 @@ export class CardProp implements CardBase {
   };
 }
 
-export const getAvatarLocation = (avatarUrl: string): string => {
+export const getLocationFromUrl = (avatarUrl: string): string => {
   const rex = new RegExp(`^(${scheme}:\\/\\/.+/)[^/]+?$`);
   const result = avatarUrl.match(rex);
   if (result && result.length === 2) {

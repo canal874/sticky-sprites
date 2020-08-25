@@ -10,15 +10,11 @@ import { Cipher } from 'crypto';
 import {
   AvatarProp,
   AvatarPropSerializable,
-  CardProp,
-  CardPropSerializable,
-  CardStatus,
   CardStyle,
-  cardVersion,
   DEFAULT_CARD_GEOMETRY,
   DRAG_IMAGE_MARGIN,
   Geometry,
-  getAvatarLocation,
+  getLocationFromUrl,
 } from './modules_common/cardprop';
 import {
   CardCssStyle,
@@ -114,7 +110,7 @@ const initializeUIEvents = () => {
     geometry.x = avatarProp.geometry.x + 30;
     geometry.y = avatarProp.geometry.y + 30;
     const avatars: { [key: string]: Geometry & CardStyle } = {};
-    avatars[getAvatarLocation(avatarProp.url)] = {
+    avatars[getLocationFromUrl(avatarProp.url)] = {
       x: geometry.x,
       y: geometry.y,
       z: geometry.z + 1,
