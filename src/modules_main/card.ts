@@ -67,8 +67,7 @@ export const getCardFromUrl = (_url: string): Card | undefined => {
 };
 
 const generateNewCardId = (): string => {
-  // YYYY-MM-DD-UUID4
-  return `${getCurrentDateAndTime().replace(/^(.+?)\s.+?$/, '$1')}-${uuidv4()}`;
+  return uuidv4();
 };
 
 export const getCardData = (avatarUrl: string) => {
