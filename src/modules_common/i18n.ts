@@ -15,6 +15,7 @@ type MessagesMain = {
   btnAllow: string;
   btnCancel: string;
   btnRemove: string;
+  workspaceName: string;
   settings: string;
   trayToolTip: string;
   lockCard: string;
@@ -108,6 +109,7 @@ export const English: Messages = {
   btnAllow: 'Allow',
   btnCancel: 'Cancel ', // 'Cancel' is automatically translated to local language, so add use 'Cancel '.
   btnRemove: 'Remove',
+  workspaceName: 'Workspace $1',
   settings: 'Settings...',
   trayToolTip: 'Media Stickies',
   lockCard: 'Lock card',
@@ -166,6 +168,7 @@ export const Japanese: Messages = {
   btnAllow: '許可する',
   btnCancel: 'キャンセル',
   btnRemove: '削除する',
+  workspaceName: 'ワークスペース $1',
   settings: '設定...',
   trayToolTip: 'Media Stickies',
   lockCard: 'ロックする',

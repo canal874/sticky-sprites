@@ -32,7 +32,7 @@ import {
 import { initializeGlobalStore, MESSAGE } from './modules_main/store';
 import { destroyTray, initializeTaskTray } from './modules_main/tray';
 import { openSettings, settingsDialog } from './modules_main/settings';
-import { getCurrentWorkspaceId } from './modules_main/workspace';
+import { getCurrentWorkspace, getCurrentWorkspaceId } from './modules_main/workspace';
 
 // process.on('unhandledRejection', console.dir);
 
@@ -66,37 +66,54 @@ app.on('ready', async () => {
   }
 
   // load cards
-  const avatarIdArray: string[] = await CardIO.getAvatarIdList(
+  let avatarIdArray: string[] = await CardIO.getAvatarUrlList(
     getCurrentWorkspaceId()
   ).catch((e: Error) => {
     console.error(`Cannot load a list of cards: ${e.message}`);
     return [];
   });
 
-  const cardIdArray = avatarIdArray.map(avatarUrl => getIdFromUrl(avatarUrl));
-  // Be unique
-  const uniqueCardIdArray = [...new Set(cardIdArray)];
-  const loadCard = async (card: Card) => {
+  if (avatarIdArray.length === 0) {
+    const card = new Card('New');
     await card.loadOrCreateCardData().catch(e => {
       throw e;
     });
-    cards.set(card.prop.id, card);
-  };
-  const loaders = uniqueCardIdArray.map(id =>
-    uniqueCardIdArray.length === 0
-      ? loadCard(new Card('New'))
-      : loadCard(new Card('Load', id))
-  );
+    const avatarLocs = Object.keys(card.prop.avatars);
+    // eslint-disable-next-line require-atomic-updates
+    avatarIdArray = [];
+    avatarLocs.forEach(loc => {
+      const _url = loc + card.prop.id;
+      avatarIdArray.push(_url);
+      getCurrentWorkspace()!.avatars.push(_url);
+      CardIO.addAvatarUrl(getCurrentWorkspaceId(), _url);
+    });
 
-  await Promise.all(loaders).catch(e => {
-    console.error(`Error while loading cards in ready event: ${e.message}`);
-  });
+    cards.set(card.prop.id, card);
+    await CardIO.updateOrCreateCardData(card.prop).catch((e: Error) => {
+      console.error(e.message);
+    });
+  }
+  else {
+    const cardIdArray = avatarIdArray.map(avatarUrl => getIdFromUrl(avatarUrl));
+    // Be unique
+    const uniqueCardIdArray = [...new Set(cardIdArray)];
+    const loadCard = async (card: Card) => {
+      await card.loadOrCreateCardData().catch(e => {
+        throw e;
+      });
+      cards.set(card.prop.id, card);
+    };
+    const loaders = uniqueCardIdArray.map(id => loadCard(new Card('Load', id)));
+    await Promise.all(loaders).catch(e => {
+      console.error(`Error while loading cards in ready event: ${e.message}`);
+    });
+  }
 
   /**
    * TODO: カードをRxJS か Observable-hooks + Redux で保存
    */
   const setAvatarEntry = (avatar: Avatar) => avatars.set(avatar.prop.url, avatar);
-  avatarIdArray.map(avatarUrl =>
+  avatarIdArray.forEach(avatarUrl =>
     setAvatarEntry(
       new Avatar(
         new AvatarProp(avatarUrl, getCardData(avatarUrl), getAvatarProp(avatarUrl))
@@ -294,7 +311,7 @@ ipcMain.handle('bring-to-front', (event, url: string, rearrange = false) => {
     return;
   }
 
-  const backToFront = [...cards.keys()].sort((a, b) => {
+  const backToFront = [...avatars.keys()].sort((a, b) => {
     if (avatars.get(a)!.prop.geometry.z < avatars.get(b)!.prop.geometry.z) {
       return -1;
     }
@@ -325,7 +342,7 @@ ipcMain.handle('send-to-back', (event, url: string) => {
     return;
   }
 
-  const backToFront = [...cards.keys()].sort((a, b) => {
+  const backToFront = [...avatars.keys()].sort((a, b) => {
     if (avatars.get(a)!.prop.geometry.z < avatars.get(b)!.prop.geometry.z) {
       return -1;
     }

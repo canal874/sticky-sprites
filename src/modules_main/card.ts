@@ -21,12 +21,17 @@ import {
   TransformableFeature,
 } from '../modules_common/cardprop';
 import { CardIO } from './io';
-import { getCurrentDateAndTime, sleep } from '../modules_common/utils';
+import { sleep } from '../modules_common/utils';
 import { CardInitializeType } from '../modules_common/types';
 import { getSettings, globalDispatch, MESSAGE } from './store';
 import { cardColors, ColorName } from '../modules_common/color';
 import { DialogButton } from '../modules_common/const';
-import { getCurrentWorkspaceUrl } from './workspace';
+import {
+  getCurrentWorkspace,
+  getCurrentWorkspaceId,
+  getCurrentWorkspaceUrl,
+  workspaces,
+} from './workspace';
 
 /**
  * Const
@@ -87,18 +92,23 @@ export const createCard = async (propObject: CardPropSerializable) => {
    * Render avatar if current workspace matches
    */
   const workspaceUrl = getCurrentWorkspaceUrl();
-  const renderers = [];
-  for (const _url in card.prop.avatars) {
-    if (_url.match(workspaceUrl)) {
-      const avatar = avatars.get(_url);
-      if (avatar) {
-        renderers.push(avatar.render());
-      }
+  const promises = [];
+  for (const loc in card.prop.avatars) {
+    if (loc.match(workspaceUrl)) {
+      const avatarUrl = loc + card.prop.id;
+      const avatar = new Avatar(
+        new AvatarProp(avatarUrl, getCardData(avatarUrl), getAvatarProp(avatarUrl))
+      );
+      avatars.set(avatarUrl, avatar);
+      promises.push(avatar.render());
+      getCurrentWorkspace()!.avatars.push(avatarUrl);
+      promises.push(CardIO.addAvatarUrl(getCurrentWorkspaceId(), avatarUrl));
     }
   }
-  await Promise.all(renderers).catch(e => {
+  await Promise.all(promises).catch(e => {
     console.error(`Error in createCard: ${e.message}`);
   });
+  await saveCard(card.prop);
   return prop.id;
 };
 
@@ -157,12 +167,17 @@ export const deleteAvatar = async (_url: string) => {
   if (avatar) {
     avatars.delete(_url);
     avatar.window.destroy();
+    await CardIO.deleteAvatarUrl(getCurrentWorkspaceId(), _url);
+    const ws = getCurrentWorkspace();
+    if (ws) {
+      ws.avatars = ws.avatars.filter(avatarUrl => avatarUrl !== _url);
+    }
   }
   const card = getCardFromUrl(_url);
   if (!card) {
     return;
   }
-  delete card.prop.avatars[_url];
+  delete card.prop.avatars[getAvatarLocation(_url)];
   await saveCard(card.prop);
 };
 
@@ -179,13 +194,13 @@ export const updateAvatar = async (avatarPropObj: AvatarPropSerializable) => {
     date: prop.date,
   };
   card.prop.data = prop.data;
-  card.prop.avatars[prop.url] = feature;
+  card.prop.avatars[getAvatarLocation(prop.url)] = feature;
 
   await saveCard(card.prop);
 };
 
 const saveCard = async (cardProp: CardProp) => {
-  await CardIO.writeOrCreateCardData(cardProp).catch((e: Error) => {
+  await CardIO.updateOrCreateCardData(cardProp).catch((e: Error) => {
     console.error(e.message);
   });
 };
@@ -309,7 +324,7 @@ export class Card {
       const id = arg;
 
       this.loadOrCreateCardData = async () => {
-        this.prop = await CardIO.readCardData(id).catch(e => {
+        this.prop = await CardIO.getCardData(id).catch(e => {
           throw e;
         });
       };
@@ -395,7 +410,7 @@ export class Avatar {
 
     this.window.webContents.on('did-finish-load', () => {
       const checkNavigation = (_event: Electron.Event, navUrl: string) => {
-        console.debug('did-start-navigate : ' + navUrl);
+        //        console.debug('did-start-navigate : ' + navUrl);
         // Check top frame
         const topFrameURL = this.indexUrl.replace(/\\/g, '/');
         if (navUrl === topFrameURL) {
@@ -495,7 +510,7 @@ export class Avatar {
           }
         }
       };
-      console.debug('did-finish-load: ' + this.window.webContents.getURL());
+      //      console.debug('did-finish-load: ' + this.window.webContents.getURL());
       this.window.webContents.on('did-start-navigation', checkNavigation);
     });
 

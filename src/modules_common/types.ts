@@ -17,10 +17,15 @@ export type CardInitializeType = 'Load' | 'New';
 
 export interface ICardIO {
   close(): void;
-  getAvatarIdList(workspaceId: string): Promise<string[]>;
+  loadOrCreateWorkspace(workspaceId: string): Promise<void>;
+
+  getAvatarUrlList(workspaceId: string): Promise<string[]>;
+  addAvatarUrl(workspaceId: string, avatarUrl: string): void;
+  deleteAvatarUrl(workspaceId: string, avatarUrl: string): void;
+
   getCardIdList(): Promise<string[]>;
-  readCardData(id: string): Promise<CardProp>;
-  writeOrCreateCardData(prop: CardProp): Promise<string>;
+  getCardData(id: string): Promise<CardProp>;
+  updateOrCreateCardData(prop: CardProp): Promise<string>;
   deleteCardData(id: string): Promise<string>;
 }
 

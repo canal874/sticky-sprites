@@ -28,7 +28,7 @@ import {
   ICardEditor,
   InnerClickEvent,
 } from './modules_common/types';
-import { DialogButton, scheme } from './modules_common/const';
+import { DialogButton } from './modules_common/const';
 import { CardEditor } from './modules_renderer/editor';
 import {
   getRenderOffsetHeight,

@@ -22,62 +22,180 @@ import {
   TransformableFeature,
 } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
-import { getSettings } from './store';
-import { getCurrentWorkspaceUrl } from './workspace';
+import { getSettings, MESSAGE } from './store';
+import { getCurrentWorkspaceUrl, Workspace, workspaces } from './workspace';
 
 /**
  * Module specific part
  */
 
-var cardsDB: PouchDB.Database<{}>;
+var cardDB: PouchDB.Database<{}>;
+var workspaceDB: PouchDB.Database<{}>;
 
 class CardIOClass implements ICardIO {
-  isClosed = true;
-  open = () => {
-    if (cardsDB === undefined || this.isClosed) {
-      cardsDB = new PouchDB(getSettings().persistent.storage.path);
-      this.isClosed = false;
+  isCardDBClosed = true;
+  isWorkspaceDBClosed = true;
+
+  openCardDB = () => {
+    if (cardDB === undefined || this.isCardDBClosed) {
+      cardDB = new PouchDB(getSettings().persistent.storage.path + '/card');
+      this.isCardDBClosed = false;
+    }
+  };
+
+  openWorkspaceDB = () => {
+    if (workspaceDB === undefined || this.isWorkspaceDBClosed) {
+      workspaceDB = new PouchDB(getSettings().persistent.storage.path + '/workspace');
+      this.isWorkspaceDBClosed = false;
     }
   };
 
   public close = () => {
-    if (this.isClosed) {
-      return;
+    if (!this.isCardDBClosed) {
+      this.isCardDBClosed = true;
+      if (cardDB === undefined || cardDB === null) {
+        return Promise.resolve();
+      }
+      return cardDB.close();
     }
-    this.isClosed = true;
-    if (cardsDB === undefined || cardsDB === null) {
-      return Promise.resolve();
+    if (!this.isWorkspaceDBClosed) {
+      this.isWorkspaceDBClosed = true;
+      if (workspaceDB === undefined || workspaceDB === null) {
+        return Promise.resolve();
+      }
+      return workspaceDB.close();
     }
-    return cardsDB.close();
   };
 
-  public getAvatarIdList = (workspaceId: string): Promise<string[]> => {
-    // TODO: load workspaces
-    const workspaces = new Map<string, string[]>();
-    const avatarIds = workspaces.get(workspaceId);
-    if (avatarIds === undefined || avatarIds.length === 0) {
-      this.open();
-      return new Promise((resolve, reject) => {
-        cardsDB
-          .allDocs()
-          .then(res => {
-            resolve(res.rows.map(row => 'reactivedt://local/0/' + row.id));
-          })
-          .catch(err => {
-            reject(err);
-          });
+  public loadOrCreateWorkspace = async (workspaceId: string) => {
+    this.openWorkspaceDB();
+
+    const workspace = ((await workspaceDB
+      .get(workspaceId)
+      .catch(() => undefined)) as unknown) as Workspace | undefined;
+
+    if (workspace) {
+      workspaces.set(workspaceId, {
+        name: workspace['name'],
+        avatars: workspace['avatars'],
       });
     }
+    else {
+      if (workspaces.size === 0) {
+        // Check if initial launch
+        this.openCardDB();
+        const ids = await cardDB.allDocs().catch(() => undefined);
+        if (ids && ids.rows.length > 0) {
+          const urls = ids.rows.map(row => 'reactivedt://local/avatar/0/' + row.id);
+          // Old version exists
+          workspaces.set(workspaceId, {
+            name: MESSAGE('workspaceName', `${workspaceId + 1}`),
+            avatars: urls,
+          });
+        }
+        else {
+          // Create initial workspace
+          workspaces.set(workspaceId, {
+            name: MESSAGE('workspaceName', `${workspaceId + 1}`),
+            avatars: [],
+          });
+        }
+      }
+      else {
+        // Create new workspace
+        workspaces.set(workspaceId, {
+          name: MESSAGE('workspaceName', `${workspaceId}`),
+          avatars: [],
+        });
+      }
+      // Save new workspace
+      const wsObj = {
+        _id: workspaceId,
+        _rev: '',
+        ...workspaces.get(workspaceId),
+      };
 
-    // TODO: load avatars
-    return Promise.resolve(['']);
+      await workspaceDB.put(wsObj).then(res => {
+        console.debug(`Workspace saved: ${res.id}`);
+        return res.id;
+      });
+    }
+  };
+
+  public getAvatarUrlList = async (workspaceId: string) => {
+    if (!workspaces.has(workspaceId)) {
+      await this.loadOrCreateWorkspace(workspaceId);
+    }
+    return workspaces.get(workspaceId)!.avatars;
+  };
+
+  public addAvatarUrl = async (workspaceId: string, avatarUrl: string) => {
+    this.openWorkspaceDB();
+    const wsObj: { _id: string; _rev: string } & Workspace = {
+      _id: workspaceId,
+      _rev: '',
+      name: '',
+      avatars: [avatarUrl],
+    };
+    await workspaceDB
+      .get(workspaceId)
+      .then(oldWS => {
+        // Update existing card
+        const { name, avatars } = (oldWS as unknown) as Workspace;
+        wsObj._rev = oldWS._rev;
+        wsObj.name = name;
+        wsObj.avatars.push(...avatars);
+      })
+      .catch(e => {
+        throw e;
+      });
+
+    return workspaceDB
+      .put(wsObj)
+      .then(res => {
+        console.debug(`Workspace saved: ${res.id}`);
+      })
+      .catch(e => {
+        throw e;
+      });
+  };
+
+  public deleteAvatarUrl = async (workspaceId: string, avatarUrl: string) => {
+    this.openWorkspaceDB();
+    const wsObj: { _id: string; _rev: string } & Workspace = {
+      _id: workspaceId,
+      _rev: '',
+      name: '',
+      avatars: [],
+    };
+    await workspaceDB
+      .get(workspaceId)
+      .then(oldWS => {
+        // Update existing card
+        const { name, avatars } = (oldWS as unknown) as Workspace;
+        wsObj._rev = oldWS._rev;
+        wsObj.name = name;
+        wsObj.avatars = avatars.filter(url => url !== avatarUrl);
+      })
+      .catch(e => {
+        throw e;
+      });
+
+    return workspaceDB
+      .put(wsObj)
+      .then(res => {
+        console.debug(`Delete avatar: ${avatarUrl}`);
+      })
+      .catch(e => {
+        throw e;
+      });
   };
 
   public getCardIdList = (): Promise<string[]> => {
     // returns all card ids.
-    this.open();
+    this.openCardDB();
     return new Promise((resolve, reject) => {
-      cardsDB
+      cardDB
         .allDocs()
         .then(res => {
           resolve(res.rows.map(row => row.id));
@@ -91,27 +209,32 @@ class CardIOClass implements ICardIO {
   public deleteCardData = async (id: string): Promise<string> => {
     // for debug
     // await sleep(60000);
-    this.open();
-    const card = await cardsDB.get(id);
-    await cardsDB.remove(card).catch(e => {
+    this.openCardDB();
+    const card = await cardDB.get(id);
+    await cardDB.remove(card).catch(e => {
       throw e;
     });
     return id;
   };
 
-  public readCardData = (id: string): Promise<CardProp> => {
+  public getCardData = (id: string): Promise<CardProp> => {
     // for debug
     // await sleep(60000);
-    this.open();
+    this.openCardDB();
     return new Promise((resolve, reject) => {
-      cardsDB
+      cardDB
         .get(id)
         .then(doc => {
           const propsRequired: CardPropSerializable = new CardProp('').toObject();
 
           // Check versions and compatibility
+          let isFirstVersion = false;
           if (!Object.prototype.hasOwnProperty.call(doc, 'version')) {
-            // The initial version has no version property.
+            isFirstVersion = true;
+          }
+
+          if (isFirstVersion) {
+            // The first version has no version property.
             propsRequired.version = '1.0';
 
             const { x, y, z, width, height } = (doc as unknown) as Geometry;
@@ -162,6 +285,10 @@ class CardIOClass implements ICardIO {
           prop.data = propsRequired.data;
           prop.avatars = propsRequired.avatars;
 
+          if (isFirstVersion) {
+            this.updateOrCreateCardData(prop);
+          }
+
           resolve(prop);
         })
         .catch(e => {
@@ -170,8 +297,8 @@ class CardIOClass implements ICardIO {
     });
   };
 
-  public writeOrCreateCardData = async (prop: CardProp): Promise<string> => {
-    this.open();
+  public updateOrCreateCardData = async (prop: CardProp): Promise<string> => {
+    this.openCardDB();
     console.debug('Saving card...: ' + JSON.stringify(prop.toObject()));
     // In PouchDB, _id must be used instead of id in document.
     // Convert class to Object to serialize.
@@ -181,7 +308,7 @@ class CardIOClass implements ICardIO {
     // for debug
     // await sleep(60000);
 
-    await cardsDB
+    await cardDB
       .get(prop.id)
       .then(oldCard => {
         // Update existing card
@@ -191,7 +318,7 @@ class CardIOClass implements ICardIO {
         /* Create new card */
       });
 
-    return cardsDB
+    return cardDB
       .put(propObj)
       .then(res => {
         console.debug(`Saved: ${res.id}`);

@@ -10,10 +10,18 @@ import { scheme } from '../modules_common/const';
 
 let currentWorkspaceId = '0';
 let lastIdOfWorkspace = '0';
+export type Workspace = {
+  name: string;
+  avatars: string[];
+};
+export const workspaces = new Map<string, Workspace>();
 export const getCurrentWorkspaceUrl = () => {
   // TODO: Check if does current workspace exist
   // TODO: Create and save workspace if there is no workspace
-  return `${scheme}://local/${currentWorkspaceId}/`;
+  return `${scheme}://local/avatar/${currentWorkspaceId}/`;
+};
+export const getCurrentWorkspace = () => {
+  return workspaces.get(currentWorkspaceId);
 };
 export const getCurrentWorkspaceId = () => {
   // TODO: Check if does current workspace exist
@@ -22,6 +30,9 @@ export const getCurrentWorkspaceId = () => {
 };
 export const setCurrentWorkspaceId = (id: string) => {
   currentWorkspaceId = id;
+};
+export const getLastIdOfWorkspace = () => {
+  return lastIdOfWorkspace;
 };
 export const setLastIdOfWorkspace = (id: string) => {
   lastIdOfWorkspace = id;

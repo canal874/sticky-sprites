@@ -9,6 +9,7 @@
 import { getCurrentDateAndTime } from './utils';
 import { cardColors, darkenHexColor } from './color';
 import { scheme } from './const';
+import { getCurrentWorkspaceUrl } from '../modules_main/workspace';
 
 export const cardVersion = '1.0';
 
@@ -124,9 +125,7 @@ export class TransformableFeature {
   }
 }
 
-type CardAvatars = {
-  [key: string]: TransformableFeature;
-};
+type CardAvatars = { [key: string]: TransformableFeature };
 
 // Properties of a card that must be serialized
 // Each of them must have unique name to be able to use as a key when serialize.
@@ -143,7 +142,7 @@ export type AvatarPropSerializable = {
 
 export class AvatarProp extends TransformableFeature {
   public version = cardVersion;
-  public url = ''; // reactivedt://workspace_id/group_id_0/group_id_1/../card_id
+  public url = '';
   public data = '';
   public status: CardStatus = 'Blurred';
 
@@ -197,11 +196,7 @@ export class CardProp implements CardBase {
   public avatars: CardAvatars;
 
   // eslint-disable-next-line complexity
-  constructor (
-    _id?: string,
-    _data?: string,
-    _avatars?: { [_url: string]: TransformableFeature }
-  ) {
+  constructor (_id?: string, _data?: string, _avatars?: CardAvatars) {
     if (_id !== undefined) {
       this.id = _id;
     }
@@ -220,7 +215,7 @@ export class CardProp implements CardBase {
     }
     else {
       this.avatars = {};
-      this.avatars[0] = new TransformableFeature();
+      this.avatars[getCurrentWorkspaceUrl()] = new TransformableFeature();
     }
   }
 
