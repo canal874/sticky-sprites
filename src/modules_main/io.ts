@@ -100,7 +100,7 @@ class CardIOClass implements ICardIO {
         const urls = ids.rows.map(row => 'reactivedt://local/avatar/0/' + row.id);
         // Old version exists
         workspaces.set(workspaceId, {
-          name: MESSAGE('workspaceName', `${workspaceId + 1}`),
+          name: MESSAGE('workspaceName', `${parseInt(workspaceId, 10) + 1}`),
           avatars: urls,
         });
       }
@@ -141,16 +141,24 @@ class CardIOClass implements ICardIO {
   };
 
   public updateWorkspaceStatus = async () => {
-    const currentId = await workspaceDB.get('currentId');
+    const currentId = await workspaceDB.get('currentId').catch(() => undefined);
+    let currentIdRev = '';
+    if (currentId) {
+      currentIdRev = currentId._rev;
+    }
     workspaceDB.put({
       _id: 'currentId',
-      _rev: currentId._rev,
+      _rev: currentIdRev,
       currentId: getCurrentWorkspaceId(),
     });
-    const lastId = await workspaceDB.get('lastId');
+    const lastId = await workspaceDB.get('lastId').catch(() => undefined);
+    let lastIdRev = '';
+    if (lastId) {
+      lastIdRev = lastId._rev;
+    }
     workspaceDB.put({
       _id: 'lastId',
-      _rev: lastId._rev,
+      _rev: lastIdRev,
       lastId: getLastWorkspaceId(),
     });
   };

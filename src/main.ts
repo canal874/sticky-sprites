@@ -83,6 +83,7 @@ app.on('window-all-closed', () => {
     avatars.clear();
     cards.clear();
     setCurrentWorkspaceId(nextWorkspaceId);
+    CardIO.updateWorkspaceStatus();
     loadCurrentWorkspace();
   }
   else {
