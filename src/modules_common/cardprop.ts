@@ -124,7 +124,7 @@ export class TransformableFeature {
   }
 }
 
-type CardAvatars = { [key: string]: TransformableFeature };
+export type CardAvatars = { [key: string]: TransformableFeature };
 
 // Properties of a card that must be serialized
 // Each of them must have unique name to be able to use as a key when serialize.

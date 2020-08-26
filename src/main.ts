@@ -17,6 +17,7 @@ import {
   cards,
   createCard,
   deleteAvatar,
+  deleteCardWithRetry,
   setGlobalFocusEventListenerPermission,
   updateAvatar,
 } from './modules_main/card';
@@ -25,10 +26,12 @@ import { destroyTray, initializeTaskTray } from './modules_main/tray';
 import { openSettings, settingsDialog } from './modules_main/settings';
 import { loadCurrentWorkspace } from './modules_main/workspace';
 import {
-  getChangingWorkspace,
+  getChangingToWorkspaceId,
+  setChangingToWorkspaceId,
   setCurrentWorkspaceId,
 } from './modules_main/store_workspaces';
 import { handlers } from './modules_main/event';
+import { getIdFromUrl } from './modules_common/avatar_url_utils';
 
 // process.on('unhandledRejection', console.dir);
 
@@ -62,7 +65,7 @@ app.on('ready', async () => {
   }
 
   // load workspaces
-  await CardIO.loadOrCreateWorkspaces();
+  await CardIO.loadOrCreateWorkspaces().catch(e => console.error(e.message));
 
   await loadCurrentWorkspace();
 
@@ -76,7 +79,7 @@ app.on('ready', async () => {
  * Exit app
  */
 app.on('window-all-closed', () => {
-  const nextWorkspaceId = getChangingWorkspace();
+  const nextWorkspaceId = getChangingToWorkspaceId();
   if (nextWorkspaceId !== '-1') {
     handlers.forEach(channel => ipcMain.removeHandler(channel));
     handlers.length = 0; // empty
@@ -85,6 +88,7 @@ app.on('window-all-closed', () => {
     setCurrentWorkspaceId(nextWorkspaceId);
     CardIO.updateWorkspaceStatus();
     loadCurrentWorkspace();
+    setChangingToWorkspaceId('-1');
   }
   else {
     CardIO.close();
@@ -103,6 +107,10 @@ ipcMain.handle('update-avatar', async (event, avatarPropObj: AvatarPropSerializa
 
 ipcMain.handle('delete-avatar', async (event, url: string) => {
   await deleteAvatar(url);
+});
+
+ipcMain.handle('delete-card', async (event, url: string) => {
+  await deleteCardWithRetry(getIdFromUrl(url));
 });
 
 ipcMain.handle('finish-render-card', (event, url: string) => {

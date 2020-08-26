@@ -33,6 +33,9 @@ contextBridge.exposeInMainWorld('api', {
   deleteAvatar: (url: string) => {
     return ipcRenderer.invoke('delete-avatar', url);
   },
+  deleteCard: (url: string) => {
+    return ipcRenderer.invoke('delete-card', url);
+  },
   finishLoad: (url: string) => {
     return ipcRenderer.invoke('finish-load-' + url);
   },

@@ -148,10 +148,10 @@ export const deleteCard = async (id: string) => {
   /**
    * Delete all avatar cards
    */
-  for (const key in card.prop.avatars) {
-    const avatar = avatars.get(key);
+  for (const avatarLocation in card.prop.avatars) {
+    const avatar = avatars.get(avatarLocation + id);
     if (avatar) {
-      avatars.delete(key);
+      avatars.delete(avatarLocation + id);
       avatar.window.destroy();
     }
   }

@@ -14,7 +14,7 @@ import window from './window';
 
 type task = {
   prop: AvatarPropSerializable;
-  type: 'Save' | 'Delete';
+  type: 'Save' | 'DeleteAvatar' | 'DeleteCard';
 };
 
 const unfinishedTasks: task[] = [];
@@ -63,7 +63,7 @@ const execTask = async () => {
       if (task.type === 'Save') {
         setTitleMessage('[saving...]');
       }
-      else if (task.type === 'Delete') {
+      else if (task.type === 'DeleteAvatar' || task.type === 'DeleteCard') {
         setTitleMessage('[deleting...]');
       }
     }, 1000);
@@ -75,7 +75,13 @@ const execTask = async () => {
         console.error('Error in execTask:' + e);
       });
     }
-    else if (task.type === 'Delete') {
+    else if (task.type === 'DeleteCard') {
+      await window.api.deleteCard(task.prop.url).catch(e => {
+        // TODO: Handle save error.
+        console.error('Error in execTask:' + e);
+      });
+    }
+    else if (task.type === 'DeleteAvatar') {
       await window.api.deleteAvatar(task.prop.url).catch(e => {
         // TODO: Handle save error.
         console.error('Error in execTask:' + e);
@@ -119,9 +125,25 @@ export const deleteCard = (avatarProp: AvatarProp) => {
       `Skip unfinishedTask: [${poppedTask?.type}] ${poppedTask?.prop.date.modifiedDate}`
     );
   }
-  console.debug(`Enqueue unfinishedTask: [Delete] ${propObject.date.modifiedDate}`);
+  console.debug(`Enqueue unfinishedTask: [Delete Card] ${propObject.date.modifiedDate}`);
   // Here, current length of unfinishedTasks should be 0 or 1.
-  unfinishedTasks.push({ prop: propObject, type: 'Delete' });
+  unfinishedTasks.push({ prop: propObject, type: 'DeleteCard' });
+  // Here, current length of unfinishedTasks is 1 or 2.
+  execTask();
+};
+
+export const deleteAvatar = (avatarProp: AvatarProp) => {
+  avatarProp.date.modifiedDate = getCurrentDateAndTime();
+  const propObject = avatarProp.toObject();
+  while (unfinishedTasks.length > 1) {
+    const poppedTask = unfinishedTasks.pop();
+    console.debug(
+      `Skip unfinishedTask: [${poppedTask?.type}] ${poppedTask?.prop.date.modifiedDate}`
+    );
+  }
+  console.debug(`Enqueue unfinishedTask: [Delete Avatar] ${propObject.date.modifiedDate}`);
+  // Here, current length of unfinishedTasks should be 0 or 1.
+  unfinishedTasks.push({ prop: propObject, type: 'DeleteAvatar' });
   // Here, current length of unfinishedTasks is 1 or 2.
   execTask();
 };

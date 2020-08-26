@@ -24,8 +24,8 @@ import {
   getCurrentWorkspaceId,
   getCurrentWorkspaceUrl,
   getNextWorkspaceId,
+  setChangingToWorkspaceId,
   setLastWorkspaceId,
-  setNextWorkspaceId,
   Workspace,
   workspaces,
 } from './store_workspaces';
@@ -105,7 +105,7 @@ export const setTrayContextMenu = () => {
             if (!workspace) {
               return;
             }
-            setNextWorkspaceId(id);
+            setChangingToWorkspaceId(id);
             avatars.forEach(avatar => avatar.window.webContents.send('card-close'));
             // wait 'window-all-closed' event
           }

@@ -41,8 +41,8 @@ export const loadCurrentWorkspace = async () => {
     // Be unique
     const uniqueCardIdArray = [...new Set(cardIdArray)];
     const loadCard = async (card: Card) => {
-      await card.loadOrCreateCardData().catch(e => {
-        throw e;
+      await card.loadOrCreateCardData().catch((e: Error) => {
+        console.error(e.message);
       });
       cards.set(card.prop.id, card);
     };

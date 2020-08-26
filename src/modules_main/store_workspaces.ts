@@ -11,7 +11,7 @@ import { scheme } from '../modules_common/const';
 let currentWorkspaceId = '0'; // string expression of positive number
 let lastWorkspaceId = '0';
 
-let nextWorkspaceId = '-1'; // nextWorkspaceId stores next id while workspace is changing. It store '-1' if not.
+let changingToWorkspaceId = '-1'; // changingToWorkspaceId stores next id while workspace is changing. It store '-1' if not.
 
 export type Workspace = {
   name: string;
@@ -47,10 +47,10 @@ export const getNextWorkspaceId = () => {
   return `${++lastId}`;
 };
 
-export const setNextWorkspaceId = (workspaceId: string) => {
-  nextWorkspaceId = workspaceId;
+export const setChangingToWorkspaceId = (workspaceId: string) => {
+  changingToWorkspaceId = workspaceId;
 };
 
-export const getChangingWorkspace = () => {
-  return nextWorkspaceId;
+export const getChangingToWorkspaceId = () => {
+  return changingToWorkspaceId;
 };

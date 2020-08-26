@@ -32,6 +32,7 @@ import {
 } from './modules_renderer/card_renderer';
 import { darkenHexColor } from './modules_common/color';
 import {
+  deleteAvatar,
   deleteCard,
   saveCard,
   saveCardColor,
@@ -156,7 +157,7 @@ const initializeUIEvents = () => {
         .then((res: number) => {
           if (res === DialogButton.Default) {
             // OK
-            close();
+            deleteAvatar(avatarProp);
           }
           else if (res === DialogButton.Cancel) {
             // Cancel

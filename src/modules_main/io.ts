@@ -12,6 +12,7 @@
  */
 import PouchDB from 'pouchdb';
 import {
+  CardAvatars,
   CardCondition,
   CardDate,
   CardProp,
@@ -31,6 +32,7 @@ import {
   Workspace,
   workspaces,
 } from './store_workspaces';
+import { getWorkspaceIdFromUrl } from '../modules_common/avatar_url_utils';
 
 /**
  * Module specific part
@@ -92,32 +94,60 @@ class CardIOClass implements ICardIO {
       }
     });
     if (workspaces.size === 0) {
-      const workspaceId = getCurrentWorkspaceId();
-      // Check if initial launch
+      // Initialize or rebuild workspaces if workspaceDB folder does not exist.
+
       this.openCardDB();
-      const ids = await cardDB.allDocs().catch(() => undefined);
-      if (ids && ids.rows.length > 0) {
-        const urls = ids.rows.map(row => 'reactivedt://local/avatar/0/' + row.id);
-        // Old version exists
-        workspaces.set(workspaceId, {
-          name: MESSAGE('workspaceName', `${parseInt(workspaceId, 10) + 1}`),
-          avatars: urls,
+      const cardDocs = await cardDB.allDocs({ include_docs: true }).catch(() => undefined);
+      if (cardDocs && cardDocs.rows.length > 0) {
+        // Rebuild workspaces
+        cardDocs.rows.forEach(row => {
+          const doc = row.doc;
+          if (!Object.prototype.hasOwnProperty.call(doc, 'version')) {
+            // Old version
+            const workspaceId = getCurrentWorkspaceId();
+            if (workspaces.has(workspaceId)) {
+              workspaces
+                .get(workspaceId)!
+                .avatars.push('reactivedt://local/avatar/0/' + doc!._id);
+            }
+            else {
+              workspaces.set(workspaceId, {
+                name: MESSAGE('workspaceName', `${parseInt(workspaceId, 10) + 1}`),
+                avatars: [],
+              });
+            }
+          }
+          else {
+            // Parse avatars and register it to its workspace.
+            const { avatars } = (doc as unknown) as { avatars: CardAvatars };
+            Object.keys(avatars).forEach(avatarLocation => {
+              const workspaceId = getWorkspaceIdFromUrl(avatarLocation);
+              if (workspaces.has(workspaceId)) {
+                workspaces.get(workspaceId)!.avatars!.push(avatarLocation + doc!._id);
+              }
+              else {
+                workspaces.set(workspaceId, {
+                  name: MESSAGE('workspaceName', `${parseInt(workspaceId, 10) + 1}`),
+                  avatars: [],
+                });
+              }
+            });
+          }
         });
       }
       else {
         // Create initial workspace
+        const workspaceId = getCurrentWorkspaceId();
         workspaces.set(workspaceId, {
           name: MESSAGE('workspaceName', `${parseInt(workspaceId, 10) + 1}`),
           avatars: [],
         });
       }
-      const ws = workspaces.get(workspaceId);
-      if (ws) {
-        await this.createWorkspace(workspaceId, ws).catch(e => {
-          throw e;
-        });
-        this.updateWorkspaceStatus();
-      }
+
+      workspaces.forEach((workspace, workspaceId) =>
+        this.createWorkspace(workspaceId, workspace)
+      );
+      this.updateWorkspaceStatus();
     }
   };
 
@@ -136,7 +166,7 @@ class CardIOClass implements ICardIO {
         return res.id;
       })
       .catch(e => {
-        throw e;
+        throw new Error(`Error in createWorkspace()): ${e.message}`);
       });
   };
 
@@ -359,7 +389,7 @@ class CardIOClass implements ICardIO {
         return res.id;
       })
       .catch(e => {
-        throw e;
+        throw new Error(`Error in updateOrCreateCardDate: ${e.message}`);
       });
   };
 }
