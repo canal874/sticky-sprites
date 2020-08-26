@@ -9,10 +9,10 @@
 import {
   AvatarProp,
   AvatarPropSerializable,
-  CardStyle,
+  CardAvatars,
   DEFAULT_CARD_GEOMETRY,
   DRAG_IMAGE_MARGIN,
-  Geometry,
+  TransformableFeature,
 } from './modules_common/cardprop';
 import {
   CardCssStyle,
@@ -109,18 +109,22 @@ const initializeUIEvents = () => {
     const geometry = DEFAULT_CARD_GEOMETRY;
     geometry.x = avatarProp.geometry.x + 30;
     geometry.y = avatarProp.geometry.y + 30;
-    const avatars: { [key: string]: Geometry & CardStyle } = {};
-    avatars[getLocationFromUrl(avatarProp.url)] = {
-      x: geometry.x,
-      y: geometry.y,
-      z: geometry.z + 1,
-      width: geometry.width,
-      height: geometry.height,
-      uiColor: avatarProp.style.uiColor,
-      backgroundColor: avatarProp.style.backgroundColor,
-      opacity: avatarProp.style.opacity,
-      zoom: avatarProp.style.zoom,
-    };
+    const avatars: CardAvatars = {};
+    avatars[getLocationFromUrl(avatarProp.url)] = new TransformableFeature(
+      {
+        x: geometry.x,
+        y: geometry.y,
+        z: geometry.z + 1,
+        width: geometry.width,
+        height: geometry.height,
+      },
+      {
+        uiColor: avatarProp.style.uiColor,
+        backgroundColor: avatarProp.style.backgroundColor,
+        opacity: avatarProp.style.opacity,
+        zoom: avatarProp.style.zoom,
+      }
+    );
     const newId = await window.api.createCard({
       avatars: avatars,
     });

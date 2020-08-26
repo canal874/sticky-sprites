@@ -12,11 +12,13 @@ import { getSettings, MESSAGE } from './store';
 import { avatars, cards, createCard } from './card';
 import { emitter } from './event';
 import {
+  CardAvatars,
   CardProp,
   CardPropSerializable,
   CardStyle,
   DEFAULT_CARD_GEOMETRY,
   Geometry,
+  TransformableFeature,
 } from '../modules_common/cardprop';
 import { getRandomInt } from '../modules_common/utils';
 import { cardColors, ColorName, darkenHexColor } from '../modules_common/color';
@@ -64,18 +66,22 @@ const createNewCard = async () => {
 
   const bgColor: string = cardColors[newColor];
 
-  const newAvatars: { [key: string]: Geometry & CardStyle } = {};
-  newAvatars[getCurrentWorkspaceUrl()] = {
-    x: geometry.x,
-    y: geometry.y,
-    z: geometry.z,
-    width: geometry.width,
-    height: geometry.height,
-    uiColor: darkenHexColor(bgColor),
-    backgroundColor: bgColor,
-    opacity: 1.0,
-    zoom: 1.0,
-  };
+  const newAvatars: CardAvatars = {};
+  newAvatars[getCurrentWorkspaceUrl()] = new TransformableFeature(
+    {
+      x: geometry.x,
+      y: geometry.y,
+      z: geometry.z,
+      width: geometry.width,
+      height: geometry.height,
+    },
+    {
+      uiColor: darkenHexColor(bgColor),
+      backgroundColor: bgColor,
+      opacity: 1.0,
+      zoom: 1.0,
+    }
+  );
 
   const id = await createCard(
     CardProp.fromObject(({
