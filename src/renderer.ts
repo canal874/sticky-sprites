@@ -6,7 +6,6 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { Cipher } from 'crypto';
 import {
   AvatarProp,
   AvatarPropSerializable,
@@ -14,7 +13,6 @@ import {
   DEFAULT_CARD_GEOMETRY,
   DRAG_IMAGE_MARGIN,
   Geometry,
-  getLocationFromUrl,
 } from './modules_common/cardprop';
 import {
   CardCssStyle,
@@ -40,6 +38,7 @@ import {
   waitUnfinishedTasks,
 } from './modules_renderer/save';
 import window from './modules_renderer/window';
+import { getLocationFromUrl } from './modules_common/avatar_url_utils';
 
 let avatarProp: AvatarProp = new AvatarProp('');
 

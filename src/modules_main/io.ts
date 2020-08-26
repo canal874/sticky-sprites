@@ -10,7 +10,6 @@
 /**
  * Common part
  */
-import { Transform } from 'stream';
 import PouchDB from 'pouchdb';
 import {
   CardCondition,
@@ -23,7 +22,15 @@ import {
 } from '../modules_common/cardprop';
 import { ICardIO } from '../modules_common/types';
 import { getSettings, MESSAGE } from './store';
-import { getCurrentWorkspaceUrl, Workspace, workspaces } from './workspace';
+import {
+  getCurrentWorkspaceId,
+  getCurrentWorkspaceUrl,
+  getLastWorkspaceId,
+  setCurrentWorkspaceId,
+  setLastWorkspaceId,
+  Workspace,
+  workspaces,
+} from './store_workspaces';
 
 /**
  * Module specific part
@@ -67,66 +74,85 @@ class CardIOClass implements ICardIO {
     }
   };
 
-  public loadOrCreateWorkspace = async (workspaceId: string) => {
+  public loadOrCreateWorkspaces = async () => {
     this.openWorkspaceDB();
-
-    const workspace = ((await workspaceDB
-      .get(workspaceId)
-      .catch(() => undefined)) as unknown) as Workspace | undefined;
-
-    if (workspace) {
-      workspaces.set(workspaceId, {
-        name: workspace['name'],
-        avatars: workspace['avatars'],
-      });
-    }
-    else {
-      if (workspaces.size === 0) {
-        // Check if initial launch
-        this.openCardDB();
-        const ids = await cardDB.allDocs().catch(() => undefined);
-        if (ids && ids.rows.length > 0) {
-          const urls = ids.rows.map(row => 'reactivedt://local/avatar/0/' + row.id);
-          // Old version exists
-          workspaces.set(workspaceId, {
-            name: MESSAGE('workspaceName', `${workspaceId + 1}`),
-            avatars: urls,
-          });
-        }
-        else {
-          // Create initial workspace
-          workspaces.set(workspaceId, {
-            name: MESSAGE('workspaceName', `${workspaceId + 1}`),
-            avatars: [],
-          });
-        }
+    (await workspaceDB.allDocs({ include_docs: true })).rows.forEach(row => {
+      if (row.id === 'currentId') {
+        const { currentId } = (row.doc as unknown) as { currentId: string };
+        setCurrentWorkspaceId(currentId);
+      }
+      else if (row.id === 'lastId') {
+        const { lastId } = (row.doc as unknown) as { lastId: string };
+        setLastWorkspaceId(lastId);
       }
       else {
-        // Create new workspace
+        const { name, avatars } = (row.doc as unknown) as Workspace;
+        const workspace: Workspace = { name, avatars };
+        workspaces.set(row.id, workspace);
+      }
+    });
+    if (workspaces.size === 0) {
+      const workspaceId = getCurrentWorkspaceId();
+      // Check if initial launch
+      this.openCardDB();
+      const ids = await cardDB.allDocs().catch(() => undefined);
+      if (ids && ids.rows.length > 0) {
+        const urls = ids.rows.map(row => 'reactivedt://local/avatar/0/' + row.id);
+        // Old version exists
         workspaces.set(workspaceId, {
-          name: MESSAGE('workspaceName', `${workspaceId}`),
+          name: MESSAGE('workspaceName', `${workspaceId + 1}`),
+          avatars: urls,
+        });
+      }
+      else {
+        // Create initial workspace
+        workspaces.set(workspaceId, {
+          name: MESSAGE('workspaceName', `${parseInt(workspaceId, 10) + 1}`),
           avatars: [],
         });
       }
-      // Save new workspace
-      const wsObj = {
-        _id: workspaceId,
-        _rev: '',
-        ...workspaces.get(workspaceId),
-      };
-
-      await workspaceDB.put(wsObj).then(res => {
-        console.debug(`Workspace saved: ${res.id}`);
-        return res.id;
-      });
+      const ws = workspaces.get(workspaceId);
+      if (ws) {
+        await this.createWorkspace(workspaceId, ws).catch(e => {
+          throw e;
+        });
+        this.updateWorkspaceStatus();
+      }
     }
   };
 
-  public getAvatarUrlList = async (workspaceId: string) => {
-    if (!workspaces.has(workspaceId)) {
-      await this.loadOrCreateWorkspace(workspaceId);
-    }
-    return workspaces.get(workspaceId)!.avatars;
+  public createWorkspace = async (workspaceId: string, workspace: Workspace) => {
+    // Save new workspace
+    const wsObj = {
+      _id: workspaceId,
+      _rev: '',
+      ...workspace,
+    };
+
+    await workspaceDB
+      .put(wsObj)
+      .then(res => {
+        console.debug(`Workspace saved: ${res.id}`);
+        return res.id;
+      })
+      .catch(e => {
+        throw e;
+      });
+  };
+
+  public updateWorkspaceStatus = async () => {
+    const currentId = await workspaceDB.get('currentId');
+    workspaceDB.put({
+      _id: 'currentId',
+      _rev: currentId._rev,
+      currentId: getCurrentWorkspaceId(),
+    });
+    const lastId = await workspaceDB.get('lastId');
+    workspaceDB.put({
+      _id: 'lastId',
+      _rev: lastId._rev,
+      lastId: getLastWorkspaceId(),
+    });
   };
 
   public addAvatarUrl = async (workspaceId: string, avatarUrl: string) => {

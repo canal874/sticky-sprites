@@ -8,35 +8,46 @@
 
 import url from 'url';
 import path from 'path';
+import contextMenu from 'electron-context-menu';
+
 import { v4 as uuidv4 } from 'uuid';
 import { BrowserWindow, dialog, ipcMain, shell } from 'electron';
-import contextMenu from 'electron-context-menu';
 import {
   AvatarProp,
   AvatarPropSerializable,
   CardProp,
   CardPropSerializable,
-  getIdFromUrl,
-  getLocationFromUrl,
   TransformableFeature,
 } from '../modules_common/cardprop';
 import { CardIO } from './io';
 import { sleep } from '../modules_common/utils';
 import { CardInitializeType } from '../modules_common/types';
-import { getSettings, globalDispatch, MESSAGE } from './store';
-import { cardColors, ColorName } from '../modules_common/color';
-import { DialogButton } from '../modules_common/const';
 import {
   getCurrentWorkspace,
   getCurrentWorkspaceId,
   getCurrentWorkspaceUrl,
-} from './workspace';
+} from './store_workspaces';
+import { DialogButton } from '../modules_common/const';
+import { cardColors, ColorName } from '../modules_common/color';
+import { getSettings, globalDispatch, MESSAGE } from './store';
+import { getIdFromUrl, getLocationFromUrl } from '../modules_common/avatar_url_utils';
+import { handlers } from './event';
+
+/**
+ * Card
+ * Content unit is called 'card'.
+ * A card is internally stored as an actual card (a.k.a Card class),
+ * and externally represented as one or multiple avatar cards (a.k.a. Avatar class).
+ */
+export const cards: Map<string, Card> = new Map<string, Card>();
 
 /**
  * Const
  */
 const MINIMUM_WINDOW_WIDTH = 180;
 const MINIMUM_WINDOW_HEIGHT = 80;
+
+export const avatars: Map<string, Avatar> = new Map<string, Avatar>();
 
 /**
  * Focus control
@@ -54,21 +65,11 @@ export const setGlobalFocusEventListenerPermission = (
 export const getGlobalFocusEventListenerPermission = () => {
   return globalFocusListenerPermission;
 };
-
-/**
- * Card
- * Content unit is called 'card'.
- * A card is internally stored as an actual card (a.k.a Card class),
- * and externally represented as one or multiple avatar cards (a.k.a. Avatar class).
- */
-export const cards: Map<string, Card> = new Map<string, Card>();
-export const avatars: Map<string, Avatar> = new Map<string, Avatar>();
-
-const generateNewCardId = (): string => {
-  return uuidv4();
+export const getAvatarProp = (avatarUrl: string) => {
+  return getCardFromUrl(avatarUrl)?.prop.avatars[getLocationFromUrl(avatarUrl)];
 };
 
-export const getCardFromUrl = (avatarUrl: string): Card | undefined => {
+export const getCardFromUrl = (avatarUrl: string) => {
   const id = getIdFromUrl(avatarUrl);
   const card = cards.get(id);
   return card;
@@ -78,8 +79,12 @@ export const getCardData = (avatarUrl: string) => {
   return getCardFromUrl(avatarUrl)?.prop.data;
 };
 
-export const getAvatarProp = (avatarUrl: string) => {
-  return getCardFromUrl(avatarUrl)?.prop.avatars[getLocationFromUrl(avatarUrl)];
+/**
+ * Card
+ */
+
+const generateNewCardId = (): string => {
+  return uuidv4();
 };
 
 export const createCard = async (propObject: CardPropSerializable) => {
@@ -111,7 +116,13 @@ export const createCard = async (propObject: CardPropSerializable) => {
   return prop.id;
 };
 
-const deleteCardWithRetry = async (id: string) => {
+const saveCard = async (cardProp: CardProp) => {
+  await CardIO.updateOrCreateCardData(cardProp).catch((e: Error) => {
+    console.error(e.message);
+  });
+};
+
+export const deleteCardWithRetry = async (id: string) => {
   for (let i = 0; i < 5; i++) {
     let doRetry = false;
     // eslint-disable-next-line no-await-in-loop
@@ -161,6 +172,54 @@ export const deleteCard = async (id: string) => {
     });
 };
 
+export class Card {
+  public prop!: CardProp;
+  public loadOrCreateCardData: () => Promise<void>;
+  /**
+   * constructor
+   * @param cardInitializeType New or Load
+   * @param arg CardProp or id
+   */
+  constructor (public cardInitializeType: CardInitializeType, arg?: CardProp | string) {
+    if (cardInitializeType === 'New') {
+      this.loadOrCreateCardData = () => {
+        return Promise.resolve();
+      };
+      if (arg === undefined) {
+        // Create card with default properties
+        this.prop = new CardProp(generateNewCardId());
+      }
+      else if (arg instanceof CardProp) {
+        // Create card with specified CardProp
+        if (arg.id === '') {
+          arg.id = generateNewCardId();
+        }
+        this.prop = arg;
+      }
+      else {
+        throw new TypeError('Second parameter must be CardProp when creating new card.');
+      }
+    }
+    else {
+      // cardInitializeType === 'Load'
+      // Load Card
+      if (typeof arg !== 'string') {
+        throw new TypeError('Second parameter must be id string when loading the card.');
+      }
+      const id = arg;
+
+      this.loadOrCreateCardData = async () => {
+        this.prop = await CardIO.getCardData(id).catch(e => {
+          throw e;
+        });
+      };
+    }
+  }
+}
+
+/**
+ * Avatar
+ */
 export const deleteAvatar = async (_url: string) => {
   const avatar = avatars.get(_url);
   if (avatar) {
@@ -196,12 +255,6 @@ export const updateAvatar = async (avatarPropObj: AvatarPropSerializable) => {
   card.prop.avatars[getLocationFromUrl(prop.url)] = feature;
 
   await saveCard(card.prop);
-};
-
-const saveCard = async (cardProp: CardProp) => {
-  await CardIO.updateOrCreateCardData(cardProp).catch((e: Error) => {
-    console.error(e.message);
-  });
 };
 
 /**
@@ -285,51 +338,6 @@ const setContextMenu = (prop: AvatarProp, win: BrowserWindow) => {
     setContextMenu(prop, win);
   };
 };
-
-export class Card {
-  public prop!: CardProp;
-  public loadOrCreateCardData: () => Promise<void>;
-  /**
-   * constructor
-   * @param cardInitializeType New or Load
-   * @param arg CardProp or id
-   */
-  constructor (public cardInitializeType: CardInitializeType, arg?: CardProp | string) {
-    if (cardInitializeType === 'New') {
-      this.loadOrCreateCardData = () => {
-        return Promise.resolve();
-      };
-      if (arg === undefined) {
-        // Create card with default properties
-        this.prop = new CardProp(generateNewCardId());
-      }
-      else if (arg instanceof CardProp) {
-        // Create card with specified CardProp
-        if (arg.id === '') {
-          arg.id = generateNewCardId();
-        }
-        this.prop = arg;
-      }
-      else {
-        throw new TypeError('Second parameter must be CardProp when creating new card.');
-      }
-    }
-    else {
-      // cardInitializeType === 'Load'
-      // Load Card
-      if (typeof arg !== 'string') {
-        throw new TypeError('Second parameter must be id string when loading the card.');
-      }
-      const id = arg;
-
-      this.loadOrCreateCardData = async () => {
-        this.prop = await CardIO.getCardData(id).catch(e => {
-          throw e;
-        });
-      };
-    }
-  }
-}
 
 export class Avatar {
   public prop: AvatarProp;
@@ -563,10 +571,9 @@ export class Avatar {
         // Don't use 'did-finish-load' event.
         // loadHTML resolves after loading HTML and processing required script are finished.
         //     this.window.webContents.on('did-finish-load', () => {
-        ipcMain.handle(
-          'finish-load-' + encodeURIComponent(this.prop.url),
-          _finishReloadListener
-        );
+        const handler = 'finish-load-' + encodeURIComponent(this.prop.url);
+        handlers.push(handler);
+        ipcMain.handle(handler, _finishReloadListener);
         resolve();
       };
       ipcMain.handleOnce(

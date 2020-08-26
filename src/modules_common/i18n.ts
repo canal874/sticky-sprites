@@ -15,7 +15,6 @@ type MessagesMain = {
   btnAllow: string;
   btnCancel: string;
   btnRemove: string;
-  workspaceName: string;
   settings: string;
   trayToolTip: string;
   lockCard: string;
@@ -29,6 +28,12 @@ type MessagesMain = {
   purple: string;
   gray: string;
   transparent: string;
+};
+
+type MessagesWorkspace = {
+  workspace: string;
+  workspaceNew: string;
+  workspaceName: string;
 };
 
 type MessagesSettings = {
@@ -54,16 +59,22 @@ type MessagesLanguage = {
   ja: string;
 };
 
-export type Messages = MessagesMain & MessagesSettings & MessagesLanguage;
+export type Messages = MessagesMain &
+  MessagesWorkspace &
+  MessagesSettings &
+  MessagesLanguage;
 
-export type MessageLabel =
-  | keyof MessagesMain
-  | keyof MessagesSettings
-  | keyof MessagesLanguage;
+export type MessageLabel = keyof Messages;
 
 const LanguagesCommon: MessagesLanguage = {
   en: 'English',
   ja: '日本語(Japanese)',
+};
+
+const WorkspaceEnglish: MessagesWorkspace = {
+  workspace: 'Workspace',
+  workspaceNew: 'New Workspace...',
+  workspaceName: 'Workspace $1',
 };
 
 const SettingsEnglish: MessagesSettings = {
@@ -87,6 +98,7 @@ const SettingsEnglish: MessagesSettings = {
 };
 export const English: Messages = {
   ...LanguagesCommon,
+  ...WorkspaceEnglish,
   ...SettingsEnglish,
   exit: 'Exit',
   zoomIn: 'Zoom In',
@@ -109,7 +121,6 @@ export const English: Messages = {
   btnAllow: 'Allow',
   btnCancel: 'Cancel ', // 'Cancel' is automatically translated to local language, so add use 'Cancel '.
   btnRemove: 'Remove',
-  workspaceName: 'Workspace $1',
   settings: 'Settings...',
   trayToolTip: 'Media Stickies',
   lockCard: 'Lock card',
@@ -123,6 +134,12 @@ export const English: Messages = {
   purple: 'purple',
   gray: 'gray',
   transparent: 'transparent',
+};
+
+const WorkspaceJapanese: MessagesWorkspace = {
+  workspace: 'ワークスペース',
+  workspaceNew: '新規ワークスペース...',
+  workspaceName: 'Workspace $1',
 };
 
 const SettingsJapanese: MessagesSettings = {
@@ -146,6 +163,7 @@ const SettingsJapanese: MessagesSettings = {
 };
 export const Japanese: Messages = {
   ...LanguagesCommon,
+  ...WorkspaceJapanese,
   ...SettingsJapanese,
   exit: '終了',
   zoomIn: '拡大',

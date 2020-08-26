@@ -8,8 +8,7 @@
 
 import { getCurrentDateAndTime } from './utils';
 import { cardColors, darkenHexColor } from './color';
-import { scheme } from './const';
-import { getCurrentWorkspaceUrl } from '../modules_main/workspace';
+import { getCurrentWorkspaceUrl } from '../modules_main/store_workspaces';
 
 export const cardVersion = '1.0';
 
@@ -243,17 +242,3 @@ export class CardProp implements CardBase {
     return new CardProp(json.id, json.data, json.avatars);
   };
 }
-
-export const getLocationFromUrl = (avatarUrl: string): string => {
-  const rex = new RegExp(`^(${scheme}:\\/\\/.+/)[^/]+?$`);
-  const result = avatarUrl.match(rex);
-  if (result && result.length === 2) {
-    return result[1];
-  }
-  return '';
-};
-
-export const getIdFromUrl = (url: string): string => {
-  const paths = url.split('/');
-  return paths[paths.length - 1];
-};

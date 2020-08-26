@@ -7,6 +7,7 @@
  */
 
 import { AvatarProp, CardProp } from './cardprop';
+import { Workspace } from '../modules_main/store_workspaces';
 
 /**
  * CardInitializeType
@@ -17,9 +18,9 @@ export type CardInitializeType = 'Load' | 'New';
 
 export interface ICardIO {
   close(): void;
-  loadOrCreateWorkspace(workspaceId: string): Promise<void>;
+  loadOrCreateWorkspaces(): Promise<void>;
+  createWorkspace(workspaceId: string, workspace: Workspace): Promise<void>;
 
-  getAvatarUrlList(workspaceId: string): Promise<string[]>;
   addAvatarUrl(workspaceId: string, avatarUrl: string): void;
   deleteAvatarUrl(workspaceId: string, avatarUrl: string): void;
 

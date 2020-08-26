@@ -6,10 +6,10 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import path from 'path';
-import { app, Menu, Tray } from 'electron';
+import { app, Menu, MenuItemConstructorOptions, Tray } from 'electron';
 import { openSettings, settingsDialog } from './settings';
 import { getSettings, MESSAGE } from './store';
-import { avatars, Card, cards, createCard, getCardFromUrl } from './card';
+import { avatars, cards, createCard } from './card';
 import { emitter } from './event';
 import {
   CardProp,
@@ -20,7 +20,17 @@ import {
 } from '../modules_common/cardprop';
 import { getRandomInt } from '../modules_common/utils';
 import { cardColors, ColorName, darkenHexColor } from '../modules_common/color';
-import { getCurrentWorkspaceUrl } from './workspace';
+import {
+  getCurrentWorkspaceId,
+  getCurrentWorkspaceUrl,
+  getNextWorkspaceId,
+  setLastWorkspaceId,
+  setNextWorkspaceId,
+  Workspace,
+  workspaces,
+} from './store_workspaces';
+import { CardIO } from './io';
+import { loadCurrentWorkspace } from './workspace';
 
 /**
  * Task tray
@@ -82,12 +92,61 @@ export const setTrayContextMenu = () => {
   if (!tray) {
     return;
   }
+  const changeWorkspaces: MenuItemConstructorOptions[] = [...workspaces.keys()]
+    .sort()
+    .map(id => {
+      return {
+        label: `${workspaces.get(id)?.name}`,
+        type: 'radio',
+        checked: id === getCurrentWorkspaceId(),
+        click: () => {
+          if (id !== getCurrentWorkspaceId()) {
+            const workspace = workspaces.get(id);
+            if (!workspace) {
+              return;
+            }
+            setNextWorkspaceId(id);
+            avatars.forEach(avatar => avatar.window.webContents.send('card-close'));
+            // wait 'window-all-closed' event
+          }
+        },
+      };
+    });
+  if (changeWorkspaces.length > 0) {
+    changeWorkspaces.unshift({
+      type: 'separator',
+    } as MenuItemConstructorOptions);
+  }
+
   const contextMenu = Menu.buildFromTemplate([
     {
       label: MESSAGE('newCard'),
       click: () => {
         createNewCard();
       },
+    },
+    {
+      type: 'separator',
+    },
+    {
+      label: MESSAGE('workspaceNew'),
+      click: async () => {
+        const newId = getNextWorkspaceId();
+        setLastWorkspaceId(newId);
+        const workspace: Workspace = {
+          name: `${MESSAGE('workspaceName', String(parseInt(newId, 10) + 1))}`,
+          avatars: [],
+        };
+        workspaces.set(newId, workspace);
+        await CardIO.createWorkspace(newId, workspace).catch((e: Error) =>
+          console.error(e.message)
+        );
+        setTrayContextMenu();
+      },
+    },
+    ...changeWorkspaces,
+    {
+      type: 'separator',
     },
     {
       label: MESSAGE('settings'),

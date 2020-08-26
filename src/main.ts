@@ -10,29 +10,25 @@ import { v4 as uuidv4 } from 'uuid';
 import { app, BrowserWindow, dialog, ipcMain, MouseInputEvent } from 'electron';
 import { CardIO } from './modules_main/io';
 import { DialogButton } from './modules_common/const';
-import {
-  AvatarProp,
-  AvatarPropSerializable,
-  CardPropSerializable,
-  getIdFromUrl,
-} from './modules_common/cardprop';
+import { AvatarPropSerializable, CardPropSerializable } from './modules_common/cardprop';
 import { availableLanguages, defaultLanguage, MessageLabel } from './modules_common/i18n';
 import {
-  Avatar,
   avatars,
-  Card,
   cards,
   createCard,
   deleteAvatar,
-  getAvatarProp,
-  getCardData,
   setGlobalFocusEventListenerPermission,
   updateAvatar,
 } from './modules_main/card';
 import { initializeGlobalStore, MESSAGE } from './modules_main/store';
 import { destroyTray, initializeTaskTray } from './modules_main/tray';
 import { openSettings, settingsDialog } from './modules_main/settings';
-import { getCurrentWorkspace, getCurrentWorkspaceId } from './modules_main/workspace';
+import { loadCurrentWorkspace } from './modules_main/workspace';
+import {
+  getChangingWorkspace,
+  setCurrentWorkspaceId,
+} from './modules_main/store_workspaces';
+import { handlers } from './modules_main/event';
 
 // process.on('unhandledRejection', console.dir);
 
@@ -65,87 +61,10 @@ app.on('ready', async () => {
     openSettings();
   }
 
-  // load cards
-  let avatarIdArray: string[] = await CardIO.getAvatarUrlList(
-    getCurrentWorkspaceId()
-  ).catch((e: Error) => {
-    console.error(`Cannot load a list of cards: ${e.message}`);
-    return [];
-  });
+  // load workspaces
+  await CardIO.loadOrCreateWorkspaces();
 
-  if (avatarIdArray.length === 0) {
-    const card = new Card('New');
-    await card.loadOrCreateCardData().catch(e => {
-      throw e;
-    });
-    const avatarLocs = Object.keys(card.prop.avatars);
-    // eslint-disable-next-line require-atomic-updates
-    avatarIdArray = [];
-    avatarLocs.forEach(loc => {
-      const _url = loc + card.prop.id;
-      avatarIdArray.push(_url);
-      getCurrentWorkspace()!.avatars.push(_url);
-      CardIO.addAvatarUrl(getCurrentWorkspaceId(), _url);
-    });
-
-    cards.set(card.prop.id, card);
-    await CardIO.updateOrCreateCardData(card.prop).catch((e: Error) => {
-      console.error(e.message);
-    });
-  }
-  else {
-    const cardIdArray = avatarIdArray.map(avatarUrl => getIdFromUrl(avatarUrl));
-    // Be unique
-    const uniqueCardIdArray = [...new Set(cardIdArray)];
-    const loadCard = async (card: Card) => {
-      await card.loadOrCreateCardData().catch(e => {
-        throw e;
-      });
-      cards.set(card.prop.id, card);
-    };
-    const loaders = uniqueCardIdArray.map(id => loadCard(new Card('Load', id)));
-    await Promise.all(loaders).catch(e => {
-      console.error(`Error while loading cards in ready event: ${e.message}`);
-    });
-  }
-
-  /**
-   * TODO: カードをRxJS か Observable-hooks + Redux で保存
-   */
-  const setAvatarEntry = (avatar: Avatar) => avatars.set(avatar.prop.url, avatar);
-  avatarIdArray.forEach(avatarUrl =>
-    setAvatarEntry(
-      new Avatar(
-        new AvatarProp(avatarUrl, getCardData(avatarUrl), getAvatarProp(avatarUrl))
-      )
-    )
-  );
-
-  const renderers = [...avatars.values()].map(avatar => avatar.render());
-
-  await Promise.all(renderers).catch(e => {
-    console.error(`Error while rendering cards in ready event: ${e.message}`);
-  });
-
-  const backToFront = [...avatars.keys()].sort((a, b) => {
-    if (avatars.get(a)!.prop.geometry.z < avatars.get(b)!.prop.geometry.z) {
-      return -1;
-    }
-    else if (avatars.get(a)!.prop.geometry.z > avatars.get(b)!.prop.geometry.z) {
-      return 1;
-    }
-    return 0;
-  });
-
-  for (const key of backToFront) {
-    const avatar = avatars.get(key);
-    if (avatar) {
-      if (!avatar.window.isDestroyed()) {
-        avatar.window.moveTop();
-      }
-    }
-  }
-  console.debug(`Completed to load ${renderers.length} cards`);
+  await loadCurrentWorkspace();
 
   /**
    * Add task tray
@@ -157,9 +76,20 @@ app.on('ready', async () => {
  * Exit app
  */
 app.on('window-all-closed', () => {
-  CardIO.close();
-  destroyTray();
-  app.quit();
+  const nextWorkspaceId = getChangingWorkspace();
+  if (nextWorkspaceId !== '-1') {
+    handlers.forEach(channel => ipcMain.removeHandler(channel));
+    handlers.length = 0; // empty
+    avatars.clear();
+    cards.clear();
+    setCurrentWorkspaceId(nextWorkspaceId);
+    loadCurrentWorkspace();
+  }
+  else {
+    CardIO.close();
+    destroyTray();
+    app.quit();
+  }
 });
 
 /**
