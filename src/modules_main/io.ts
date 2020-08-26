@@ -99,6 +99,7 @@ class CardIOClass implements ICardIO {
       this.openCardDB();
       const cardDocs = await cardDB.allDocs({ include_docs: true }).catch(() => undefined);
       if (cardDocs && cardDocs.rows.length > 0) {
+        let lastWorkspaceId = '0';
         // Rebuild workspaces
         cardDocs.rows.forEach(row => {
           const doc = row.doc;
@@ -113,7 +114,7 @@ class CardIOClass implements ICardIO {
             else {
               workspaces.set(workspaceId, {
                 name: MESSAGE('workspaceName', `${parseInt(workspaceId, 10) + 1}`),
-                avatars: [],
+                avatars: ['reactivedt://local/avatar/0/' + doc!._id],
               });
             }
           }
@@ -122,18 +123,22 @@ class CardIOClass implements ICardIO {
             const { avatars } = (doc as unknown) as { avatars: CardAvatars };
             Object.keys(avatars).forEach(avatarLocation => {
               const workspaceId = getWorkspaceIdFromUrl(avatarLocation);
+              if (parseInt(workspaceId, 10) > parseInt(lastWorkspaceId, 10)) {
+                lastWorkspaceId = workspaceId;
+              }
               if (workspaces.has(workspaceId)) {
                 workspaces.get(workspaceId)!.avatars!.push(avatarLocation + doc!._id);
               }
               else {
                 workspaces.set(workspaceId, {
                   name: MESSAGE('workspaceName', `${parseInt(workspaceId, 10) + 1}`),
-                  avatars: [],
+                  avatars: [avatarLocation + doc!._id],
                 });
               }
             });
           }
         });
+        setLastWorkspaceId(lastWorkspaceId);
       }
       else {
         // Create initial workspace
