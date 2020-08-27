@@ -31,6 +31,8 @@ export interface ICardIO {
   getCardData(id: string): Promise<CardProp>;
   updateOrCreateCardData(prop: CardProp): Promise<string>;
   deleteCardData(id: string): Promise<string>;
+
+  export(filepath: string): Promise<void>;
 }
 
 export interface ICardEditor {

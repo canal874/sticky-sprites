@@ -8,7 +8,7 @@
 import path from 'path';
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import electronConnect from 'electron-connect';
-import { MESSAGE, subscribeStoreFromSettings } from './store';
+import { subscribeStoreFromSettings } from './store';
 import { CardIO } from './io';
 
 // eslint-disable-next-line import/no-mutable-exports
@@ -50,19 +50,23 @@ export const openSettings = () => {
 };
 
 // Request from settings dialog
-ipcMain.handle('open-directory-selector-dialog', event => {
-  return openDirectorySelectorDialog();
+ipcMain.handle('open-directory-selector-dialog', (event, message: string) => {
+  return openDirectorySelectorDialog(message);
 });
 
 ipcMain.handle('close-cardio', async event => {
   await CardIO.close();
 });
 
-const openDirectorySelectorDialog = () => {
+ipcMain.handle('export-data-to', async (event, filepath: string) => {
+  await CardIO.export(filepath);
+});
+
+const openDirectorySelectorDialog = (message: string) => {
   const file: string[] | undefined = dialog.showOpenDialogSync(settingsDialog, {
     properties: ['openDirectory'],
-    title: MESSAGE('chooseSaveFilePath'),
-    message: MESSAGE('chooseSaveFilePath'), // macOS only
+    title: message,
+    message: message, // macOS only
   });
   return file;
 };

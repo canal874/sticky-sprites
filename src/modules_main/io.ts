@@ -11,6 +11,7 @@
  * Common part
  */
 import PouchDB from 'pouchdb';
+import fs from 'fs-extra';
 import {
   CardAvatars,
   CardCondition,
@@ -414,6 +415,22 @@ class CardIOClass implements ICardIO {
       .catch(e => {
         throw new Error(`Error in updateOrCreateCardDate: ${e.message}`);
       });
+  };
+
+  public export = async (filepath: string) => {
+    this.openWorkspaceDB();
+    this.openCardDB();
+
+    const workspaceObj = (await workspaceDB.allDocs({ include_docs: true })).rows.map(
+      row => row.doc
+    );
+    const cardObj = (await cardDB.allDocs({ include_docs: true })).rows.map(row => row.doc);
+
+    const dataObj = {
+      workspaces: workspaceObj,
+      cards: cardObj,
+    };
+    fs.writeJSON(filepath, dataObj, { spaces: 2 });
   };
 }
 

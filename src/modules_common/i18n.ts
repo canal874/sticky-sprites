@@ -46,6 +46,8 @@ type MessagesSettings = {
   settingPageLanguage: string;
   settingPageSecurity: string;
   settingPageSave: string;
+  exportData: string;
+  exportDataButton: string;
   saveDetailedText: string;
   saveFilePath: string;
   saveChangeFilePathButton: string;
@@ -93,7 +95,9 @@ const SettingsEnglish: MessagesSettings = {
   settingPageLanguage: 'Language',
   settingPageSecurity: 'Security',
   settingPageSave: 'Data Save',
-  saveDetailedText: 'Data is saved to the following location automatically:',
+  exportData: 'Export data (JSON format) by hand',
+  exportDataButton: 'Select folder',
+  saveDetailedText: 'Save data automatically to the following location',
   saveFilePath: 'Save in the folder of',
   saveChangeFilePathButton: 'Change',
   chooseSaveFilePath: 'Select the place for saving data',
@@ -163,8 +167,10 @@ const SettingsJapanese: MessagesSettings = {
   settingsDialog: '設定',
   settingPageLanguage: '言語',
   settingPageSecurity: 'セキュリティ',
-  settingPageSave: 'データ保存先',
-  saveDetailedText: 'データは次の場所へ自動的に保存されます。',
+  settingPageSave: 'データ保存',
+  exportData: '手動で書き出し（JSON形式）',
+  exportDataButton: '書き出し先を選択',
+  saveDetailedText: '自動的に次の場所へ保存',
   saveFilePath: 'このフォルダに保存',
   saveChangeFilePathButton: '変更',
   chooseSaveFilePath: 'データの保存先を選んでください',
