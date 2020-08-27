@@ -38,6 +38,7 @@ type MessagesWorkspace = {
   workspaceRename: string;
   workspaceDelete: string;
   workspaceCannotDelete: string;
+  workspaceNewName: string;
 };
 
 type MessagesSettings = {
@@ -79,11 +80,12 @@ const WorkspaceEnglish: MessagesWorkspace = {
   workspace: 'Workspace',
   workspaceNew: 'New workspace...',
   workspaceName: 'Workspace $1',
-  workspaceMove: 'Move...',
+  workspaceMove: 'Move',
   workspaceRename: 'Rename this workspace',
   workspaceDelete: 'Delete this workspace',
   workspaceCannotDelete:
     'To delete workspace, delete all visible cards or move them to another workspace.',
+  workspaceNewName: 'Enter new workspace name',
 };
 
 const SettingsEnglish: MessagesSettings = {
@@ -149,11 +151,12 @@ const WorkspaceJapanese: MessagesWorkspace = {
   workspace: 'ワークスペース',
   workspaceNew: '新規ワークスペース...',
   workspaceName: 'ワークスペース $1',
-  workspaceMove: '移動...',
+  workspaceMove: '移動',
   workspaceRename: 'ワークスペース名を変更',
   workspaceDelete: 'このワークスペースを削除',
   workspaceCannotDelete:
     'ワークスペースを削除するには、表示されているカードを全て削除するか他のワークスペースへ移動してください。',
+  workspaceNewName: '新しいワークスペース名を入力してください',
 };
 
 const SettingsJapanese: MessagesSettings = {

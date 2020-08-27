@@ -6,6 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import path from 'path';
+import prompt from 'electron-prompt';
 import { app, dialog, Menu, MenuItemConstructorOptions, Tray } from 'electron';
 import { openSettings, settingsDialog } from './settings';
 import { getSettings, MESSAGE } from './store';
@@ -143,8 +144,27 @@ export const setTrayContextMenu = () => {
       label: MESSAGE('workspaceNew'),
       click: async () => {
         const newId = getNextWorkspaceId();
+        const newName: string | void | null = await prompt({
+          title: MESSAGE('workspace'),
+          label: MESSAGE('workspaceNewName'),
+          value: `${MESSAGE('workspaceName', String(workspaces.size + 1))}`,
+          inputAttrs: {
+            type: 'text',
+            required: true,
+          },
+          height: 200,
+        }).catch(e => console.error(e.message));
+
+        if (
+          newName === null ||
+          newName === undefined ||
+          newName === '' ||
+          (newName as string).match(/^\s+$/)
+        ) {
+          return;
+        }
         const workspace: Workspace = {
-          name: `${MESSAGE('workspaceName', String(parseInt(newId, 10) + 1))}`,
+          name: newName as string,
           avatars: [],
         };
         workspaces.set(newId, workspace);
@@ -163,9 +183,28 @@ export const setTrayContextMenu = () => {
     {
       label: MESSAGE('workspaceRename'),
       click: async () => {
-        const newName = '';
+        const newName: string | void | null = await prompt({
+          title: MESSAGE('workspace'),
+          label: MESSAGE('workspaceNewName'),
+          value: getCurrentWorkspace().name,
+          inputAttrs: {
+            type: 'text',
+            required: true,
+          },
+          height: 200,
+        }).catch(e => console.error(e.message));
+
+        if (
+          newName === null ||
+          newName === undefined ||
+          newName === '' ||
+          (newName as string).match(/^\s+$/)
+        ) {
+          return;
+        }
+
         const workspace = getCurrentWorkspace();
-        workspace.name = newName;
+        workspace.name = newName as string;
         await CardIO.updateWorkspace(getCurrentWorkspaceId(), workspace).catch((e: Error) =>
           console.error(e.message)
         );
