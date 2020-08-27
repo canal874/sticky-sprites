@@ -148,6 +148,7 @@ export const setTrayContextMenu = () => {
           console.error(e.message)
         );
         setTrayContextMenu();
+        avatars.forEach(avatar => avatar.resetContextMenu());
       },
     },
     ...changeWorkspaces,

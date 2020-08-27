@@ -7,6 +7,7 @@
  */
 
 import { scheme } from '../modules_common/const';
+import { getWorkspaceIdFromUrl } from '../modules_common/avatar_url_utils';
 
 let currentWorkspaceId = '0'; // string expression of positive number
 let lastWorkspaceId = '0';
@@ -18,9 +19,15 @@ export type Workspace = {
   avatars: string[];
 };
 export const workspaces = new Map<string, Workspace>();
-export const getCurrentWorkspaceUrl = () => {
-  return `${scheme}://local/avatar/${currentWorkspaceId}/`;
+
+export const getWorkspaceUrl = (workspaceId: string) => {
+  return `${scheme}://local/avatar/${workspaceId}/`;
 };
+
+export const getCurrentWorkspaceUrl = () => {
+  return getWorkspaceUrl(currentWorkspaceId);
+};
+
 export const getCurrentWorkspace = () => {
   const workspace = workspaces.get(currentWorkspaceId);
   if (!workspace) {
@@ -30,12 +37,28 @@ export const getCurrentWorkspace = () => {
   }
   return workspace;
 };
+
 export const getCurrentWorkspaceId = () => {
   return currentWorkspaceId;
 };
 export const setCurrentWorkspaceId = (id: string) => {
   currentWorkspaceId = id;
 };
+
+export const addAvatarToWorkspace = (workspaceId: string, avatarUrl: string) => {
+  const ws = workspaces.get(workspaceId);
+  if (ws) {
+    ws.avatars.push(avatarUrl);
+  }
+};
+
+export const removeAvatarFromWorkspace = (workspaceId: string, avatarUrl: string) => {
+  const ws = workspaces.get(workspaceId);
+  if (ws) {
+    ws.avatars = ws.avatars.filter(_url => _url !== avatarUrl);
+  }
+};
+
 export const getLastWorkspaceId = () => {
   return lastWorkspaceId;
 };

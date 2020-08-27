@@ -11,7 +11,13 @@ import path from 'path';
 import contextMenu from 'electron-context-menu';
 
 import { v4 as uuidv4 } from 'uuid';
-import { BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import {
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  MenuItemConstructorOptions,
+  shell,
+} from 'electron';
 import {
   AvatarProp,
   AvatarPropSerializable,
@@ -23,9 +29,13 @@ import { CardIO } from './io';
 import { sleep } from '../modules_common/utils';
 import { CardInitializeType } from '../modules_common/types';
 import {
+  addAvatarToWorkspace,
   getCurrentWorkspace,
   getCurrentWorkspaceId,
   getCurrentWorkspaceUrl,
+  getWorkspaceUrl,
+  removeAvatarFromWorkspace,
+  workspaces,
 } from './store_workspaces';
 import { DialogButton } from '../modules_common/const';
 import { cardColors, ColorName } from '../modules_common/color';
@@ -275,6 +285,41 @@ const setContextMenu = (prop: AvatarProp, win: BrowserWindow) => {
     };
   };
 
+  const moveAvatarToWorkspace = (workspaceId: string) => {
+    removeAvatarFromWorkspace(getCurrentWorkspaceId(), prop.url);
+    CardIO.deleteAvatarUrl(getCurrentWorkspaceId(), prop.url);
+    const newAvatarUrl = getWorkspaceUrl(workspaceId) + getIdFromUrl(prop.url);
+    addAvatarToWorkspace(workspaceId, newAvatarUrl);
+    CardIO.addAvatarUrl(workspaceId, newAvatarUrl);
+    win.webContents.send('card-close');
+
+    const card = getCardFromUrl(prop.url);
+    if (card) {
+      const avatarProp = card.prop.avatars[getLocationFromUrl(prop.url)];
+      delete card.prop.avatars[getLocationFromUrl(prop.url)];
+      card.prop.avatars[getLocationFromUrl(newAvatarUrl)] = avatarProp;
+      saveCard(card.prop);
+    }
+  };
+
+  const moveToWorkspaces: MenuItemConstructorOptions[] = [...workspaces.keys()]
+    .sort()
+    .reduce((result, id) => {
+      if (id !== getCurrentWorkspaceId()) {
+        result.push({
+          label: `${workspaces.get(id)?.name}`,
+          click: () => {
+            const workspace = workspaces.get(id);
+            if (!workspace) {
+              return;
+            }
+            moveAvatarToWorkspace(id);
+          },
+        });
+      }
+      return result;
+    }, [] as MenuItemConstructorOptions[]);
+
   const dispose = contextMenu({
     window: win,
     showSaveImageAs: true,
@@ -292,6 +337,10 @@ const setContextMenu = (prop: AvatarProp, win: BrowserWindow) => {
       actions.separator(),
     ],
     prepend: () => [
+      {
+        label: MESSAGE('workspaceMove'),
+        submenu: [...moveToWorkspaces],
+      },
       {
         label: MESSAGE('zoomIn'),
         click: () => {
@@ -337,6 +386,8 @@ const setContextMenu = (prop: AvatarProp, win: BrowserWindow) => {
     dispose();
     setContextMenu(prop, win);
   };
+
+  return resetContextMenu;
 };
 
 export class Avatar {
@@ -349,6 +400,8 @@ export class Avatar {
   public recaptureGlobalFocusEventAfterLocalFocusEvent = false;
 
   public renderingCompleted = false;
+
+  public resetContextMenu: Function;
 
   constructor (_prop: AvatarProp) {
     this.prop = _prop;
@@ -413,7 +466,7 @@ export class Avatar {
     this.window.on('focus', this._focusListener);
     this.window.on('blur', this._blurListener);
 
-    setContextMenu(this.prop, this.window);
+    this.resetContextMenu = setContextMenu(this.prop, this.window);
 
     this.window.webContents.on('did-finish-load', () => {
       const checkNavigation = (_event: Electron.Event, navUrl: string) => {

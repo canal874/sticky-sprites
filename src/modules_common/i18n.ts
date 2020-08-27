@@ -34,6 +34,7 @@ type MessagesWorkspace = {
   workspace: string;
   workspaceNew: string;
   workspaceName: string;
+  workspaceMove: string;
 };
 
 type MessagesSettings = {
@@ -75,6 +76,7 @@ const WorkspaceEnglish: MessagesWorkspace = {
   workspace: 'Workspace',
   workspaceNew: 'New Workspace...',
   workspaceName: 'Workspace $1',
+  workspaceMove: 'Move...',
 };
 
 const SettingsEnglish: MessagesSettings = {
@@ -139,7 +141,8 @@ export const English: Messages = {
 const WorkspaceJapanese: MessagesWorkspace = {
   workspace: 'ワークスペース',
   workspaceNew: '新規ワークスペース...',
-  workspaceName: 'Workspace $1',
+  workspaceName: 'ワークスペース $1',
+  workspaceMove: '移動...',
 };
 
 const SettingsJapanese: MessagesSettings = {
@@ -186,7 +189,6 @@ export const Japanese: Messages = {
   btnAllow: '許可する',
   btnCancel: 'キャンセル',
   btnRemove: '削除する',
-  workspaceName: 'ワークスペース $1',
   settings: '設定...',
   trayToolTip: 'Media Stickies',
   lockCard: 'ロックする',
