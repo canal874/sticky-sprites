@@ -7,12 +7,9 @@
  */
 
 import { scheme } from '../modules_common/const';
-import { getWorkspaceIdFromUrl } from '../modules_common/avatar_url_utils';
 
 let currentWorkspaceId = '0'; // string expression of positive number
-let lastWorkspaceId = '0';
-
-let changingToWorkspaceId = '-1'; // changingToWorkspaceId stores next id while workspace is changing. It store '-1' if not.
+let changingToWorkspaceId = 'none'; // changingToWorkspaceId stores next id while workspace is changing, 'none' or 'exit'
 
 export type Workspace = {
   name: string;
@@ -59,14 +56,9 @@ export const removeAvatarFromWorkspace = (workspaceId: string, avatarUrl: string
   }
 };
 
-export const getLastWorkspaceId = () => {
-  return lastWorkspaceId;
-};
-export const setLastWorkspaceId = (id: string) => {
-  lastWorkspaceId = id;
-};
 export const getNextWorkspaceId = () => {
-  let lastId = parseInt(lastWorkspaceId, 10);
+  const idArray = [...workspaces.keys()].map(id => parseInt(id, 0)).sort();
+  let lastId = idArray[idArray.length - 1];
   return `${++lastId}`;
 };
 

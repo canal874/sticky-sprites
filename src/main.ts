@@ -22,7 +22,7 @@ import {
   updateAvatar,
 } from './modules_main/card';
 import { initializeGlobalStore, MESSAGE } from './modules_main/store';
-import { destroyTray, initializeTaskTray } from './modules_main/tray';
+import { destroyTray, initializeTaskTray, setTrayContextMenu } from './modules_main/tray';
 import { openSettings, settingsDialog } from './modules_main/settings';
 import { loadCurrentWorkspace } from './modules_main/workspace';
 import {
@@ -30,7 +30,7 @@ import {
   setChangingToWorkspaceId,
   setCurrentWorkspaceId,
 } from './modules_main/store_workspaces';
-import { handlers } from './modules_main/event';
+import { emitter, handlers } from './modules_main/event';
 import { getIdFromUrl } from './modules_common/avatar_url_utils';
 
 // process.on('unhandledRejection', console.dir);
@@ -78,23 +78,32 @@ app.on('ready', async () => {
 /**
  * Exit app
  */
+emitter.on('exit', () => {
+  CardIO.close();
+  destroyTray();
+  app.quit();
+});
+
+emitter.on('change-workspace', (nextWorkspaceId: string) => {
+  handlers.forEach(channel => ipcMain.removeHandler(channel));
+  handlers.length = 0; // empty
+  avatars.clear();
+  cards.clear();
+  setCurrentWorkspaceId(nextWorkspaceId);
+  setTrayContextMenu();
+  CardIO.updateWorkspaceStatus();
+  loadCurrentWorkspace();
+});
+
 app.on('window-all-closed', () => {
   const nextWorkspaceId = getChangingToWorkspaceId();
-  if (nextWorkspaceId !== '-1') {
-    handlers.forEach(channel => ipcMain.removeHandler(channel));
-    handlers.length = 0; // empty
-    avatars.clear();
-    cards.clear();
-    setCurrentWorkspaceId(nextWorkspaceId);
-    CardIO.updateWorkspaceStatus();
-    loadCurrentWorkspace();
-    setChangingToWorkspaceId('-1');
+  if (nextWorkspaceId === 'exit') {
+    emitter.emit('exit');
   }
-  else {
-    CardIO.close();
-    destroyTray();
-    app.quit();
+  else if (nextWorkspaceId !== 'none') {
+    emitter.emit('change-workspace', nextWorkspaceId);
   }
+  setChangingToWorkspaceId('none');
 });
 
 /**

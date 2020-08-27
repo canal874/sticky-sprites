@@ -26,9 +26,7 @@ import { getSettings, MESSAGE } from './store';
 import {
   getCurrentWorkspaceId,
   getCurrentWorkspaceUrl,
-  getLastWorkspaceId,
   setCurrentWorkspaceId,
-  setLastWorkspaceId,
   Workspace,
   workspaces,
 } from './store_workspaces';
@@ -83,10 +81,6 @@ class CardIOClass implements ICardIO {
         const { currentId } = (row.doc as unknown) as { currentId: string };
         setCurrentWorkspaceId(currentId);
       }
-      else if (row.id === 'lastId') {
-        const { lastId } = (row.doc as unknown) as { lastId: string };
-        setLastWorkspaceId(lastId);
-      }
       else {
         const { name, avatars } = (row.doc as unknown) as Workspace;
         const workspace: Workspace = { name, avatars };
@@ -138,7 +132,6 @@ class CardIOClass implements ICardIO {
             });
           }
         });
-        setLastWorkspaceId(lastWorkspaceId);
       }
       else {
         // Create initial workspace
@@ -175,6 +168,41 @@ class CardIOClass implements ICardIO {
       });
   };
 
+  public updateWorkspace = async (workspaceId: string, workspace: Workspace) => {
+    this.openWorkspaceDB();
+    const wsObj: { _id: string; _rev: string } & Workspace = {
+      _id: workspaceId,
+      _rev: '',
+      ...workspace,
+    };
+    await workspaceDB
+      .get(workspaceId)
+      .then(oldWS => {
+        // Update existing card
+        wsObj._rev = oldWS._rev;
+      })
+      .catch(e => {
+        throw new Error(`Error in updateWorkspace: ${e.message}`);
+      });
+
+    return workspaceDB
+      .put(wsObj)
+      .then(res => {
+        console.debug(`Workspace saved: ${res.id}`);
+      })
+      .catch(e => {
+        throw new Error(`Error in updateWorkspace: ${e.message}`);
+      });
+  };
+
+  public deleteWorkspace = async (workspaceId: string) => {
+    this.openWorkspaceDB();
+    const workspace = await workspaceDB.get(workspaceId);
+    await workspaceDB.remove(workspace).catch(e => {
+      throw new Error(`Error in deleteWorkspace: ${e}`);
+    });
+  };
+
   public updateWorkspaceStatus = async () => {
     const currentId = await workspaceDB.get('currentId').catch(() => undefined);
     let currentIdRev = '';
@@ -185,16 +213,6 @@ class CardIOClass implements ICardIO {
       _id: 'currentId',
       _rev: currentIdRev,
       currentId: getCurrentWorkspaceId(),
-    });
-    const lastId = await workspaceDB.get('lastId').catch(() => undefined);
-    let lastIdRev = '';
-    if (lastId) {
-      lastIdRev = lastId._rev;
-    }
-    workspaceDB.put({
-      _id: 'lastId',
-      _rev: lastIdRev,
-      lastId: getLastWorkspaceId(),
     });
   };
 
@@ -216,7 +234,7 @@ class CardIOClass implements ICardIO {
         wsObj.avatars.push(...avatars);
       })
       .catch(e => {
-        throw e;
+        throw new Error(`Error in addAvatarUrl: ${e}`);
       });
 
     return workspaceDB
@@ -225,7 +243,7 @@ class CardIOClass implements ICardIO {
         console.debug(`Workspace saved: ${res.id}`);
       })
       .catch(e => {
-        throw e;
+        throw new Error(`Error in addAvatarUrl: ${e}`);
       });
   };
 
@@ -247,7 +265,7 @@ class CardIOClass implements ICardIO {
         wsObj.avatars = avatars.filter(url => url !== avatarUrl);
       })
       .catch(e => {
-        throw e;
+        throw new Error(`Error in deleteAvatarUrl: ${e}`);
       });
 
     return workspaceDB
@@ -256,7 +274,7 @@ class CardIOClass implements ICardIO {
         console.debug(`Delete avatar: ${avatarUrl}`);
       })
       .catch(e => {
-        throw e;
+        throw new Error(`Error in deleteAvatarUrl: ${e}`);
       });
   };
 
@@ -281,7 +299,7 @@ class CardIOClass implements ICardIO {
     this.openCardDB();
     const card = await cardDB.get(id);
     await cardDB.remove(card).catch(e => {
-      throw e;
+      throw new Error(`Error in deleteCardData: ${e}`);
     });
     return id;
   };

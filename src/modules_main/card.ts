@@ -128,7 +128,7 @@ export const createCard = async (propObject: CardPropSerializable) => {
 
 const saveCard = async (cardProp: CardProp) => {
   await CardIO.updateOrCreateCardData(cardProp).catch((e: Error) => {
-    console.error(e.message);
+    console.error(`Error in saveCard: ${e.message}`);
   });
 };
 
@@ -137,7 +137,7 @@ export const deleteCardWithRetry = async (id: string) => {
     let doRetry = false;
     // eslint-disable-next-line no-await-in-loop
     await deleteCard(id).catch(e => {
-      console.error(e);
+      console.error(`Error in deleteCardWithRetry: ${e.message}`);
       doRetry = true;
     });
     if (!doRetry) {
@@ -159,9 +159,13 @@ export const deleteCard = async (id: string) => {
    * Delete all avatar cards
    */
   for (const avatarLocation in card.prop.avatars) {
-    const avatar = avatars.get(avatarLocation + id);
+    const avatarUrl = avatarLocation + id;
+    const avatar = avatars.get(avatarUrl);
     if (avatar) {
-      avatars.delete(avatarLocation + id);
+      getCurrentWorkspace().avatars = getCurrentWorkspace().avatars.filter(
+        _url => _url !== avatarUrl
+      );
+      avatars.delete(avatarUrl);
       avatar.window.destroy();
     }
   }

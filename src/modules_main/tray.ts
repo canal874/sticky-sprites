@@ -6,11 +6,11 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import path from 'path';
-import { app, Menu, MenuItemConstructorOptions, Tray } from 'electron';
+import { app, dialog, Menu, MenuItemConstructorOptions, Tray } from 'electron';
 import { openSettings, settingsDialog } from './settings';
 import { getSettings, MESSAGE } from './store';
 import { avatars, cards, createCard } from './card';
-import { emitter } from './event';
+import { emitter, handlers } from './event';
 import {
   CardAvatars,
   CardProp,
@@ -23,16 +23,16 @@ import {
 import { getRandomInt } from '../modules_common/utils';
 import { cardColors, ColorName, darkenHexColor } from '../modules_common/color';
 import {
+  getCurrentWorkspace,
   getCurrentWorkspaceId,
   getCurrentWorkspaceUrl,
   getNextWorkspaceId,
   setChangingToWorkspaceId,
-  setLastWorkspaceId,
+  setCurrentWorkspaceId,
   Workspace,
   workspaces,
 } from './store_workspaces';
 import { CardIO } from './io';
-import { loadCurrentWorkspace } from './workspace';
 
 /**
  * Task tray
@@ -111,9 +111,14 @@ export const setTrayContextMenu = () => {
             if (!workspace) {
               return;
             }
-            setChangingToWorkspaceId(id);
-            avatars.forEach(avatar => avatar.window.webContents.send('card-close'));
-            // wait 'window-all-closed' event
+            if (avatars.size === 0) {
+              emitter.emit('change-workspace', id);
+            }
+            else {
+              setChangingToWorkspaceId(id);
+              avatars.forEach(avatar => avatar.window.webContents.send('card-close'));
+              // wait 'window-all-closed' event
+            }
           }
         },
       };
@@ -138,7 +143,6 @@ export const setTrayContextMenu = () => {
       label: MESSAGE('workspaceNew'),
       click: async () => {
         const newId = getNextWorkspaceId();
-        setLastWorkspaceId(newId);
         const workspace: Workspace = {
           name: `${MESSAGE('workspaceName', String(parseInt(newId, 10) + 1))}`,
           avatars: [],
@@ -147,8 +151,49 @@ export const setTrayContextMenu = () => {
         await CardIO.createWorkspace(newId, workspace).catch((e: Error) =>
           console.error(e.message)
         );
+        if (avatars.size === 0) {
+          emitter.emit('change-workspace', newId);
+        }
+        else {
+          setChangingToWorkspaceId(newId);
+          avatars.forEach(avatar => avatar.window.webContents.send('card-close'));
+        }
+      },
+    },
+    {
+      label: MESSAGE('workspaceRename'),
+      click: async () => {
+        const newName = '';
+        const workspace = getCurrentWorkspace();
+        workspace.name = newName;
+        await CardIO.updateWorkspace(getCurrentWorkspaceId(), workspace).catch((e: Error) =>
+          console.error(e.message)
+        );
         setTrayContextMenu();
         avatars.forEach(avatar => avatar.resetContextMenu());
+      },
+    },
+    {
+      label: MESSAGE('workspaceDelete'),
+      enabled: workspaces.size > 1,
+      click: async () => {
+        if (workspaces.size <= 1) {
+          return;
+        }
+        if (getCurrentWorkspace().avatars.length > 0) {
+          dialog.showMessageBox({
+            type: 'info',
+            buttons: ['OK'],
+            message: MESSAGE('workspaceCannotDelete'),
+          });
+          return;
+        }
+        workspaces.delete(getCurrentWorkspaceId());
+        await CardIO.deleteWorkspace(getCurrentWorkspaceId()).catch((e: Error) =>
+          console.error(`Error in workspaceDelete: ${e.message}`)
+        );
+        setTrayContextMenu();
+        emitter.emit('change-workspace', '0');
       },
     },
     ...changeWorkspaces,
@@ -167,7 +212,13 @@ export const setTrayContextMenu = () => {
         if (settingsDialog && !settingsDialog.isDestroyed()) {
           settingsDialog.close();
         }
-        avatars.forEach(avatar => avatar.window.webContents.send('card-close'));
+        setChangingToWorkspaceId('exit');
+        if (avatars.size === 0) {
+          emitter.emit('exit');
+        }
+        else {
+          avatars.forEach(avatar => avatar.window.webContents.send('card-close'));
+        }
       },
     },
   ]);

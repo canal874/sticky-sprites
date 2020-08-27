@@ -20,6 +20,9 @@ export interface ICardIO {
   close(): void;
   loadOrCreateWorkspaces(): Promise<void>;
   createWorkspace(workspaceId: string, workspace: Workspace): Promise<void>;
+  updateWorkspace(workspaceId: string, workspace: Workspace): Promise<void>;
+  deleteWorkspace(workspaceId: string): Promise<void>;
+  updateWorkspaceStatus(): Promise<void>;
 
   addAvatarUrl(workspaceId: string, avatarUrl: string): void;
   deleteAvatarUrl(workspaceId: string, avatarUrl: string): void;
