@@ -158,17 +158,21 @@ export const deleteCard = async (id: string) => {
   /**
    * Delete all avatar cards
    */
+  const deleters = [];
   for (const avatarLocation in card.prop.avatars) {
     const avatarUrl = avatarLocation + id;
+    deleters.push(CardIO.deleteAvatarUrl(getCurrentWorkspaceId(), avatarUrl));
+
     const avatar = avatars.get(avatarUrl);
-    if (avatar) {
-      getCurrentWorkspace().avatars = getCurrentWorkspace().avatars.filter(
-        _url => _url !== avatarUrl
-      );
+    const ws = getCurrentWorkspace();
+    if (avatar && ws) {
+      ws.avatars = ws.avatars.filter(_url => _url !== avatarUrl);
       avatars.delete(avatarUrl);
       avatar.window.destroy();
     }
   }
+  await Promise.all(deleters);
+
   /**
    * Delete actual card
    */

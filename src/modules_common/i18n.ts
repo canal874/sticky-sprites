@@ -122,7 +122,7 @@ export const English: Messages = {
   sendToBack: 'Send to Back',
   newCard: 'New card',
   confirmClosing:
-    'Close OK?\n\nThe card can be opened again from the app menu.\nIf you want to delete the card, let it empty before closing it.)',
+    'Close OK?\n\nThe card can be opened again from the app menu.\n(If you want to delete the card, let it empty before closing it.)',
   confirmWaitMore:
     'It takes a long time to save. Do you want to wait a little longer?\n\nIf you press Cancel, your changes will not be saved.',
   pleaseRestartErrorInOpeningEditor:
@@ -195,7 +195,7 @@ export const Japanese: Messages = {
   sendToBack: '最背面へ',
   newCard: '新規カード',
   confirmClosing:
-    'カードを閉じても良いですか？\n\n閉じたカードはアプリメニューから再表示できます。\n削除したい場合、カードの内容を全て消してから閉じてください）',
+    'カードを閉じても良いですか？\n\n閉じたカードはアプリメニューから再表示できます。\n（削除したい場合、カードの内容を全て消してから閉じてください）',
   confirmWaitMore:
     '保存に時間が掛かっています。もう少し待ちますか？\n\nキャンセルを押すと、変更した内容は保存されない場合があります。',
   pleaseRestartErrorInOpeningEditor:
