@@ -17,6 +17,8 @@ type MessagesMain = {
   btnRemove: string;
   settings: string;
   trayToolTip: string;
+  lockCard: string;
+  unlockCard: string;
   white: string;
   yellow: string;
   red: string;
@@ -28,11 +30,24 @@ type MessagesMain = {
   transparent: string;
 };
 
+type MessagesWorkspace = {
+  workspace: string;
+  workspaceNew: string;
+  workspaceName: string;
+  workspaceMove: string;
+  workspaceRename: string;
+  workspaceDelete: string;
+  workspaceCannotDelete: string;
+  workspaceNewName: string;
+};
+
 type MessagesSettings = {
   settingsDialog: string;
   settingPageLanguage: string;
   settingPageSecurity: string;
   settingPageSave: string;
+  exportData: string;
+  exportDataButton: string;
   saveDetailedText: string;
   saveFilePath: string;
   saveChangeFilePathButton: string;
@@ -51,16 +66,28 @@ type MessagesLanguage = {
   ja: string;
 };
 
-export type Messages = MessagesMain & MessagesSettings & MessagesLanguage;
+export type Messages = MessagesMain &
+  MessagesWorkspace &
+  MessagesSettings &
+  MessagesLanguage;
 
-export type MessageLabel =
-  | keyof MessagesMain
-  | keyof MessagesSettings
-  | keyof MessagesLanguage;
+export type MessageLabel = keyof Messages;
 
 const LanguagesCommon: MessagesLanguage = {
   en: 'English',
   ja: '日本語(Japanese)',
+};
+
+const WorkspaceEnglish: MessagesWorkspace = {
+  workspace: 'Workspace',
+  workspaceNew: 'New workspace...',
+  workspaceName: 'Workspace $1',
+  workspaceMove: 'Move',
+  workspaceRename: 'Rename this workspace',
+  workspaceDelete: 'Delete this workspace',
+  workspaceCannotDelete:
+    'To delete workspace, delete all visible cards or move them to another workspace.',
+  workspaceNewName: 'Enter new workspace name',
 };
 
 const SettingsEnglish: MessagesSettings = {
@@ -68,7 +95,9 @@ const SettingsEnglish: MessagesSettings = {
   settingPageLanguage: 'Language',
   settingPageSecurity: 'Security',
   settingPageSave: 'Data Save',
-  saveDetailedText: 'Data is saved to the following location automatically:',
+  exportData: 'Export data (JSON format) by hand',
+  exportDataButton: 'Select folder',
+  saveDetailedText: 'Save data automatically to the following location',
   saveFilePath: 'Save in the folder of',
   saveChangeFilePathButton: 'Change',
   chooseSaveFilePath: 'Select the place for saving data',
@@ -84,6 +113,7 @@ const SettingsEnglish: MessagesSettings = {
 };
 export const English: Messages = {
   ...LanguagesCommon,
+  ...WorkspaceEnglish,
   ...SettingsEnglish,
   exit: 'Exit',
   zoomIn: 'Zoom In',
@@ -92,7 +122,7 @@ export const English: Messages = {
   sendToBack: 'Send to Back',
   newCard: 'New card',
   confirmClosing:
-    'Close OK?\n\nThe card will be shown again when restating the app.\nIf you want to delete the card, let it empty before closing it.)',
+    'Close OK?\n\nThe card can be opened again from the app menu.\n(If you want to delete the card, let it empty before closing it.)',
   confirmWaitMore:
     'It takes a long time to save. Do you want to wait a little longer?\n\nIf you press Cancel, your changes will not be saved.',
   pleaseRestartErrorInOpeningEditor:
@@ -108,6 +138,8 @@ export const English: Messages = {
   btnRemove: 'Remove',
   settings: 'Settings...',
   trayToolTip: 'Media Stickies',
+  lockCard: 'Lock card',
+  unlockCard: 'Unlock card',
   white: 'white',
   yellow: 'yellow',
   red: 'red',
@@ -119,12 +151,26 @@ export const English: Messages = {
   transparent: 'transparent',
 };
 
+const WorkspaceJapanese: MessagesWorkspace = {
+  workspace: 'ワークスペース',
+  workspaceNew: '新規ワークスペース...',
+  workspaceName: 'ワークスペース $1',
+  workspaceMove: '移動',
+  workspaceRename: 'ワークスペース名を変更',
+  workspaceDelete: 'このワークスペースを削除',
+  workspaceCannotDelete:
+    'ワークスペースを削除するには、表示されているカードを全て削除するか他のワークスペースへ移動してください。',
+  workspaceNewName: '新しいワークスペース名を入力してください',
+};
+
 const SettingsJapanese: MessagesSettings = {
   settingsDialog: '設定',
   settingPageLanguage: '言語',
   settingPageSecurity: 'セキュリティ',
-  settingPageSave: 'データ保存先',
-  saveDetailedText: 'データは次の場所へ自動的に保存されます。',
+  settingPageSave: 'データ保存',
+  exportData: '手動で書き出し（JSON形式）',
+  exportDataButton: '書き出し先を選択',
+  saveDetailedText: '自動的に次の場所へ保存',
   saveFilePath: 'このフォルダに保存',
   saveChangeFilePathButton: '変更',
   chooseSaveFilePath: 'データの保存先を選んでください',
@@ -140,6 +186,7 @@ const SettingsJapanese: MessagesSettings = {
 };
 export const Japanese: Messages = {
   ...LanguagesCommon,
+  ...WorkspaceJapanese,
   ...SettingsJapanese,
   exit: '終了',
   zoomIn: '拡大',
@@ -148,7 +195,7 @@ export const Japanese: Messages = {
   sendToBack: '最背面へ',
   newCard: '新規カード',
   confirmClosing:
-    'カードを閉じても良いですか？\n\n閉じたカードはアプリ再起動でまた表示されます。\n削除したい場合、カードの内容を全て消してから閉じてください）',
+    'カードを閉じても良いですか？\n\n閉じたカードはアプリメニューから再表示できます。\n（削除したい場合、カードの内容を全て消してから閉じてください）',
   confirmWaitMore:
     '保存に時間が掛かっています。もう少し待ちますか？\n\nキャンセルを押すと、変更した内容は保存されない場合があります。',
   pleaseRestartErrorInOpeningEditor:
@@ -164,6 +211,8 @@ export const Japanese: Messages = {
   btnRemove: '削除する',
   settings: '設定...',
   trayToolTip: 'Media Stickies',
+  lockCard: 'ロックする',
+  unlockCard: 'ロック解除する',
   white: '白',
   yellow: '黄',
   red: '赤',

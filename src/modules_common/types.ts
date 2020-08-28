@@ -6,7 +6,8 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardProp } from './cardprop';
+import { AvatarProp, CardProp } from './cardprop';
+import { Workspace } from '../modules_main/store_workspaces';
 
 /**
  * CardInitializeType
@@ -17,14 +18,24 @@ export type CardInitializeType = 'Load' | 'New';
 
 export interface ICardIO {
   close(): void;
+  loadOrCreateWorkspaces(): Promise<void>;
+  createWorkspace(workspaceId: string, workspace: Workspace): Promise<void>;
+  updateWorkspace(workspaceId: string, workspace: Workspace): Promise<void>;
+  deleteWorkspace(workspaceId: string): Promise<void>;
+  updateWorkspaceStatus(): Promise<void>;
+
+  addAvatarUrl(workspaceId: string, avatarUrl: string): void;
+  deleteAvatarUrl(workspaceId: string, avatarUrl: string): void;
+
   getCardIdList(): Promise<string[]>;
-  readCardData(id: string, prop: CardProp): Promise<void>;
-  writeOrCreateCardData(prop: CardProp): Promise<string>;
+  getCardData(id: string): Promise<CardProp>;
+  updateOrCreateCardData(prop: CardProp): Promise<string>;
   deleteCardData(id: string): Promise<string>;
+
+  export(filepath: string): Promise<void>;
 }
 
 export interface ICardEditor {
-  readonly editorType: EditorType;
   readonly hasCodeMode: boolean;
   isCodeMode: boolean;
   isOpened: boolean;
@@ -32,7 +43,7 @@ export interface ICardEditor {
   getImageTag(id: string, src: string, width: number, height: number, alt: string): string;
 
   loadUI(cardCssStyle: CardCssStyle): Promise<void>; // A Promise resolves when required initialization is finished.
-  setCard(prop: CardProp): void; // Loading a card after loadUI().
+  setCard(prop: AvatarProp): void; // Loading a card after loadUI().
 
   showEditor(): Promise<void>;
   hideEditor(): void;
@@ -55,8 +66,6 @@ export interface ICardEditor {
 export type CardCssStyle = {
   borderWidth: number;
 };
-
-export type EditorType = 'WYSIWYG' | 'Markup';
 
 /*
 export type ContentsFrameCommand =

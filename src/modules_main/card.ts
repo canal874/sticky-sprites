@@ -8,22 +8,56 @@
 
 import url from 'url';
 import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import { BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import contextMenu from 'electron-context-menu';
-import { CardProp } from '../modules_common/cardprop';
+
+import { v4 as uuidv4 } from 'uuid';
+import {
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  MenuItemConstructorOptions,
+  shell,
+} from 'electron';
+import {
+  AvatarProp,
+  AvatarPropSerializable,
+  CardProp,
+  CardPropSerializable,
+  TransformableFeature,
+} from '../modules_common/cardprop';
 import { CardIO } from './io';
-import { getCurrentDateAndTime, sleep } from '../modules_common/utils';
+import { sleep } from '../modules_common/utils';
 import { CardInitializeType } from '../modules_common/types';
-import { getSettings, globalDispatch, MESSAGE } from './store';
-import { cardColors, ColorName } from '../modules_common/color';
+import {
+  addAvatarToWorkspace,
+  getCurrentWorkspace,
+  getCurrentWorkspaceId,
+  getCurrentWorkspaceUrl,
+  getWorkspaceUrl,
+  removeAvatarFromWorkspace,
+  workspaces,
+} from './store_workspaces';
 import { DialogButton } from '../modules_common/const';
+import { cardColors, ColorName } from '../modules_common/color';
+import { getSettings, globalDispatch, MESSAGE } from './store';
+import { getIdFromUrl, getLocationFromUrl } from '../modules_common/avatar_url_utils';
+import { handlers } from './event';
+
+/**
+ * Card
+ * Content unit is called 'card'.
+ * A card is internally stored as an actual card (a.k.a Card class),
+ * and externally represented as one or multiple avatar cards (a.k.a. Avatar class).
+ */
+export const cards: Map<string, Card> = new Map<string, Card>();
 
 /**
  * Const
  */
 const MINIMUM_WINDOW_WIDTH = 180;
 const MINIMUM_WINDOW_HEIGHT = 80;
+
+export const avatars: Map<string, Avatar> = new Map<string, Avatar>();
 
 /**
  * Focus control
@@ -41,24 +75,69 @@ export const setGlobalFocusEventListenerPermission = (
 export const getGlobalFocusEventListenerPermission = () => {
   return globalFocusListenerPermission;
 };
+export const getAvatarProp = (avatarUrl: string) => {
+  return getCardFromUrl(avatarUrl)?.prop.avatars[getLocationFromUrl(avatarUrl)];
+};
+
+export const getCardFromUrl = (avatarUrl: string) => {
+  const id = getIdFromUrl(avatarUrl);
+  const card = cards.get(id);
+  return card;
+};
+
+export const getCardData = (avatarUrl: string) => {
+  return getCardFromUrl(avatarUrl)?.prop.data;
+};
 
 /**
  * Card
- * A small sticky windows is called 'card'.
  */
-export const cards: Map<string, Card> = new Map<string, Card>();
 
 const generateNewCardId = (): string => {
-  // YYYY-MM-DD-UUID4
-  return `${getCurrentDateAndTime().replace(/^(.+?)\s.+?$/, '$1')}-${uuidv4()}`;
+  return uuidv4();
 };
 
-const deleteCardWithRetry = async (id: string) => {
+export const createCard = async (propObject: CardPropSerializable) => {
+  const prop = CardProp.fromObject(propObject);
+  const card = new Card('New', prop);
+  cards.set(card.prop.id, card);
+
+  /**
+   * Render avatar if current workspace matches
+   */
+  const workspaceUrl = getCurrentWorkspaceUrl();
+  const promises = [];
+  for (const loc in card.prop.avatars) {
+    if (loc.match(workspaceUrl)) {
+      const avatarUrl = loc + card.prop.id;
+      const avatar = new Avatar(
+        new AvatarProp(avatarUrl, getCardData(avatarUrl), getAvatarProp(avatarUrl))
+      );
+      avatars.set(avatarUrl, avatar);
+      promises.push(avatar.render());
+      getCurrentWorkspace()!.avatars.push(avatarUrl);
+      promises.push(CardIO.addAvatarUrl(getCurrentWorkspaceId(), avatarUrl));
+    }
+  }
+  await Promise.all(promises).catch(e => {
+    console.error(`Error in createCard: ${e.message}`);
+  });
+  await saveCard(card.prop);
+  return prop.id;
+};
+
+const saveCard = async (cardProp: CardProp) => {
+  await CardIO.updateOrCreateCardData(cardProp).catch((e: Error) => {
+    console.error(`Error in saveCard: ${e.message}`);
+  });
+};
+
+export const deleteCardWithRetry = async (id: string) => {
   for (let i = 0; i < 5; i++) {
     let doRetry = false;
     // eslint-disable-next-line no-await-in-loop
     await deleteCard(id).catch(e => {
-      console.error(e);
+      console.error(`Error in deleteCardWithRetry: ${e.message}`);
       doRetry = true;
     });
     if (!doRetry) {
@@ -71,6 +150,32 @@ const deleteCardWithRetry = async (id: string) => {
 };
 
 export const deleteCard = async (id: string) => {
+  const card = cards.get(id);
+  if (!card) {
+    console.error(`Error in deleteCard: card does not exist: ${id}`);
+    return;
+  }
+  /**
+   * Delete all avatar cards
+   */
+  const deleters = [];
+  for (const avatarLocation in card.prop.avatars) {
+    const avatarUrl = avatarLocation + id;
+    deleters.push(CardIO.deleteAvatarUrl(getCurrentWorkspaceId(), avatarUrl));
+
+    const avatar = avatars.get(avatarUrl);
+    const ws = getCurrentWorkspace();
+    if (avatar && ws) {
+      ws.avatars = ws.avatars.filter(_url => _url !== avatarUrl);
+      avatars.delete(avatarUrl);
+      avatar.window.destroy();
+    }
+  }
+  await Promise.all(deleters);
+
+  /**
+   * Delete actual card
+   */
   await CardIO.deleteCardData(id)
     .catch((e: Error) => {
       throw new Error(`Error in delete-card: ${e.message}`);
@@ -78,102 +183,24 @@ export const deleteCard = async (id: string) => {
     .then(() => {
       console.debug(`deleted : ${id}`);
       // eslint-disable-next-line no-unused-expressions
-      const card = cards.get(id);
-      if (card) {
-        cards.delete(id);
-        card.window.destroy();
-      }
+      cards.delete(id);
     })
     .catch((e: Error) => {
       throw new Error(`Error in destroy window: ${e.message}`);
     });
 };
 
-/**
- * Context Menu
- */
-
-const setContextMenu = (win: BrowserWindow) => {
-  const setColor = (name: ColorName) => {
-    return {
-      label: MESSAGE(name),
-      click: () => {
-        if (name === 'transparent') {
-          win.webContents.send('change-card-color', cardColors[name], 0.0);
-        }
-        else {
-          win.webContents.send('change-card-color', cardColors[name]);
-        }
-      },
-    };
-  };
-
-  contextMenu({
-    window: win,
-    showSaveImageAs: true,
-    showInspectElement: false,
-    menu: actions => [
-      actions.searchWithGoogle({}),
-      actions.separator(),
-      actions.cut({}),
-      actions.copy({}),
-      actions.paste({}),
-      actions.separator(),
-      actions.saveImageAs({}),
-      actions.separator(),
-      actions.copyLink({}),
-      actions.separator(),
-    ],
-    prepend: () => [
-      {
-        label: MESSAGE('zoomIn'),
-        click: () => {
-          win.webContents.send('zoom-in');
-        },
-      },
-      {
-        label: MESSAGE('zoomOut'),
-        click: () => {
-          win.webContents.send('zoom-out');
-        },
-      },
-      {
-        label: MESSAGE('sendToBack'),
-        click: () => {
-          win.webContents.send('send-to-back');
-        },
-      },
-    ],
-    append: () => [
-      setColor('yellow'),
-      setColor('red'),
-      setColor('green'),
-      setColor('blue'),
-      setColor('orange'),
-      setColor('purple'),
-      setColor('white'),
-      setColor('gray'),
-      setColor('transparent'),
-    ],
-  });
-};
-
 export class Card {
-  public prop: CardProp; // ! is Definite assignment assertion
-  public window: BrowserWindow;
-  public indexUrl: string;
-
-  public suppressFocusEventOnce = false;
-  public suppressBlurEventOnce = false;
-  public recaptureGlobalFocusEventAfterLocalFocusEvent = false;
-
-  public renderingCompleted = false;
-
-  private _loadOrCreateCardData: () => Promise<void>;
-
+  public prop!: CardProp;
+  public loadOrCreateCardData: () => Promise<void>;
+  /**
+   * constructor
+   * @param cardInitializeType New or Load
+   * @param arg CardProp or id
+   */
   constructor (public cardInitializeType: CardInitializeType, arg?: CardProp | string) {
     if (cardInitializeType === 'New') {
-      this._loadOrCreateCardData = () => {
+      this.loadOrCreateCardData = () => {
         return Promise.resolve();
       };
       if (arg === undefined) {
@@ -198,28 +225,200 @@ export class Card {
         throw new TypeError('Second parameter must be id string when loading the card.');
       }
       const id = arg;
-      this.prop = new CardProp(id);
 
-      this._loadOrCreateCardData = () => {
-        return new Promise((resolve, reject) => {
-          CardIO.readCardData(id, this.prop)
-            .then(() => {
-              // console.debug('loadCardData  ' + arg);
-              resolve();
-            })
-            .catch((e: Error) => {
-              reject(new Error(`Error in loadCardData: ${e.message}`));
-            });
+      this.loadOrCreateCardData = async () => {
+        this.prop = await CardIO.getCardData(id).catch(e => {
+          throw e;
         });
       };
     }
+  }
+}
 
+/**
+ * Avatar
+ */
+export const deleteAvatar = async (_url: string) => {
+  const avatar = avatars.get(_url);
+  if (avatar) {
+    avatars.delete(_url);
+    avatar.window.destroy();
+    await CardIO.deleteAvatarUrl(getCurrentWorkspaceId(), _url);
+    const ws = getCurrentWorkspace();
+    if (ws) {
+      ws.avatars = ws.avatars.filter(avatarUrl => avatarUrl !== _url);
+    }
+  }
+  const card = getCardFromUrl(_url);
+  if (!card) {
+    return;
+  }
+  delete card.prop.avatars[getLocationFromUrl(_url)];
+  await saveCard(card.prop);
+};
+
+export const updateAvatar = async (avatarPropObj: AvatarPropSerializable) => {
+  const prop = AvatarProp.fromObject(avatarPropObj);
+  const card = getCardFromUrl(prop.url);
+  if (!card) {
+    throw new Error('The card is not registered in cards: ' + prop.url);
+  }
+  const feature: TransformableFeature = {
+    geometry: prop.geometry,
+    style: prop.style,
+    condition: prop.condition,
+    date: prop.date,
+  };
+  card.prop.data = prop.data;
+  card.prop.avatars[getLocationFromUrl(prop.url)] = feature;
+
+  await saveCard(card.prop);
+};
+
+/**
+ * Context Menu
+ */
+const setContextMenu = (prop: AvatarProp, win: BrowserWindow) => {
+  const setColor = (name: ColorName) => {
+    return {
+      label: MESSAGE(name),
+      click: () => {
+        if (name === 'transparent') {
+          win.webContents.send('change-card-color', cardColors[name], 0.0);
+        }
+        else {
+          win.webContents.send('change-card-color', cardColors[name]);
+        }
+      },
+    };
+  };
+
+  const moveAvatarToWorkspace = (workspaceId: string) => {
+    removeAvatarFromWorkspace(getCurrentWorkspaceId(), prop.url);
+    CardIO.deleteAvatarUrl(getCurrentWorkspaceId(), prop.url);
+    const newAvatarUrl = getWorkspaceUrl(workspaceId) + getIdFromUrl(prop.url);
+    addAvatarToWorkspace(workspaceId, newAvatarUrl);
+    CardIO.addAvatarUrl(workspaceId, newAvatarUrl);
+    win.webContents.send('card-close');
+
+    const card = getCardFromUrl(prop.url);
+    if (card) {
+      const avatarProp = card.prop.avatars[getLocationFromUrl(prop.url)];
+      delete card.prop.avatars[getLocationFromUrl(prop.url)];
+      card.prop.avatars[getLocationFromUrl(newAvatarUrl)] = avatarProp;
+      saveCard(card.prop);
+    }
+  };
+
+  const moveToWorkspaces: MenuItemConstructorOptions[] = [...workspaces.keys()]
+    .sort()
+    .reduce((result, id) => {
+      if (id !== getCurrentWorkspaceId()) {
+        result.push({
+          label: `${workspaces.get(id)?.name}`,
+          click: () => {
+            const workspace = workspaces.get(id);
+            if (!workspace) {
+              return;
+            }
+            moveAvatarToWorkspace(id);
+          },
+        });
+      }
+      return result;
+    }, [] as MenuItemConstructorOptions[]);
+
+  const dispose = contextMenu({
+    window: win,
+    showSaveImageAs: true,
+    showInspectElement: false,
+    menu: actions => [
+      actions.searchWithGoogle({}),
+      actions.separator(),
+      actions.cut({}),
+      actions.copy({}),
+      actions.paste({}),
+      actions.separator(),
+      actions.saveImageAs({}),
+      actions.separator(),
+      actions.copyLink({}),
+      actions.separator(),
+    ],
+    prepend: () => [
+      {
+        label: MESSAGE('workspaceMove'),
+        submenu: [...moveToWorkspaces],
+      },
+      {
+        label: MESSAGE('zoomIn'),
+        click: () => {
+          win.webContents.send('zoom-in');
+        },
+      },
+      {
+        label: MESSAGE('zoomOut'),
+        click: () => {
+          win.webContents.send('zoom-out');
+        },
+      },
+      {
+        label: MESSAGE('sendToBack'),
+        click: () => {
+          win.webContents.send('send-to-back');
+        },
+      },
+      {
+        label: prop.condition.locked ? MESSAGE('unlockCard') : MESSAGE('lockCard'),
+        click: () => {
+          prop.condition.locked = !prop.condition.locked;
+          win.webContents.send('set-lock', prop.condition.locked);
+          resetContextMenu();
+        },
+      },
+    ],
+    append: () => [
+      setColor('yellow'),
+      setColor('red'),
+      setColor('green'),
+      setColor('blue'),
+      setColor('orange'),
+      setColor('purple'),
+      setColor('white'),
+      setColor('gray'),
+      setColor('transparent'),
+    ],
+  });
+
+  const resetContextMenu = () => {
+    // @ts-ignore
+    dispose();
+    setContextMenu(prop, win);
+  };
+
+  return resetContextMenu;
+};
+
+export class Avatar {
+  public prop: AvatarProp;
+  public window: BrowserWindow;
+  public indexUrl: string;
+
+  public suppressFocusEventOnce = false;
+  public suppressBlurEventOnce = false;
+  public recaptureGlobalFocusEventAfterLocalFocusEvent = false;
+
+  public renderingCompleted = false;
+
+  public resetContextMenu: Function;
+
+  constructor (_prop: AvatarProp) {
+    this.prop = _prop;
     this.indexUrl = url.format({
       pathname: path.join(__dirname, '../index.html'),
       protocol: 'file:',
       slashes: true,
       query: {
-        id: this.prop.id,
+        avatarUrl: this.prop.url,
       },
     });
 
@@ -261,7 +460,7 @@ export class Card {
       // Dereference the window object, usually you would store windows
       // in an array if your app supports multi windows, this is the time
       // when you should delete the corresponding element.
-      cards.delete(this.prop.id);
+      avatars.delete(this.prop.url);
     });
 
     // Open hyperlink on external browser window
@@ -275,11 +474,11 @@ export class Card {
     this.window.on('focus', this._focusListener);
     this.window.on('blur', this._blurListener);
 
-    setContextMenu(this.window);
+    this.resetContextMenu = setContextMenu(this.prop, this.window);
 
     this.window.webContents.on('did-finish-load', () => {
       const checkNavigation = (_event: Electron.Event, navUrl: string) => {
-        console.debug('did-start-navigate : ' + navUrl);
+        //        console.debug('did-start-navigate : ' + navUrl);
         // Check top frame
         const topFrameURL = this.indexUrl.replace(/\\/g, '/');
         if (navUrl === topFrameURL) {
@@ -306,14 +505,14 @@ export class Card {
           // Same origin policy between top frame and iframe is failed after reload(). (Cause unknown)
           // Create and destroy card for workaround.
           // this.window.webContents.send('reload');
-          const card = new Card('Load', this.prop.id);
+          const avatar = new Avatar(this.prop);
           const prevWin = this.window;
-          cards.get(this.prop.id);
-          card
+          avatars.get(this.prop.url);
+          avatar
             .render()
             .then(() => {
               prevWin.destroy();
-              cards.set(this.prop.id, card);
+              avatars.set(this.prop.url, avatar);
             })
             .catch(() => {});
         }
@@ -343,8 +542,8 @@ export class Card {
               message: MESSAGE('securityLocalNavigationError', navUrl),
             });
             // Destroy
-
-            deleteCardWithRetry(this.prop.id);
+            const id = getIdFromUrl(this.prop.url);
+            deleteCardWithRetry(id);
             return;
           }
 
@@ -374,11 +573,12 @@ export class Card {
           else if (res === DialogButton.Cancel) {
             // Destroy if not permitted
             console.debug(`Deny ${domain}`);
-            deleteCardWithRetry(this.prop.id);
+            const id = getIdFromUrl(this.prop.url);
+            deleteCardWithRetry(id);
           }
         }
       };
-      console.debug('did-finish-load: ' + this.window.webContents.getURL());
+      //      console.debug('did-finish-load: ' + this.window.webContents.getURL());
       this.window.webContents.on('did-start-navigation', checkNavigation);
     });
 
@@ -396,7 +596,7 @@ export class Card {
   }
 
   public render = async () => {
-    await Promise.all([this._loadOrCreateCardData(), this._loadHTML()]).catch(e => {
+    await this._loadHTML().catch(e => {
       throw new Error(`Error in render(): ${e.message}`);
     });
     await this._renderCard(this.prop).catch(e => {
@@ -404,11 +604,11 @@ export class Card {
     });
   };
 
-  _renderCard = (_prop: CardProp) => {
+  _renderCard = (_prop: AvatarProp) => {
     return new Promise(resolve => {
       this.window.setSize(_prop.geometry.width, _prop.geometry.height);
       this.window.setPosition(_prop.geometry.x, _prop.geometry.y);
-      console.debug(`renderCard in main [${_prop.id}] ${_prop.data.substr(0, 40)}`);
+      console.debug(`renderCard in main [${_prop.url}] ${_prop.data.substr(0, 40)}`);
       this.window.showInactive();
       this.window.webContents.send('render-card', _prop.toObject()); // CardProp must be serialize because passing non-JavaScript objects to IPC methods is deprecated and will throw an exception beginning with Electron 9.
       const checkTimer = setInterval(() => {
@@ -423,19 +623,24 @@ export class Card {
   private _loadHTML: () => Promise<void> = () => {
     return new Promise((resolve, reject) => {
       const finishLoadListener = (event: Electron.IpcMainInvokeEvent) => {
-        console.debug('loadHTML  ' + this.prop.id);
+        console.debug('loadHTML  ' + this.prop.url);
         const _finishReloadListener = () => {
-          console.debug('Reloaded: ' + this.prop.id);
+          console.debug('Reloaded: ' + this.prop.url);
           this.window.webContents.send('render-card', this.prop.toObject());
         };
 
         // Don't use 'did-finish-load' event.
         // loadHTML resolves after loading HTML and processing required script are finished.
         //     this.window.webContents.on('did-finish-load', () => {
-        ipcMain.handle('finish-load-' + this.prop.id, _finishReloadListener);
+        const handler = 'finish-load-' + encodeURIComponent(this.prop.url);
+        handlers.push(handler);
+        ipcMain.handle(handler, _finishReloadListener);
         resolve();
       };
-      ipcMain.handleOnce('finish-load-' + this.prop.id, finishLoadListener);
+      ipcMain.handleOnce(
+        'finish-load-' + encodeURIComponent(this.prop.url),
+        finishLoadListener
+      );
 
       this.window.webContents.on(
         'did-fail-load',
@@ -455,25 +660,25 @@ export class Card {
       setGlobalFocusEventListenerPermission(true);
     }
     if (this.suppressFocusEventOnce) {
-      console.debug(`skip focus event listener ${this.prop.id}`);
+      console.debug(`skip focus event listener ${this.prop.url}`);
       this.suppressFocusEventOnce = false;
     }
     else if (!getGlobalFocusEventListenerPermission()) {
-      console.debug(`focus event listener is suppressed ${this.prop.id}`);
+      console.debug(`focus event listener is suppressed ${this.prop.url}`);
     }
     else {
-      console.debug(`focus ${this.prop.id}`);
+      console.debug(`focus ${this.prop.url}`);
       this.window.webContents.send('card-focused');
     }
   };
 
   private _blurListener = () => {
     if (this.suppressBlurEventOnce) {
-      console.debug(`skip blur event listener ${this.prop.id}`);
+      console.debug(`skip blur event listener ${this.prop.url}`);
       this.suppressBlurEventOnce = false;
     }
     else {
-      console.debug(`blur ${this.prop.id}`);
+      console.debug(`blur ${this.prop.url}`);
       this.window.webContents.send('card-blurred');
     }
   };

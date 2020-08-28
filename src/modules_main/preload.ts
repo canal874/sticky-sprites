@@ -12,62 +12,65 @@ contextBridge.exposeInMainWorld('api', {
   /**
    * Command from Renderer process
    */
-  alertDialog: (id: string, message: string) => {
-    return ipcRenderer.invoke('alert-dialog', id, message);
+  alertDialog: (url: string, message: string) => {
+    return ipcRenderer.invoke('alert-dialog', url, message);
   },
-  blurAndFocusWithSuppressEvents: (id: string) => {
-    return ipcRenderer.invoke('blur-and-focus-with-suppress-events', id);
+  blurAndFocusWithSuppressEvents: (url: string) => {
+    return ipcRenderer.invoke('blur-and-focus-with-suppress-events', url);
   },
-  blurAndFocusWithSuppressFocusEvents: (id: string) => {
-    return ipcRenderer.invoke('blur-and-focus-with-suppress-focus-events', id);
+  blurAndFocusWithSuppressFocusEvents: (url: string) => {
+    return ipcRenderer.invoke('blur-and-focus-with-suppress-focus-events', url);
   },
-  bringToFront: (id: string) => {
-    return ipcRenderer.invoke('bring-to-front', id);
+  bringToFront: (url: string) => {
+    return ipcRenderer.invoke('bring-to-front', url);
   },
   createCard: (subsetOfCardPropSerializable: Record<string, any>) => {
     return ipcRenderer.invoke('create-card', subsetOfCardPropSerializable);
   },
-  confirmDialog: (id: string, buttonLabels: string[], message: string) => {
-    return ipcRenderer.invoke('confirm-dialog', id, buttonLabels, message);
+  confirmDialog: (url: string, buttonLabels: string[], message: string) => {
+    return ipcRenderer.invoke('confirm-dialog', url, buttonLabels, message);
   },
-  deleteCard: (id: string) => {
-    return ipcRenderer.invoke('delete-card', id);
+  deleteAvatar: (url: string) => {
+    return ipcRenderer.invoke('delete-avatar', url);
   },
-  finishLoad: (id: string) => {
-    return ipcRenderer.invoke('finish-load-' + id);
+  deleteCard: (url: string) => {
+    return ipcRenderer.invoke('delete-card', url);
   },
-  finishRenderCard: (id: string) => {
-    return ipcRenderer.invoke('finish-render-card', id);
+  finishLoad: (url: string) => {
+    return ipcRenderer.invoke('finish-load-' + url);
   },
-  focus: (id: string) => {
-    return ipcRenderer.invoke('focus', id);
+  finishRenderCard: (url: string) => {
+    return ipcRenderer.invoke('finish-render-card', url);
+  },
+  focus: (url: string) => {
+    return ipcRenderer.invoke('focus', url);
   },
   getUuid: () => {
     return ipcRenderer.invoke('get-uuid');
   },
-  saveCard: (cardPropSerializable: Record<string, any>) => {
-    return ipcRenderer.invoke('save-card', cardPropSerializable);
+  updateAvatar: (avatarPropSerializable: Record<string, any>) => {
+    return ipcRenderer.invoke('update-avatar', avatarPropSerializable);
   },
-  sendLeftMouseDown: (id: string, x: number, y: number) => {
+  sendLeftMouseDown: (url: string, x: number, y: number) => {
     const leftMouseDown: MouseInputEvent = {
       button: 'left',
       type: 'mouseDown',
       x: x,
       y: y,
     };
-    return ipcRenderer.invoke('send-mouse-input', id, leftMouseDown);
+    return ipcRenderer.invoke('send-mouse-input', url, leftMouseDown);
   },
-  sendToBack: (id: string) => {
-    return ipcRenderer.invoke('send-to-back', id);
+  sendToBack: (url: string) => {
+    return ipcRenderer.invoke('send-to-back', url);
   },
-  setWindowSize: (id: string, width: number, height: number) => {
-    return ipcRenderer.invoke('set-window-size', id, width, height);
+  setWindowSize: (url: string, width: number, height: number) => {
+    return ipcRenderer.invoke('set-window-size', url, width, height);
   },
-  setWindowPosition: (id: string, x: number, y: number) => {
-    return ipcRenderer.invoke('set-window-position', id, x, y);
+  setWindowPosition: (url: string, x: number, y: number) => {
+    return ipcRenderer.invoke('set-window-position', url, x, y);
   },
-  setTitle: (id: string, title: string) => {
-    return ipcRenderer.invoke('set-title', id, title);
+  setTitle: (url: string, title: string) => {
+    return ipcRenderer.invoke('set-title', url, title);
   },
 });
 
@@ -112,5 +115,8 @@ ipcRenderer.on(
 ipcRenderer.on('send-to-back', () =>
   window.postMessage({ command: 'send-to-back' }, 'file://')
 );
+ipcRenderer.on('set-lock', (event: Electron.IpcRendererEvent, locked: boolean) => {
+  window.postMessage({ command: 'set-lock', locked: locked }, 'file://');
+});
 ipcRenderer.on('zoom-in', () => window.postMessage({ command: 'zoom-in' }, 'file://'));
 ipcRenderer.on('zoom-out', () => window.postMessage({ command: 'zoom-out' }, 'file://'));

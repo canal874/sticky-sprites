@@ -6,13 +6,13 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { CardProp } from '../modules_common/cardprop';
+import { AvatarProp } from '../modules_common/cardprop';
 import { CardCssStyle, ICardEditor } from '../modules_common/types';
 import { convertHexColorToRgba, darkenHexColor } from '../modules_common/color';
 import window from './window';
 
 let cardCssStyle: CardCssStyle;
-let cardProp: CardProp;
+let avatarProp: AvatarProp;
 let cardEditor: ICardEditor;
 
 export const shadowHeight = 5;
@@ -34,11 +34,11 @@ export const setRenderOffsetHeight = (h: number) => {
 };
 
 export const initCardRenderer = (
-  prop: CardProp,
+  prop: AvatarProp,
   style: CardCssStyle,
   editor: ICardEditor
 ) => {
-  cardProp = prop;
+  avatarProp = prop;
   cardCssStyle = style;
   cardEditor = editor;
 };
@@ -53,11 +53,11 @@ export type CardRenderOptions =
   | 'EditorRect';
 
 const setWindowTitle = () => {
-  window.api.setTitle(cardProp.id, CardProp.getPlainText(cardProp.data));
+  window.api.setTitle(avatarProp.url, AvatarProp.getPlainText(avatarProp.data));
 };
 
 const renderTitleBar = () => {
-  const titleWidth = cardProp.geometry.width - cardCssStyle.borderWidth * 2 - shadowWidth;
+  const titleWidth = avatarProp.geometry.width - cardCssStyle.borderWidth * 2 - shadowWidth;
   document.getElementById('title')!.style.width = titleWidth + 'px';
   const closeBtnLeft = titleWidth - document.getElementById('closeBtn')!.offsetWidth;
   document.getElementById('closeBtn')!.style.left = closeBtnLeft + 'px';
@@ -75,13 +75,13 @@ const renderTitleBar = () => {
     document.getElementById('codeBtn')!.style.visibility = 'hidden';
   }
   /**
-   * TODO: Update title when cardProp.data changes
+   * TODO: Update title when avatarProp.data changes
    */
   setWindowTitle();
 };
 
 const renderTitleBarStyle = () => {
-  const darkerColor = darkenHexColor(cardProp.style.backgroundColor, 0.6);
+  const darkerColor = darkenHexColor(avatarProp.style.backgroundColor, 0.6);
   document.getElementById('newBtn')!.style.color = darkerColor;
   document.getElementById('closeBtn')!.style.color = darkerColor;
 
@@ -106,7 +106,7 @@ const renderContentsData = () => {
       <script type='text/javascript' src='./iframe/contents_frame.js'></script>
     </head>
     <body>
-      ${cardProp.data}
+      ${avatarProp.data}
     </body>
   </html>`;
     try {
@@ -127,27 +127,27 @@ const renderContentsData = () => {
 const renderCardAndContentsRect = () => {
   // cardOffset is adjustment for box-shadow
   let cardOffset = 0;
-  if (cardProp.status === 'Blurred') {
+  if (avatarProp.status === 'Blurred') {
     cardOffset = cardCssStyle.borderWidth;
   }
   const cardWidth =
-    cardProp.geometry.width - cardOffset - shadowWidth + getRenderOffsetWidth();
+    avatarProp.geometry.width - cardOffset - shadowWidth + getRenderOffsetWidth();
 
   const cardHeight =
-    cardProp.geometry.height - cardOffset - shadowHeight + getRenderOffsetHeight();
+    avatarProp.geometry.height - cardOffset - shadowHeight + getRenderOffsetHeight();
 
   document.getElementById('card')!.style.width = cardWidth + 'px';
   document.getElementById('card')!.style.height = cardHeight + 'px';
 
-  // width of BrowserWindow (namely cardProp.geometry.width) equals border + padding + content.
+  // width of BrowserWindow (namely avatarProp.geometry.width) equals border + padding + content.
   const contentsWidth =
-    cardProp.geometry.width +
+    avatarProp.geometry.width +
     renderOffsetWidth -
     cardCssStyle.borderWidth * 2 -
     shadowWidth;
 
   const contentsHeight =
-    cardProp.geometry.height +
+    avatarProp.geometry.height +
     renderOffsetHeight -
     cardCssStyle.borderWidth * 2 -
     document.getElementById('title')!.offsetHeight -
@@ -179,12 +179,12 @@ const renderCardAndContentsRect = () => {
 };
 
 const renderCardStyle = () => {
-  if (cardProp.status === 'Focused') {
+  if (avatarProp.status === 'Focused') {
     document.getElementById(
       'card'
     )!.style.border = `${cardCssStyle.borderWidth}px solid red`;
   }
-  else if (cardProp.status === 'Blurred') {
+  else if (avatarProp.status === 'Blurred') {
     document.getElementById(
       'card'
     )!.style.border = `${cardCssStyle.borderWidth}px solid transparent`;
@@ -197,32 +197,32 @@ const renderCardStyle = () => {
    * So, the user need to click twice when #title is hidden.
    * Use opacity instead of visible/hidden.
   document.getElementById('title')!.style.visibility = 'visible';
-  if (cardProp.style.opacity === 0 && cardProp.status === 'Blurred') {
+  if (avatarProp.style.opacity === 0 && avatarProp.status === 'Blurred') {
     document.getElementById('title')!.style.visibility = 'hidden';
   }
    */
   document.getElementById('title')!.style.opacity = '1.0';
-  if (cardProp.style.opacity === 0 && cardProp.status === 'Blurred') {
+  if (avatarProp.style.opacity === 0 && avatarProp.status === 'Blurred') {
     document.getElementById('title')!.style.opacity = '0.01';
   }
 
   // Set card properties
   const backgroundRgba = convertHexColorToRgba(
-    cardProp.style.backgroundColor,
-    cardProp.style.opacity
+    avatarProp.style.backgroundColor,
+    avatarProp.style.opacity
   );
   document.getElementById('contents')!.style.backgroundColor = backgroundRgba;
   const darkerRgba = convertHexColorToRgba(
-    darkenHexColor(cardProp.style.backgroundColor),
-    cardProp.style.opacity
+    darkenHexColor(avatarProp.style.backgroundColor),
+    avatarProp.style.opacity
   );
 
-  const uiRgba = convertHexColorToRgba(cardProp.style.uiColor);
+  const uiRgba = convertHexColorToRgba(avatarProp.style.uiColor);
 
   document.getElementById('title')!.style.backgroundColor = uiRgba;
 
   let boxShadow = 'none';
-  if (cardProp.style.opacity !== 0 || cardProp.status === 'Focused') {
+  if (avatarProp.style.opacity !== 0 || avatarProp.status === 'Focused') {
     boxShadow = '5px 5px 3px 0px rgba(0,0,0, .2)';
   }
   document.getElementById('card')!.style.boxShadow = boxShadow;
@@ -242,7 +242,7 @@ const renderCardStyle = () => {
         '}';
       iframeDoc.head.appendChild(style);
 
-      iframeDoc.body.style.zoom = `${cardProp.style.zoom}`;
+      iframeDoc.body.style.zoom = `${avatarProp.style.zoom}`;
     }
   } catch (e) {
     console.error(e);

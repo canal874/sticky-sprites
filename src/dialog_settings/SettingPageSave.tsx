@@ -17,6 +17,7 @@ import { MessageLabel } from '../modules_common/i18n';
 import { cardColors, ColorName } from '../modules_common/color';
 import { cardDirName } from '../modules_main/store.types';
 import { DialogButton } from '../modules_common/const';
+import { getCurrentDateAndTime } from '../modules_common/utils';
 
 export interface SettingPageSaveProps {
   item: MenuItemProps;
@@ -29,9 +30,11 @@ export const SettingPageSave = (props: SettingPageSaveProps) => {
     return globalState.temporal.messages[label];
   };
   const onChangeButtonClick = async () => {
-    const file = await ipcRenderer.invoke('open-directory-selector-dialog').catch(e => {
-      console.error(`Failed to open directory selector dialog: ${e.me}`);
-    });
+    const file = await ipcRenderer
+      .invoke('open-directory-selector-dialog', MESSAGE('chooseSaveFilePath'))
+      .catch(e => {
+        console.error(`Failed to open directory selector dialog: ${e.me}`);
+      });
     if (file) {
       await ipcRenderer.invoke('close-cardio').catch(e => {
         console.error(`Failed to close cardio: ${e.me}`);
@@ -74,6 +77,24 @@ export const SettingPageSave = (props: SettingPageSaveProps) => {
         });
     }
   };
+  const onExportDataButtonClick = async () => {
+    const file = await ipcRenderer
+      .invoke('open-directory-selector-dialog', MESSAGE('exportDataButton'))
+      .catch(e => {
+        console.error(`Failed to open directory selector dialog: ${e.me}`);
+      });
+    if (file) {
+      const filepath =
+        file[0] +
+        '/mediastickies_' +
+        getCurrentDateAndTime()
+          .replace(/\s/g, '_')
+          .replace(/:/g, '') +
+        '.json';
+      await ipcRenderer.invoke('export-data-to', filepath);
+    }
+  };
+
   const buttonStyle = (color: ColorName) => ({
     backgroundColor: cardColors[color],
   });
@@ -91,6 +112,18 @@ export const SettingPageSave = (props: SettingPageSaveProps) => {
           {MESSAGE('saveChangeFilePathButton')}
         </button>
         <div styleName='saveFilePathValue'>{globalState.persistent.storage.path}</div>
+      </div>
+      <br style={{ clear: 'both' }} />
+      <hr></hr>
+      <div styleName='exportData'>
+        <div styleName='exportDataLabel'>{MESSAGE('exportData')}:</div>
+        <button
+          styleName='exportDataButton'
+          onClick={onExportDataButtonClick}
+          style={buttonStyle('red')}
+        >
+          {MESSAGE('exportDataButton')}
+        </button>
       </div>
     </SettingPageTemplate>
   );

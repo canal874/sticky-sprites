@@ -7,10 +7,12 @@
  */
 
 import {
-  CardProp,
-  CardPropSerializable,
+  AvatarProp,
+  AvatarPropSerializable,
+  CardAvatars,
   DEFAULT_CARD_GEOMETRY,
   DRAG_IMAGE_MARGIN,
+  TransformableFeature,
 } from './modules_common/cardprop';
 import {
   CardCssStyle,
@@ -30,14 +32,18 @@ import {
 } from './modules_renderer/card_renderer';
 import { darkenHexColor } from './modules_common/color';
 import {
+  deleteAvatar,
   deleteCard,
   saveCard,
   saveCardColor,
   waitUnfinishedTasks,
 } from './modules_renderer/save';
 import window from './modules_renderer/window';
+import { getLocationFromUrl } from './modules_common/avatar_url_utils';
 
-let cardProp: CardProp = new CardProp('');
+let avatarProp: AvatarProp = new AvatarProp('');
+
+let avatarUrl: string;
 
 let cardCssStyle: CardCssStyle = {
   borderWidth: 0,
@@ -53,7 +59,7 @@ let isMetaDown = false;
 const cardEditor: ICardEditor = new CardEditor();
 
 const close = async () => {
-  await waitUnfinishedTasks(cardProp.id).catch((e: Error) => {
+  await waitUnfinishedTasks(avatarProp.url).catch((e: Error) => {
     console.error(e.message);
   });
   canClose = true;
@@ -66,7 +72,7 @@ const close = async () => {
  */
 let execSaveCommandTimeout: NodeJS.Timeout;
 const execSaveCommand = () => {
-  saveCard(cardProp);
+  saveCard(avatarProp);
 };
 
 const queueSaveCommand = () => {
@@ -101,19 +107,26 @@ const initializeUIEvents = () => {
   document.getElementById('newBtn')?.addEventListener('click', async () => {
     // Position of a new card is relative to this card.
     const geometry = DEFAULT_CARD_GEOMETRY;
-    geometry.x = cardProp.geometry.x + 30;
-    geometry.y = cardProp.geometry.y + 30;
-
+    geometry.x = avatarProp.geometry.x + 30;
+    geometry.y = avatarProp.geometry.y + 30;
+    const avatars: CardAvatars = {};
+    avatars[getLocationFromUrl(avatarProp.url)] = new TransformableFeature(
+      {
+        x: geometry.x,
+        y: geometry.y,
+        z: geometry.z + 1,
+        width: geometry.width,
+        height: geometry.height,
+      },
+      {
+        uiColor: avatarProp.style.uiColor,
+        backgroundColor: avatarProp.style.backgroundColor,
+        opacity: avatarProp.style.opacity,
+        zoom: avatarProp.style.zoom,
+      }
+    );
     const newId = await window.api.createCard({
-      x: geometry.x,
-      y: geometry.y,
-      z: geometry.z + 1,
-      width: geometry.width,
-      height: geometry.height,
-      uiColor: cardProp.style.uiColor,
-      backgroundColor: cardProp.style.backgroundColor,
-      opacity: cardProp.style.opacity,
-      zoom: cardProp.style.zoom,
+      avatars: avatars,
     });
     window.api.focus(newId);
   });
@@ -126,18 +139,16 @@ const initializeUIEvents = () => {
   // eslint-disable-next-line no-unused-expressions
   document.getElementById('closeBtn')?.addEventListener('click', event => {
     if (cardEditor.isOpened) {
-      if (cardEditor.editorType === 'Markup') {
-        cardEditor.hideEditor();
-      }
+      cardEditor.hideEditor();
       const { dataChanged, data } = cardEditor.endEdit();
-      cardProp.data = data;
+      avatarProp.data = data;
       render(['TitleBar', 'ContentsData', 'ContentsRect']);
-      if (dataChanged && cardProp.data !== '') {
-        saveCard(cardProp);
+      if (dataChanged && avatarProp.data !== '') {
+        saveCard(avatarProp);
       }
     }
-    if (cardProp.data === '' || event.ctrlKey) {
-      deleteCard(cardProp);
+    if (avatarProp.data === '' || event.ctrlKey) {
+      deleteCard(avatarProp);
     }
     else {
       /**
@@ -146,11 +157,11 @@ const initializeUIEvents = () => {
        * Caret of CKEditor is disappeared just after push Cancel button of window.confirm()
        */
       window.api
-        .confirmDialog(cardProp.id, ['btnCloseCard', 'btnCancel'], 'confirmClosing')
+        .confirmDialog(avatarProp.url, ['btnCloseCard', 'btnCancel'], 'confirmClosing')
         .then((res: number) => {
           if (res === DialogButton.Default) {
             // OK
-            close();
+            deleteAvatar(avatarProp);
           }
           else if (res === DialogButton.Cancel) {
             // Cancel
@@ -167,8 +178,8 @@ const initializeUIEvents = () => {
   let isHorizontalMoving = false;
   let isVerticalMoving = false;
   const onMouseMove = async (event: MouseEvent) => {
-    let newWidth = cardProp.geometry.width + getRenderOffsetWidth();
-    let newHeight = cardProp.geometry.height + getRenderOffsetHeight();
+    let newWidth = avatarProp.geometry.width + getRenderOffsetWidth();
+    let newHeight = avatarProp.geometry.height + getRenderOffsetHeight();
     if (isHorizontalMoving) {
       newWidth += event.screenX - prevMouseX;
     }
@@ -184,7 +195,7 @@ const initializeUIEvents = () => {
         y: number;
         width: number;
         height: number;
-      } = await window.api.setWindowSize(cardProp.id, newWidth, newHeight);
+      } = await window.api.setWindowSize(avatarProp.url, newWidth, newHeight);
       onResizeByHand(rect);
     }
   };
@@ -279,8 +290,8 @@ const onload = async () => {
     const pair = arr[i].split('=');
     params[pair[0]] = pair[1];
   }
-  const id = params.id;
-  if (!id) {
+  avatarUrl = params.avatarUrl;
+  if (!avatarUrl) {
     console.error('id parameter is not given in URL');
     return;
   }
@@ -302,7 +313,7 @@ const onload = async () => {
 
   initializeContentsFrameEvents();
 
-  window.api.finishLoad(id);
+  window.api.finishLoad(avatarUrl);
 };
 
 // eslint-disable-next-line complexity
@@ -333,6 +344,9 @@ window.addEventListener('message', event => {
     case 'send-to-back':
       onSendToBack();
       break;
+    case 'set-lock':
+      onSetLock(event.data.locked);
+      break;
     case 'zoom-in':
       onZoomIn();
       break;
@@ -349,46 +363,30 @@ const onCardClose = () => {
 };
 
 const onCardFocused = async () => {
-  cardProp.status = 'Focused';
+  avatarProp.status = 'Focused';
   render(['CardStyle', 'ContentsRect']);
 
-  if (cardEditor.editorType === 'WYSIWYG') {
-    cardEditor.startEdit();
-  }
-  const newZ = await window.api.bringToFront(cardProp.id);
+  const newZ = await window.api.bringToFront(avatarProp.url);
   // eslint-disable-next-line require-atomic-updates
-  cardProp.geometry.z = newZ;
-  saveCard(cardProp);
+  avatarProp.geometry.z = newZ;
+  saveCard(avatarProp);
 };
 
 const onCardBlurred = () => {
-  cardProp.status = 'Blurred';
+  avatarProp.status = 'Blurred';
   render(['CardStyle', 'ContentsRect']);
 
   if (cardEditor.isOpened) {
-    if (cardEditor.editorType === 'Markup') {
-      if (cardEditor.isCodeMode) {
-        return;
-      }
-
-      cardEditor.hideEditor();
+    if (cardEditor.isCodeMode) {
+      return;
     }
-    const { dataChanged, data } = cardEditor.endEdit();
-    if (dataChanged) {
-      cardProp.data = data;
-      render();
-      saveCard(cardProp);
-    }
-
-    const { left, top } = cardEditor.getScrollPosition();
-    const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
-    iframe.contentWindow!.scrollTo(left, top);
+    endEditor();
   }
 };
 
 const onChangeCardColor = (backgroundColor: string, opacity = 1.0) => {
   const uiColor = darkenHexColor(backgroundColor);
-  saveCardColor(cardProp, backgroundColor, uiColor, opacity);
+  saveCardColor(avatarProp, backgroundColor, uiColor, opacity);
   render(['CardStyle', 'TitleBarStyle', 'EditorStyle']);
 };
 
@@ -398,8 +396,8 @@ const onResizeByHand = (newBounds: {
   width: number;
   height: number;
 }) => {
-  cardProp.geometry.width = Math.round(newBounds.width - getRenderOffsetWidth());
-  cardProp.geometry.height = Math.round(newBounds.height - getRenderOffsetHeight());
+  avatarProp.geometry.width = Math.round(newBounds.width - getRenderOffsetWidth());
+  avatarProp.geometry.height = Math.round(newBounds.height - getRenderOffsetHeight());
 
   render(['TitleBar', 'ContentsRect', 'EditorRect']);
 
@@ -412,19 +410,19 @@ const onMoveByHand = (newBounds: {
   width: number;
   height: number;
 }) => {
-  cardProp.geometry.x = Math.round(newBounds.x);
-  cardProp.geometry.y = Math.round(newBounds.y);
+  avatarProp.geometry.x = Math.round(newBounds.x);
+  avatarProp.geometry.y = Math.round(newBounds.y);
 
   queueSaveCommand();
 };
 
 // Render card data
-const onRenderCard = (_prop: CardPropSerializable) => {
-  cardProp = CardProp.fromObject(_prop);
+const onRenderCard = (_prop: AvatarPropSerializable) => {
+  avatarProp = AvatarProp.fromObject(_prop);
 
-  initCardRenderer(cardProp, cardCssStyle, cardEditor);
+  initCardRenderer(avatarProp, cardCssStyle, cardEditor);
 
-  cardEditor.setCard(cardProp);
+  cardEditor.setCard(avatarProp);
 
   document.getElementById('card')!.style.visibility = 'visible';
 
@@ -440,60 +438,54 @@ const onRenderCard = (_prop: CardPropSerializable) => {
       console.error(`Error in render-card: ${e.message}`);
     });
 
-  if (cardEditor.editorType === 'WYSIWYG') {
-    cardEditor
-      .showEditor()
-      .then(() => {
-        window.api.finishRenderCard(cardProp.id);
-      })
-      .catch((e: Error) => {
-        // logger.error does not work in ipcRenderer event.
-        console.error(`Error in render-card: ${e.message}`);
-      });
-  }
-  else {
-    window.api.finishRenderCard(cardProp.id).catch((e: Error) => {
-      // logger.error does not work in ipcRenderer event.
-      console.error(`Error in render-card: ${e.message}`);
-    });
-  }
+  window.api.finishRenderCard(avatarProp.url).catch((e: Error) => {
+    // logger.error does not work in ipcRenderer event.
+    console.error(`Error in render-card: ${e.message}`);
+  });
 };
 
 const onSendToBack = async () => {
-  const newZ = await window.api.sendToBack(cardProp.id);
+  const newZ = await window.api.sendToBack(avatarProp.url);
   // eslint-disable-next-line require-atomic-updates
-  cardProp.geometry.z = newZ;
-  saveCard(cardProp);
+  avatarProp.geometry.z = newZ;
+  saveCard(avatarProp);
+};
+
+const onSetLock = (locked: boolean) => {
+  avatarProp.condition.locked = locked;
+  if (cardEditor.isOpened) {
+    endEditor();
+  }
 };
 
 const onZoomIn = () => {
-  if (cardProp.style.zoom < 1.0) {
-    cardProp.style.zoom += 0.2;
+  if (avatarProp.style.zoom < 1.0) {
+    avatarProp.style.zoom += 0.2;
   }
   else {
-    cardProp.style.zoom += 0.5;
+    avatarProp.style.zoom += 0.5;
   }
-  if (cardProp.style.zoom > 3) {
-    cardProp.style.zoom = 3;
+  if (avatarProp.style.zoom > 3) {
+    avatarProp.style.zoom = 3;
   }
   render(['CardStyle', 'EditorStyle']);
 
-  saveCard(cardProp);
+  saveCard(avatarProp);
 };
 
 const onZoomOut = () => {
-  if (cardProp.style.zoom <= 1.0) {
-    cardProp.style.zoom -= 0.2;
+  if (avatarProp.style.zoom <= 1.0) {
+    avatarProp.style.zoom -= 0.2;
   }
   else {
-    cardProp.style.zoom -= 0.5;
+    avatarProp.style.zoom -= 0.5;
   }
-  if (cardProp.style.zoom <= 0.4) {
-    cardProp.style.zoom = 0.4;
+  if (avatarProp.style.zoom <= 0.4) {
+    avatarProp.style.zoom = 0.4;
   }
   render(['CardStyle', 'EditorStyle']);
 
-  saveCard(cardProp);
+  saveCard(avatarProp);
 };
 
 const filterContentsFrameMessage = (event: MessageEvent): ContentsFrameMessage => {
@@ -504,9 +496,9 @@ const filterContentsFrameMessage = (event: MessageEvent): ContentsFrameMessage =
   return msg;
 };
 
-const startEditorByClick = async (clickEvent: InnerClickEvent) => {
+const startEditor = async (x: number, y: number) => {
   await cardEditor.showEditor().catch((e: Error) => {
-    console.error(`Error in clicking contents: ${e.message}`);
+    console.error(`Error in startEditor: ${e.message}`);
   });
 
   // Set scroll position of editor to that of iframe
@@ -517,7 +509,29 @@ const startEditorByClick = async (clickEvent: InnerClickEvent) => {
 
   const offsetY = document.getElementById('title')!.offsetHeight;
   cardEditor.execAfterMouseDown(cardEditor.startEdit);
-  window.api.sendLeftMouseDown(cardProp.id, clickEvent.x, clickEvent.y + offsetY);
+  window.api.sendLeftMouseDown(avatarProp.url, x, y + offsetY);
+};
+
+const endEditor = () => {
+  cardEditor.hideEditor();
+
+  const { dataChanged, data } = cardEditor.endEdit();
+  if (dataChanged) {
+    avatarProp.data = data;
+    render();
+    saveCard(avatarProp);
+  }
+
+  const { left, top } = cardEditor.getScrollPosition();
+  const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
+  iframe.contentWindow!.scrollTo(left, top);
+};
+
+const startEditorByClick = (clickEvent: InnerClickEvent) => {
+  if (avatarProp.condition.locked) {
+    return;
+  }
+  startEditor(clickEvent.x, clickEvent.y);
 };
 
 const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
@@ -535,14 +549,14 @@ const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
 
   dropImg.addEventListener('load', async () => {
     let imageOnly = false;
-    if (cardProp.data === '') {
+    if (avatarProp.data === '') {
       imageOnly = true;
     }
     const width = dropImg.naturalWidth;
     const height = dropImg.naturalHeight;
 
     let newImageWidth =
-      cardProp.geometry.width -
+      avatarProp.geometry.width -
       (imageOnly ? DRAG_IMAGE_MARGIN : 0) -
       cardCssStyle.borderWidth * 2;
 
@@ -566,35 +580,35 @@ const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
     );
 
     if (imageOnly) {
-      cardProp.geometry.height =
+      avatarProp.geometry.height =
         newImageHeight +
         DRAG_IMAGE_MARGIN +
         cardCssStyle.borderWidth * 2 +
         document.getElementById('title')!.offsetHeight;
 
-      cardProp.data = imgTag;
+      avatarProp.data = imgTag;
     }
     else {
-      cardProp.geometry.height = cardProp.geometry.height + newImageHeight;
+      avatarProp.geometry.height = avatarProp.geometry.height + newImageHeight;
 
-      cardProp.data = cardProp.data + '<br />' + imgTag;
+      avatarProp.data = avatarProp.data + '<br />' + imgTag;
     }
 
     await window.api.setWindowSize(
-      cardProp.id,
-      cardProp.geometry.width,
-      cardProp.geometry.height
+      avatarProp.url,
+      avatarProp.geometry.width,
+      avatarProp.geometry.height
     );
 
     if (imageOnly) {
-      saveCardColor(cardProp, '#ffffff', '#ffffff', 0.0);
+      saveCardColor(avatarProp, '#ffffff', '#ffffff', 0.0);
     }
     else {
-      saveCard(cardProp);
+      saveCard(avatarProp);
     }
     render(['TitleBar', 'CardStyle', 'ContentsData', 'ContentsRect']);
 
-    window.api.focus(cardProp.id);
+    window.api.focus(avatarProp.url);
     await cardEditor.showEditor().catch((err: Error) => {
       console.error(`Error in loading image: ${err.message}`);
     });
@@ -607,7 +621,7 @@ const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
 window.addEventListener('load', onload, false);
 window.addEventListener('beforeunload', async e => {
   if (!canClose) {
-    await waitUnfinishedTasks(cardProp.id).catch((error: Error) => {
+    await waitUnfinishedTasks(avatarProp.url).catch((error: Error) => {
       console.error(error.message);
     });
     //    e.preventDefault();
