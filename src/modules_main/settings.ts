@@ -14,6 +14,12 @@ import { CardIO } from './io';
 // eslint-disable-next-line import/no-mutable-exports
 export let settingsDialog: BrowserWindow;
 
+export const closeSettings = () => {
+  if (settingsDialog !== undefined && !settingsDialog.isDestroyed()) {
+    settingsDialog.close();
+  }
+};
+
 export const openSettings = () => {
   if (settingsDialog !== undefined && !settingsDialog.isDestroyed()) {
     return;
