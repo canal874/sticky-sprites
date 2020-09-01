@@ -460,10 +460,10 @@ const onSetLock = (locked: boolean) => {
 
 const onZoomIn = () => {
   if (avatarProp.style.zoom < 1.0) {
-    avatarProp.style.zoom += 0.2;
+    avatarProp.style.zoom += 0.15;
   }
   else {
-    avatarProp.style.zoom += 0.5;
+    avatarProp.style.zoom += 0.3;
   }
   if (avatarProp.style.zoom > 3) {
     avatarProp.style.zoom = 3;
@@ -475,13 +475,13 @@ const onZoomIn = () => {
 
 const onZoomOut = () => {
   if (avatarProp.style.zoom <= 1.0) {
-    avatarProp.style.zoom -= 0.2;
+    avatarProp.style.zoom -= 0.15;
   }
   else {
-    avatarProp.style.zoom -= 0.5;
+    avatarProp.style.zoom -= 0.3;
   }
-  if (avatarProp.style.zoom <= 0.4) {
-    avatarProp.style.zoom = 0.4;
+  if (avatarProp.style.zoom <= 0.55) {
+    avatarProp.style.zoom = 0.55;
   }
   render(['CardStyle', 'EditorStyle']);
 
