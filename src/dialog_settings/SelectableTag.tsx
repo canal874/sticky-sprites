@@ -7,7 +7,7 @@
  */
 import * as React from 'react';
 import './SelectableTag.css';
-import { cardColors, ColorName } from '../modules_common/color';
+import { ColorName, uiColors } from '../modules_common/color';
 
 export interface SelectableTagProps {
   click: (value: any) => void;
@@ -24,7 +24,7 @@ export const SelectableTag = (props: SelectableTagProps) => {
   };
 
   const style = (color: ColorName) => ({
-    backgroundColor: cardColors[color],
+    backgroundColor: uiColors[color],
   });
 
   let color: ColorName = 'yellow';

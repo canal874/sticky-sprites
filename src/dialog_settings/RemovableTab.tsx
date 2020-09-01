@@ -7,7 +7,7 @@
  */
 import * as React from 'react';
 import './RemovableTag.css';
-import { cardColors, ColorName } from '../modules_common/color';
+import { ColorName, uiColors } from '../modules_common/color';
 
 export interface RemovableTagProps {
   value: string;
@@ -16,7 +16,7 @@ export interface RemovableTagProps {
 
 export const RemovableTag = (props: RemovableTagProps) => {
   const style = (color: ColorName) => ({
-    backgroundColor: cardColors[color],
+    backgroundColor: uiColors[color],
   });
 
   const color: ColorName = 'green';

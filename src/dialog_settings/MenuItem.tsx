@@ -7,7 +7,7 @@
  */
 import * as React from 'react';
 import './MenuItem.css';
-import { cardColors, ColorName } from '../modules_common/color';
+import { ColorName, uiColors } from '../modules_common/color';
 import {
   GlobalContext,
   GlobalProvider,
@@ -43,7 +43,7 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
 
   const menuHeight = 50;
   const style = (color: ColorName) => ({
-    backgroundColor: cardColors[color],
+    backgroundColor: uiColors[color],
     zIndex: isActive ? 190 : props.index,
   });
 

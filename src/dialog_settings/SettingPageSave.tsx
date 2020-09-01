@@ -14,7 +14,7 @@ import './SettingPageSave.css';
 import { MenuItemProps } from './MenuItem';
 import { SettingPageTemplate } from './SettingPageTemplate';
 import { MessageLabel } from '../modules_common/i18n';
-import { cardColors, ColorName } from '../modules_common/color';
+import { ColorName, uiColors } from '../modules_common/color';
 import { cardDirName } from '../modules_main/store.types';
 import { DialogButton } from '../modules_common/const';
 import { getCurrentDateAndTime } from '../modules_common/utils';
@@ -96,7 +96,7 @@ export const SettingPageSave = (props: SettingPageSaveProps) => {
   };
 
   const buttonStyle = (color: ColorName) => ({
-    backgroundColor: cardColors[color],
+    backgroundColor: uiColors[color],
   });
   return (
     <SettingPageTemplate item={props.item} index={props.index}>

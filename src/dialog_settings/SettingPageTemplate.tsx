@@ -11,7 +11,7 @@ import {
   SettingsDialogContext,
   SettingsDialogProvider,
 } from './StoreProvider';
-import { cardColors, ColorName } from '../modules_common/color';
+import { ColorName, uiColors } from '../modules_common/color';
 import { MenuItemProps } from './MenuItem';
 import './SettingPageTemplate.css';
 import { getRandomInt } from '../modules_common/utils';
@@ -27,7 +27,7 @@ export const SettingPageTemplate = (props: SettingPageTemplateProps) => {
     SettingsDialogContext
   );
   const style = (color: ColorName) => ({
-    backgroundColor: cardColors[color],
+    backgroundColor: uiColors[color],
     zIndex: settingsDialogState.activeSettingId === props.item.id ? 200 : 150 - props.index,
     width: props.item.width + 'px',
     height: props.item.height + 'px',

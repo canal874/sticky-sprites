@@ -34,6 +34,18 @@ export const cardColors: CardColors = {
   transparent: '#ffffff',
 };
 
+export const uiColors: CardColors = {
+  yellow: '#ffffa0',
+  red: '#ffb0b0',
+  green: '#d0ffd0',
+  blue: '#d0d0ff',
+  orange: '#ffb000',
+  purple: '#ffd0ff',
+  white: '#ffffff',
+  gray: '#d0d0d0',
+  transparent: '#ffffff',
+};
+
 export const darkenHexColor = (
   colorHEX: string,
   darkRate = UI_COLOR_DARKENING_RATE
