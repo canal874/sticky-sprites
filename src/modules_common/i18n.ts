@@ -19,6 +19,10 @@ type MessagesMain = {
   trayToolTip: string;
   lockCard: string;
   unlockCard: string;
+  cut: string;
+  copy: string;
+  paste: string;
+  pasteAndMatchStyle: string;
   white: string;
   yellow: string;
   red: string;
@@ -140,6 +144,10 @@ export const English: Messages = {
   trayToolTip: 'Media Stickies',
   lockCard: 'Lock card',
   unlockCard: 'Unlock card',
+  cut: 'Cut',
+  copy: 'Copy',
+  paste: 'Paste',
+  pasteAndMatchStyle: 'Paste and match style',
   white: 'white',
   yellow: 'yellow',
   red: 'red',
@@ -213,6 +221,10 @@ export const Japanese: Messages = {
   trayToolTip: 'Media Stickies',
   lockCard: 'ロックする',
   unlockCard: 'ロック解除する',
+  cut: '切り取り',
+  copy: 'コピー',
+  paste: '貼り付け',
+  pasteAndMatchStyle: '貼り付け（書式なし）',
   white: '白',
   yellow: '黄',
   red: '赤',

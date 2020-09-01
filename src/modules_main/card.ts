@@ -335,9 +335,22 @@ const setContextMenu = (prop: AvatarProp, win: BrowserWindow) => {
     menu: actions => [
       actions.searchWithGoogle({}),
       actions.separator(),
-      actions.cut({}),
-      actions.copy({}),
-      actions.paste({}),
+      {
+        label: MESSAGE('cut'),
+        role: 'cut',
+      },
+      {
+        label: MESSAGE('copy'),
+        role: 'copy',
+      },
+      {
+        label: MESSAGE('paste'),
+        role: 'paste',
+      },
+      {
+        label: MESSAGE('pasteAndMatchStyle'),
+        role: 'pasteAndMatchStyle',
+      },
       actions.separator(),
       actions.saveImageAs({}),
       actions.separator(),
