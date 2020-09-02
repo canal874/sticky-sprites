@@ -39,6 +39,8 @@ type MessagesWorkspace = {
   workspaceNew: string;
   workspaceName: string;
   workspaceMove: string;
+  workspaceCopy: string;
+  workspaceAvatarExist: string;
   workspaceRename: string;
   workspaceDelete: string;
   workspaceCannotDelete: string;
@@ -87,6 +89,8 @@ const WorkspaceEnglish: MessagesWorkspace = {
   workspaceNew: 'New workspace...',
   workspaceName: 'Workspace $1',
   workspaceMove: 'Move',
+  workspaceCopy: 'Copy Avatar',
+  workspaceAvatarExist: 'Avatar already exists on the workspace.',
   workspaceRename: 'Rename this workspace',
   workspaceDelete: 'Delete this workspace',
   workspaceCannotDelete:
@@ -164,6 +168,8 @@ const WorkspaceJapanese: MessagesWorkspace = {
   workspaceNew: '新規ワークスペース...',
   workspaceName: 'ワークスペース $1',
   workspaceMove: '移動',
+  workspaceCopy: '分身をコピー',
+  workspaceAvatarExist: 'コピー先には既に分身があります。',
   workspaceRename: 'ワークスペース名を変更',
   workspaceDelete: 'このワークスペースを削除',
   workspaceCannotDelete:
