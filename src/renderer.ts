@@ -29,6 +29,8 @@ import {
   getRenderOffsetWidth,
   initCardRenderer,
   render,
+  shadowHeight,
+  shadowWidth,
 } from './modules_renderer/card_renderer';
 import { darkenHexColor } from './modules_common/color';
 import {
@@ -579,19 +581,25 @@ const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
       fileDropEvent.name
     );
 
-    if (imageOnly) {
-      avatarProp.geometry.height =
-        newImageHeight +
-        DRAG_IMAGE_MARGIN +
-        cardCssStyle.borderWidth * 2 +
-        document.getElementById('title')!.offsetHeight;
+    const windowWidth =
+      newImageWidth + DRAG_IMAGE_MARGIN + cardCssStyle.borderWidth * 2 + shadowWidth;
+    const geometryWidth = windowWidth - getRenderOffsetWidth();
+    let windowHeight =
+      newImageHeight +
+      DRAG_IMAGE_MARGIN +
+      document.getElementById('title')!.offsetHeight +
+      cardCssStyle.borderWidth * 2 +
+      shadowHeight;
+    const geometryHeight = windowHeight - getRenderOffsetHeight();
 
+    if (imageOnly) {
+      avatarProp.geometry.height = geometryHeight;
       avatarProp.data = imgTag;
     }
     else {
       avatarProp.geometry.height = avatarProp.geometry.height + newImageHeight;
-
       avatarProp.data = avatarProp.data + '<br />' + imgTag;
+      windowHeight = avatarProp.geometry.height + getRenderOffsetHeight();
     }
 
     await window.api.setWindowSize(
