@@ -243,7 +243,9 @@ export const deleteAvatar = async (_url: string) => {
   const avatar = avatars.get(_url);
   if (avatar) {
     avatars.delete(_url);
-    avatar.window.destroy();
+    if (!avatar.window.isDestroyed()) {
+      avatar.window.destroy();
+    }
     await CardIO.deleteAvatarUrl(getCurrentWorkspaceId(), _url);
     const ws = getCurrentWorkspace();
     if (ws) {

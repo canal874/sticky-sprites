@@ -58,6 +58,8 @@ let isCtrlDown = false;
 let isAltDown = false;
 let isMetaDown = false;
 
+let suppressFocusEvent = false;
+
 const cardEditor: ICardEditor = new CardEditor();
 
 const close = async () => {
@@ -149,6 +151,7 @@ const initializeUIEvents = () => {
         saveCard(avatarProp);
       }
     }
+
     if (avatarProp.data === '' || event.ctrlKey) {
       deleteCard(avatarProp);
     }
@@ -163,6 +166,7 @@ const initializeUIEvents = () => {
         .then((res: number) => {
           if (res === DialogButton.Default) {
             // OK
+            suppressFocusEvent = true; // Suppress focus event in order not to focus and save this card just after closing card window.
             deleteAvatar(avatarProp);
           }
           else if (res === DialogButton.Cancel) {
@@ -365,6 +369,10 @@ const onCardClose = () => {
 };
 
 const onCardFocused = async () => {
+  if (suppressFocusEvent) {
+    return;
+  }
+
   avatarProp.status = 'Focused';
   render(['CardStyle', 'ContentsRect']);
 
