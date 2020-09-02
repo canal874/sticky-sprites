@@ -150,6 +150,10 @@ export class CardEditor implements ICardEditor {
       CKEDITOR.on('instanceReady', () => {
         // @ts-ignore
         CKEDITOR.plugins.image2.adjustEditorSize = this.adjustEditorSizeFromImage2Plugin;
+
+        CKEDITOR.instances.editor.keystrokeHandler.keystrokes[CKEDITOR.CTRL + 190] =
+          'bulletedlist';
+
         resolve();
         /*
          * Use timer for checking if instanceReady event is incredible
