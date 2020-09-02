@@ -28,31 +28,6 @@ export class CardEditor implements ICardEditor {
 
   private _cardCssStyle!: CardCssStyle; // cardCssStyle is set by loadUI()
 
-  private _moveCursorToBottom = (): void => {
-    const editor = CKEDITOR.instances.editor;
-    const s = editor.getSelection(); // getting selection
-    let selectedRanges = s.getRanges(); // getting ranges
-    if (selectedRanges.length > 0) {
-      let node = selectedRanges[0].startContainer; // selecting the starting node
-      const parents = node.getParents(true);
-      node = (parents[
-        parents.length - 2
-      ] as CKEDITOR.dom.element).getFirst() as CKEDITOR.dom.element;
-      for (;;) {
-        const x: CKEDITOR.dom.element = node.getNext() as CKEDITOR.dom.element;
-        if (x == null) {
-          break;
-        }
-        node = x;
-      }
-
-      s.selectElement(node);
-      selectedRanges = s.getRanges();
-      selectedRanges[0].collapse(false); //  false collapses the range to the end of the selected node, true before the node.
-      s.selectRanges(selectedRanges); // putting the current selection there
-    }
-  };
-
   /**
    * Public
    */
