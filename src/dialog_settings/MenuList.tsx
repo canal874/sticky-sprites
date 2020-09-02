@@ -21,6 +21,7 @@ export const MenuList = (props: MenuListProps) => {
           key={item.id}
           id={item.id}
           label={item.label}
+          icon={item.icon}
           color={item.color}
           index={index}
           width={item.width}

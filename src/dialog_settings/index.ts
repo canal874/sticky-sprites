@@ -21,6 +21,7 @@ const onready = () => {
         {
           id: 'save',
           label: 'settingPageSave',
+          icon: 'fas fa-share-square',
           color: 'yellow',
           width: 450,
           height: 220,
@@ -28,6 +29,7 @@ const onready = () => {
         {
           id: 'security',
           label: 'settingPageSecurity',
+          icon: 'fas fa-shield-alt',
           color: 'purple',
           width: 350,
           height: 220,
@@ -35,6 +37,7 @@ const onready = () => {
         {
           id: 'language',
           label: 'settingPageLanguage',
+          icon: 'fas fa-globe',
           color: 'orange',
           width: 400,
           height: 220,

@@ -21,6 +21,7 @@ import { getRandomInt } from '../modules_common/utils';
 export interface MenuItemProps {
   id: string;
   label: MessageLabel;
+  icon: string;
   color: ColorName;
   width: number;
   height: number;
@@ -74,7 +75,12 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
       onClick={isActive ? () => {} : handleClick}
       style={style(props.color)}
     >
-      {MESSAGE(props.label)}
+      <span styleName={`icon ${isActive ? 'activeIcon' : 'inactiveIcon'}`}>
+        <i className={props.icon}></i>
+      </span>
+      <span styleName={`title ${isActive ? 'activeTitle' : 'inactiveTitle'}`}>
+        {MESSAGE(props.label)}
+      </span>
     </h2>
   );
 };
