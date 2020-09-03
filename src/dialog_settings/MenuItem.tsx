@@ -7,7 +7,7 @@
  */
 import * as React from 'react';
 import './MenuItem.css';
-import { cardColors, ColorName } from '../modules_common/color';
+import { ColorName, uiColors } from '../modules_common/color';
 import {
   GlobalContext,
   GlobalProvider,
@@ -21,6 +21,7 @@ import { getRandomInt } from '../modules_common/utils';
 export interface MenuItemProps {
   id: string;
   label: MessageLabel;
+  icon: string;
   color: ColorName;
   width: number;
   height: number;
@@ -43,7 +44,7 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
 
   const menuHeight = 50;
   const style = (color: ColorName) => ({
-    backgroundColor: cardColors[color],
+    backgroundColor: uiColors[color],
     zIndex: isActive ? 190 : props.index,
   });
 
@@ -74,7 +75,12 @@ export const MenuItem = (props: MenuItemProps & MenuItemPropsInternal) => {
       onClick={isActive ? () => {} : handleClick}
       style={style(props.color)}
     >
-      {MESSAGE(props.label)}
+      <span styleName={`icon ${isActive ? 'activeIcon' : 'inactiveIcon'}`}>
+        <i className={props.icon}></i>
+      </span>
+      <span styleName={`title ${isActive ? 'activeTitle' : 'inactiveTitle'}`}>
+        {MESSAGE(props.label)}
+      </span>
     </h2>
   );
 };

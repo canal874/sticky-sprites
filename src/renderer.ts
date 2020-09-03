@@ -29,6 +29,8 @@ import {
   getRenderOffsetWidth,
   initCardRenderer,
   render,
+  shadowHeight,
+  shadowWidth,
 } from './modules_renderer/card_renderer';
 import { darkenHexColor } from './modules_common/color';
 import {
@@ -40,6 +42,7 @@ import {
 } from './modules_renderer/save';
 import window from './modules_renderer/window';
 import { getLocationFromUrl } from './modules_common/avatar_url_utils';
+import { getCurrentWorkspaceUrl } from './modules_main/store_workspaces';
 
 let avatarProp: AvatarProp = new AvatarProp('');
 
@@ -55,6 +58,8 @@ let isShiftDown = false;
 let isCtrlDown = false;
 let isAltDown = false;
 let isMetaDown = false;
+
+let suppressFocusEvent = false;
 
 const cardEditor: ICardEditor = new CardEditor();
 
@@ -128,7 +133,7 @@ const initializeUIEvents = () => {
     const newId = await window.api.createCard({
       avatars: avatars,
     });
-    window.api.focus(newId);
+    window.api.focus(getCurrentWorkspaceUrl() + newId);
   });
 
   // eslint-disable-next-line no-unused-expressions
@@ -147,6 +152,7 @@ const initializeUIEvents = () => {
         saveCard(avatarProp);
       }
     }
+
     if (avatarProp.data === '' || event.ctrlKey) {
       deleteCard(avatarProp);
     }
@@ -161,6 +167,7 @@ const initializeUIEvents = () => {
         .then((res: number) => {
           if (res === DialogButton.Default) {
             // OK
+            suppressFocusEvent = true; // Suppress focus event in order not to focus and save this card just after closing card window.
             deleteAvatar(avatarProp);
           }
           else if (res === DialogButton.Cancel) {
@@ -363,6 +370,10 @@ const onCardClose = () => {
 };
 
 const onCardFocused = async () => {
+  if (suppressFocusEvent) {
+    return;
+  }
+
   avatarProp.status = 'Focused';
   render(['CardStyle', 'ContentsRect']);
 
@@ -460,10 +471,10 @@ const onSetLock = (locked: boolean) => {
 
 const onZoomIn = () => {
   if (avatarProp.style.zoom < 1.0) {
-    avatarProp.style.zoom += 0.2;
+    avatarProp.style.zoom += 0.15;
   }
   else {
-    avatarProp.style.zoom += 0.5;
+    avatarProp.style.zoom += 0.3;
   }
   if (avatarProp.style.zoom > 3) {
     avatarProp.style.zoom = 3;
@@ -475,13 +486,13 @@ const onZoomIn = () => {
 
 const onZoomOut = () => {
   if (avatarProp.style.zoom <= 1.0) {
-    avatarProp.style.zoom -= 0.2;
+    avatarProp.style.zoom -= 0.15;
   }
   else {
-    avatarProp.style.zoom -= 0.5;
+    avatarProp.style.zoom -= 0.3;
   }
-  if (avatarProp.style.zoom <= 0.4) {
-    avatarProp.style.zoom = 0.4;
+  if (avatarProp.style.zoom <= 0.55) {
+    avatarProp.style.zoom = 0.55;
   }
   render(['CardStyle', 'EditorStyle']);
 
@@ -579,19 +590,25 @@ const addDroppedImage = async (fileDropEvent: FileDropEvent) => {
       fileDropEvent.name
     );
 
-    if (imageOnly) {
-      avatarProp.geometry.height =
-        newImageHeight +
-        DRAG_IMAGE_MARGIN +
-        cardCssStyle.borderWidth * 2 +
-        document.getElementById('title')!.offsetHeight;
+    const windowWidth =
+      newImageWidth + DRAG_IMAGE_MARGIN + cardCssStyle.borderWidth * 2 + shadowWidth;
+    const geometryWidth = windowWidth - getRenderOffsetWidth();
+    let windowHeight =
+      newImageHeight +
+      DRAG_IMAGE_MARGIN +
+      document.getElementById('title')!.offsetHeight +
+      cardCssStyle.borderWidth * 2 +
+      shadowHeight;
+    const geometryHeight = windowHeight - getRenderOffsetHeight();
 
+    if (imageOnly) {
+      avatarProp.geometry.height = geometryHeight;
       avatarProp.data = imgTag;
     }
     else {
       avatarProp.geometry.height = avatarProp.geometry.height + newImageHeight;
-
       avatarProp.data = avatarProp.data + '<br />' + imgTag;
+      windowHeight = avatarProp.geometry.height + getRenderOffsetHeight();
     }
 
     await window.api.setWindowSize(

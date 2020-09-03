@@ -23,6 +23,18 @@ export interface CardColors {
 export type ColorName = keyof CardColors;
 
 export const cardColors: CardColors = {
+  yellow: '#fff8d0',
+  red: '#ffcac4',
+  green: '#edffc4',
+  blue: '#d1e1ff',
+  orange: '#ffdd9e',
+  purple: '#f8d0ff',
+  white: '#ffffff',
+  gray: '#e0e0e0',
+  transparent: '#ffffff',
+};
+
+export const uiColors: CardColors = {
   yellow: '#ffffa0',
   red: '#ffb0b0',
   green: '#d0ffd0',

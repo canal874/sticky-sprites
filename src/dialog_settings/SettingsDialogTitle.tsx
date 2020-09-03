@@ -15,7 +15,7 @@ import {
   SettingsDialogProvider,
 } from './StoreProvider';
 import { MenuItemProps } from './MenuItem';
-import { cardColors, darkenHexColor } from '../modules_common/color';
+import { darkenHexColor, uiColors } from '../modules_common/color';
 
 export interface SettingsDialogTitleProps {
   title: MessageLabel;
@@ -37,7 +37,7 @@ export const SettingsDialogTitle = (props: SettingsDialogTitleProps) => {
   let style;
   if (activeItem !== undefined) {
     style = {
-      backgroundColor: darkenHexColor(cardColors[activeItem.color], 0.9),
+      backgroundColor: darkenHexColor(uiColors[activeItem.color], 0.9),
     };
   }
   else {

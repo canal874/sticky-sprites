@@ -87,6 +87,6 @@ CKEDITOR.editorConfig = function( config ) {
 		'wysiwygarea';
 
 	config.toolbarLocation = 'bottom';
-	config.fontSize_defaultLabel = '16';
+	config.fontSize_defaultLabel = '14';
 };
 

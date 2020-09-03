@@ -6,19 +6,18 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import path from 'path';
+import { settings } from 'cluster';
 import prompt from 'electron-prompt';
 import { app, dialog, Menu, MenuItemConstructorOptions, Tray } from 'electron';
-import { openSettings, settingsDialog } from './settings';
+import { closeSettings, openSettings, settingsDialog } from './settings';
 import { getSettings, MESSAGE } from './store';
-import { avatars, cards, createCard } from './card';
-import { emitter, handlers } from './event';
+import { avatars, createCard } from './card';
+import { emitter } from './event';
 import {
   CardAvatars,
   CardProp,
   CardPropSerializable,
-  CardStyle,
   DEFAULT_CARD_GEOMETRY,
-  Geometry,
   TransformableFeature,
 } from '../modules_common/cardprop';
 import { getRandomInt } from '../modules_common/utils';
@@ -29,7 +28,6 @@ import {
   getCurrentWorkspaceUrl,
   getNextWorkspaceId,
   setChangingToWorkspaceId,
-  setCurrentWorkspaceId,
   Workspace,
   workspaces,
 } from './store_workspaces';
@@ -112,6 +110,7 @@ export const setTrayContextMenu = () => {
             if (!workspace) {
               return;
             }
+            closeSettings();
             if (avatars.size === 0) {
               emitter.emit('change-workspace', id);
             }
@@ -171,6 +170,7 @@ export const setTrayContextMenu = () => {
         await CardIO.createWorkspace(newId, workspace).catch((e: Error) =>
           console.error(e.message)
         );
+        closeSettings();
         if (avatars.size === 0) {
           emitter.emit('change-workspace', newId);
         }
@@ -252,6 +252,7 @@ export const setTrayContextMenu = () => {
           settingsDialog.close();
         }
         setChangingToWorkspaceId('exit');
+        closeSettings();
         if (avatars.size === 0) {
           emitter.emit('exit');
         }

@@ -19,6 +19,10 @@ type MessagesMain = {
   trayToolTip: string;
   lockCard: string;
   unlockCard: string;
+  cut: string;
+  copy: string;
+  paste: string;
+  pasteAndMatchStyle: string;
   white: string;
   yellow: string;
   red: string;
@@ -35,6 +39,8 @@ type MessagesWorkspace = {
   workspaceNew: string;
   workspaceName: string;
   workspaceMove: string;
+  workspaceCopy: string;
+  workspaceAvatarExist: string;
   workspaceRename: string;
   workspaceDelete: string;
   workspaceCannotDelete: string;
@@ -83,6 +89,8 @@ const WorkspaceEnglish: MessagesWorkspace = {
   workspaceNew: 'New workspace...',
   workspaceName: 'Workspace $1',
   workspaceMove: 'Move',
+  workspaceCopy: 'Copy Avatar',
+  workspaceAvatarExist: 'Avatar already exists on the workspace.',
   workspaceRename: 'Rename this workspace',
   workspaceDelete: 'Delete this workspace',
   workspaceCannotDelete:
@@ -122,7 +130,7 @@ export const English: Messages = {
   sendToBack: 'Send to Back',
   newCard: 'New card',
   confirmClosing:
-    'Close OK?\n\nThe card can be opened again from the app menu.\n(If you want to delete the card, let it empty before closing it.)',
+    'Close OK?\n\nThe closed card is not deleted, and can be opened again in the near future update.\n(If you want to delete the card, let it empty before closing it.)',
   confirmWaitMore:
     'It takes a long time to save. Do you want to wait a little longer?\n\nIf you press Cancel, your changes will not be saved.',
   pleaseRestartErrorInOpeningEditor:
@@ -140,6 +148,10 @@ export const English: Messages = {
   trayToolTip: 'Media Stickies',
   lockCard: 'Lock card',
   unlockCard: 'Unlock card',
+  cut: 'Cut',
+  copy: 'Copy',
+  paste: 'Paste',
+  pasteAndMatchStyle: 'Paste and match style',
   white: 'white',
   yellow: 'yellow',
   red: 'red',
@@ -156,6 +168,8 @@ const WorkspaceJapanese: MessagesWorkspace = {
   workspaceNew: '新規ワークスペース...',
   workspaceName: 'ワークスペース $1',
   workspaceMove: '移動',
+  workspaceCopy: '分身をコピー',
+  workspaceAvatarExist: 'コピー先には既に分身があります。',
   workspaceRename: 'ワークスペース名を変更',
   workspaceDelete: 'このワークスペースを削除',
   workspaceCannotDelete:
@@ -195,7 +209,7 @@ export const Japanese: Messages = {
   sendToBack: '最背面へ',
   newCard: '新規カード',
   confirmClosing:
-    'カードを閉じても良いですか？\n\n閉じたカードはアプリメニューから再表示できます。\n（削除したい場合、カードの内容を全て消してから閉じてください）',
+    'カードを閉じても良いですか？\n\n閉じたカードは削除されず、近い将来のアップデートで再表示できるようになります。\n（カードを削除したい場合は、カードの内容を全て消してから閉じてください）',
   confirmWaitMore:
     '保存に時間が掛かっています。もう少し待ちますか？\n\nキャンセルを押すと、変更した内容は保存されない場合があります。',
   pleaseRestartErrorInOpeningEditor:
@@ -213,6 +227,10 @@ export const Japanese: Messages = {
   trayToolTip: 'Media Stickies',
   lockCard: 'ロックする',
   unlockCard: 'ロック解除する',
+  cut: '切り取り',
+  copy: 'コピー',
+  paste: '貼り付け',
+  pasteAndMatchStyle: '貼り付け（書式なし）',
   white: '白',
   yellow: '黄',
   red: '赤',

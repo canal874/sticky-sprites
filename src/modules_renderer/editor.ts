@@ -8,7 +8,14 @@
 
 import { AvatarProp, DRAG_IMAGE_MARGIN } from '../modules_common/cardprop';
 import { CardCssStyle, ICardEditor } from '../modules_common/types';
-import { render, setRenderOffsetHeight, shadowHeight, shadowWidth } from './card_renderer';
+import {
+  getRenderOffsetHeight,
+  getRenderOffsetWidth,
+  render,
+  setRenderOffsetHeight,
+  shadowHeight,
+  shadowWidth,
+} from './card_renderer';
 import { sleep } from '../modules_common/utils';
 import { convertHexColorToRgba, darkenHexColor } from '../modules_common/color';
 import { saveCard, saveCardColor } from './save';
@@ -27,31 +34,6 @@ export class CardEditor implements ICardEditor {
   private _avatarProp: AvatarProp = new AvatarProp('');
 
   private _cardCssStyle!: CardCssStyle; // cardCssStyle is set by loadUI()
-
-  private _moveCursorToBottom = (): void => {
-    const editor = CKEDITOR.instances.editor;
-    const s = editor.getSelection(); // getting selection
-    let selectedRanges = s.getRanges(); // getting ranges
-    if (selectedRanges.length > 0) {
-      let node = selectedRanges[0].startContainer; // selecting the starting node
-      const parents = node.getParents(true);
-      node = (parents[
-        parents.length - 2
-      ] as CKEDITOR.dom.element).getFirst() as CKEDITOR.dom.element;
-      for (;;) {
-        const x: CKEDITOR.dom.element = node.getNext() as CKEDITOR.dom.element;
-        if (x == null) {
-          break;
-        }
-        node = x;
-      }
-
-      s.selectElement(node);
-      selectedRanges = s.getRanges();
-      selectedRanges[0].collapse(false); //  false collapses the range to the end of the selected node, true before the node.
-      s.selectRanges(selectedRanges); // putting the current selection there
-    }
-  };
 
   /**
    * Public
@@ -73,7 +55,7 @@ export class CardEditor implements ICardEditor {
     return `<img id="${id}" src="${src}" alt="${alt}" width="${width}" height="${height}" />`;
   };
 
-  adjustEditorSizeFromImage2Plugin = (width: number, height: number) => {
+  adjustEditorSizeFromImage2Plugin = async (imgWidth: number, imgHeight: number) => {
     // Cancel the resizing when the card contains anything other than an image.
     const body = CKEDITOR.instances.editor.document.getBody();
     if (body.$.childNodes.length >= 4) {
@@ -108,14 +90,19 @@ export class CardEditor implements ICardEditor {
     if (toolbar) {
       toolbar.style.visibility = 'hidden';
     }
-    width = width + DRAG_IMAGE_MARGIN + this._cardCssStyle.borderWidth * 2;
-    height =
-      height +
-      DRAG_IMAGE_MARGIN +
-      this._cardCssStyle.borderWidth * 2 +
-      document.getElementById('title')!.offsetHeight;
 
-    if (width < 200) {
+    const windowWidth =
+      imgWidth + DRAG_IMAGE_MARGIN + this._cardCssStyle.borderWidth * 2 + shadowWidth;
+    const geometryWidth = windowWidth - getRenderOffsetWidth();
+    const windowHeight =
+      imgHeight +
+      DRAG_IMAGE_MARGIN +
+      document.getElementById('title')!.offsetHeight +
+      this._cardCssStyle.borderWidth * 2 +
+      shadowHeight;
+    const geometryHeight = windowHeight - getRenderOffsetHeight();
+
+    if (windowWidth < 200) {
       /**
        * Toolbar has 2 lines when width is less than 200px.
        * Cancel the resizing because the bottom of the image will be obscured by the line.
@@ -123,10 +110,10 @@ export class CardEditor implements ICardEditor {
       return;
     }
 
-    window.api.setWindowSize(this._avatarProp.url, width, height);
+    await window.api.setWindowSize(this._avatarProp.url, windowWidth, windowHeight);
 
-    this._avatarProp.geometry.width = width;
-    this._avatarProp.geometry.height = height;
+    this._avatarProp.geometry.width = geometryWidth;
+    this._avatarProp.geometry.height = geometryHeight;
 
     render(['TitleBar', 'EditorRect']);
   };
@@ -150,6 +137,10 @@ export class CardEditor implements ICardEditor {
       CKEDITOR.on('instanceReady', () => {
         // @ts-ignore
         CKEDITOR.plugins.image2.adjustEditorSize = this.adjustEditorSizeFromImage2Plugin;
+
+        CKEDITOR.instances.editor.keystrokeHandler.keystrokes[CKEDITOR.CTRL + 190] =
+          'bulletedlist';
+
         resolve();
         /*
          * Use timer for checking if instanceReady event is incredible
@@ -250,23 +241,31 @@ export class CardEditor implements ICardEditor {
               img.setAttribute('height', `${newImageHeight}`);
             }
 
+            const windowWidth =
+              newImageWidth +
+              DRAG_IMAGE_MARGIN +
+              this._cardCssStyle.borderWidth * 2 +
+              shadowWidth;
+            const geometryWidth = windowWidth - getRenderOffsetWidth();
+            let windowHeight =
+              newImageHeight +
+              DRAG_IMAGE_MARGIN +
+              document.getElementById('title')!.offsetHeight +
+              this._cardCssStyle.borderWidth * 2 +
+              shadowHeight;
+            const geometryHeight = windowHeight - getRenderOffsetHeight();
+
             if (this._avatarProp.data === '') {
-              this._avatarProp.geometry.height =
-                newImageHeight +
-                DRAG_IMAGE_MARGIN +
-                this._cardCssStyle.borderWidth * 2 +
-                document.getElementById('title')!.offsetHeight;
+              this._avatarProp.geometry.height = geometryHeight;
             }
             else {
               this._avatarProp.geometry.height =
                 this._avatarProp.geometry.height + newImageHeight;
+              windowHeight = this._avatarProp.geometry.height + getRenderOffsetHeight();
             }
 
-            window.api.setWindowSize(
-              this._avatarProp.url,
-              this._avatarProp.geometry.width,
-              this._avatarProp.geometry.height
-            );
+            window.api.setWindowSize(this._avatarProp.url, windowWidth, windowHeight);
+
             const { dataChanged, data } = this.endEdit();
             this._avatarProp.data = data;
             saveCard(this._avatarProp);

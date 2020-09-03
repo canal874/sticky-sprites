@@ -42,6 +42,7 @@ import { cardColors, ColorName } from '../modules_common/color';
 import { getSettings, globalDispatch, MESSAGE } from './store';
 import { getIdFromUrl, getLocationFromUrl } from '../modules_common/avatar_url_utils';
 import { handlers } from './event';
+import { settingsDialog } from './settings';
 
 /**
  * Card
@@ -242,7 +243,9 @@ export const deleteAvatar = async (_url: string) => {
   const avatar = avatars.get(_url);
   if (avatar) {
     avatars.delete(_url);
-    avatar.window.destroy();
+    if (!avatar.window.isDestroyed()) {
+      avatar.window.destroy();
+    }
     await CardIO.deleteAvatarUrl(getCurrentWorkspaceId(), _url);
     const ws = getCurrentWorkspace();
     if (ws) {
@@ -310,6 +313,27 @@ const setContextMenu = (prop: AvatarProp, win: BrowserWindow) => {
     }
   };
 
+  const copyAvatarToWorkspace = (workspaceId: string) => {
+    const newAvatarUrl = getWorkspaceUrl(workspaceId) + getIdFromUrl(prop.url);
+    if (workspaces.get(workspaceId)?.avatars.includes(newAvatarUrl)) {
+      dialog.showMessageBoxSync(settingsDialog, {
+        type: 'question',
+        buttons: ['OK'],
+        message: MESSAGE('workspaceAvatarExist'),
+      });
+      return;
+    }
+    addAvatarToWorkspace(workspaceId, newAvatarUrl);
+    CardIO.addAvatarUrl(workspaceId, newAvatarUrl);
+
+    const card = getCardFromUrl(prop.url);
+    if (card) {
+      const avatarProp = card.prop.avatars[getLocationFromUrl(prop.url)];
+      card.prop.avatars[getLocationFromUrl(newAvatarUrl)] = avatarProp;
+      saveCard(card.prop);
+    }
+  };
+
   const moveToWorkspaces: MenuItemConstructorOptions[] = [...workspaces.keys()]
     .sort()
     .reduce((result, id) => {
@@ -328,6 +352,24 @@ const setContextMenu = (prop: AvatarProp, win: BrowserWindow) => {
       return result;
     }, [] as MenuItemConstructorOptions[]);
 
+  const copyToWorkspaces: MenuItemConstructorOptions[] = [...workspaces.keys()]
+    .sort()
+    .reduce((result, id) => {
+      if (id !== getCurrentWorkspaceId()) {
+        result.push({
+          label: `${workspaces.get(id)?.name}`,
+          click: () => {
+            const workspace = workspaces.get(id);
+            if (!workspace) {
+              return;
+            }
+            copyAvatarToWorkspace(id);
+          },
+        });
+      }
+      return result;
+    }, [] as MenuItemConstructorOptions[]);
+
   const dispose = contextMenu({
     window: win,
     showSaveImageAs: true,
@@ -335,9 +377,22 @@ const setContextMenu = (prop: AvatarProp, win: BrowserWindow) => {
     menu: actions => [
       actions.searchWithGoogle({}),
       actions.separator(),
-      actions.cut({}),
-      actions.copy({}),
-      actions.paste({}),
+      {
+        label: MESSAGE('cut'),
+        role: 'cut',
+      },
+      {
+        label: MESSAGE('copy'),
+        role: 'copy',
+      },
+      {
+        label: MESSAGE('paste'),
+        role: 'paste',
+      },
+      {
+        label: MESSAGE('pasteAndMatchStyle'),
+        role: 'pasteAndMatchStyle',
+      },
       actions.separator(),
       actions.saveImageAs({}),
       actions.separator(),
@@ -348,6 +403,10 @@ const setContextMenu = (prop: AvatarProp, win: BrowserWindow) => {
       {
         label: MESSAGE('workspaceMove'),
         submenu: [...moveToWorkspaces],
+      },
+      {
+        label: MESSAGE('workspaceCopy'),
+        submenu: [...copyToWorkspaces],
       },
       {
         label: MESSAGE('zoomIn'),

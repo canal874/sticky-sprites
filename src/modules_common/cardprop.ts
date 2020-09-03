@@ -56,8 +56,8 @@ export const DEFAULT_CARD_GEOMETRY: Geometry = {
   x: 70,
   y: 70,
   z: 0,
-  width: 260,
-  height: 176,
+  width: 300,
+  height: 300,
 };
 export const DEFAULT_CARD_STYLE: CardStyle = {
   uiColor: '',
