@@ -42,6 +42,7 @@ import {
 } from './modules_renderer/save';
 import window from './modules_renderer/window';
 import { getLocationFromUrl } from './modules_common/avatar_url_utils';
+import { getCurrentWorkspaceUrl } from './modules_main/store_workspaces';
 
 let avatarProp: AvatarProp = new AvatarProp('');
 
@@ -132,7 +133,7 @@ const initializeUIEvents = () => {
     const newId = await window.api.createCard({
       avatars: avatars,
     });
-    window.api.focus(newId);
+    window.api.focus(getCurrentWorkspaceUrl() + newId);
   });
 
   // eslint-disable-next-line no-unused-expressions
