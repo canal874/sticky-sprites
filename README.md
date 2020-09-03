@@ -6,12 +6,7 @@ Sticky notes written by Electron
 
 # Run
 
-Type 'npm run compile-clean' on the project root directory.
-
-'compile-clean' copies required files from assets, html/ and 3rdParty/ to dist/ and compile .ts. 
-
-After that you can type 'npm start' to start app.
-
+npm run start-all-clean
 
 # Build installer
 
