@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { AvatarProp } from '../modules_common/cardprop';
+import { AvatarProp, CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, ICardEditor } from '../modules_common/types';
 import { convertHexColorToRgba, darkenHexColor } from '../modules_common/color';
 import window from './window';
@@ -63,7 +63,7 @@ const renderTitleBar = () => {
   const closeBtnLeft = titleWidth - document.getElementById('closeBtn')!.offsetWidth;
   document.getElementById('closeBtn')!.style.left = closeBtnLeft + 'px';
 
-  if (getCtrlDown()) {
+  if (getCtrlDown() || avatarProp.data === '') {
     document.getElementById('closeIcon')!.className = 'far fa-trash-alt title-btn-icon';
   }
   else {

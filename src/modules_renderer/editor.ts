@@ -45,6 +45,20 @@ export class CardEditor implements ICardEditor {
 
   private _isEditing = false;
 
+  /**
+   * queueSaveCommand
+   * Queuing and execute only last save command to avoid frequent save.
+   */
+  execSaveCommandTimeout = 0;
+  execSaveCommand = () => {
+    saveCard(this._avatarProp);
+  };
+
+  queueSaveCommand = () => {
+    clearTimeout(this.execSaveCommandTimeout);
+    this.execSaveCommandTimeout = window.setTimeout(this.execSaveCommand, 2000);
+  };
+
   getImageTag = (
     id: string,
     src: string,
@@ -140,6 +154,15 @@ export class CardEditor implements ICardEditor {
 
         CKEDITOR.instances.editor.keystrokeHandler.keystrokes[CKEDITOR.CTRL + 190] =
           'bulletedlist';
+
+        CKEDITOR.instances.editor.on('change', () => {
+          const data = CKEDITOR.instances.editor.getData();
+          if (this._avatarProp.data !== data) {
+            this._avatarProp.data = data;
+            render(['TitleBar']);
+            this.queueSaveCommand();
+          }
+        });
 
         resolve();
         /*
@@ -266,7 +289,7 @@ export class CardEditor implements ICardEditor {
 
             window.api.setWindowSize(this._avatarProp.url, windowWidth, windowHeight);
 
-            const { dataChanged, data } = this.endEdit();
+            const data = this.endEdit();
             this._avatarProp.data = data;
             saveCard(this._avatarProp);
             render();
@@ -380,15 +403,15 @@ export class CardEditor implements ICardEditor {
     CKEDITOR.instances.editor.focus();
   };
 
-  endEdit = (): { dataChanged: boolean; data: string } => {
+  endEdit = (): string => {
     this._isEditing = false;
 
-    let dataChanged = false;
     // Save data to AvatarProp
     const data = CKEDITOR.instances.editor.getData();
-    if (this._avatarProp.data !== data) {
-      dataChanged = true;
-    }
+
+    clearTimeout(this.execSaveCommandTimeout);
+
+    saveCard(this._avatarProp);
 
     window.api.setWindowSize(
       this._avatarProp.url,
@@ -409,7 +432,7 @@ export class CardEditor implements ICardEditor {
     // eslint-disable-next-line no-unused-expressions
     CKEDITOR.instances.editor.getSelection()?.removeAllRanges();
 
-    return { dataChanged, data };
+    return data;
   };
 
   toggleCodeMode = () => {

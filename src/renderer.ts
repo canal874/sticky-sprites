@@ -76,7 +76,7 @@ const execSaveCommand = () => {
   saveCard(avatarProp);
 };
 
-const queueSaveCommand = () => {
+export const queueSaveCommand = () => {
   clearTimeout(execSaveCommandTimeout);
   execSaveCommandTimeout = setTimeout(execSaveCommand, 1000);
 };
@@ -143,12 +143,9 @@ const initializeUIEvents = () => {
   document.getElementById('closeBtn')?.addEventListener('click', event => {
     if (cardEditor.isOpened) {
       cardEditor.hideEditor();
-      const { dataChanged, data } = cardEditor.endEdit();
+      const data = cardEditor.endEdit();
       avatarProp.data = data;
       render(['TitleBar', 'ContentsData', 'ContentsRect']);
-      if (dataChanged && avatarProp.data !== '') {
-        saveCard(avatarProp);
-      }
     }
 
     if (avatarProp.data === '' || event.ctrlKey) {
@@ -524,12 +521,9 @@ const startEditor = async (x: number, y: number) => {
 const endEditor = () => {
   cardEditor.hideEditor();
 
-  const { dataChanged, data } = cardEditor.endEdit();
-  if (dataChanged) {
-    avatarProp.data = data;
-    render();
-    saveCard(avatarProp);
-  }
+  const data = cardEditor.endEdit();
+  avatarProp.data = data;
+  render();
 
   const { left, top } = cardEditor.getScrollPosition();
   const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;

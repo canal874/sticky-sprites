@@ -49,7 +49,7 @@ export interface ICardEditor {
   hideEditor(): void;
 
   startEdit(): Promise<void>;
-  endEdit(): { dataChanged: boolean; data: string };
+  endEdit(): string;
   toggleCodeMode(): void;
   startCodeMode(): void;
   endCodeMode(): void;
