@@ -10,6 +10,8 @@ CKEDITOR.editorConfig = function( config ) {
 
 	config.contentsCss = './css/ckeditor-media-stickies-contents.css?20200609';
 
+  config.colorButton_colors = 'FFD700,DC143C,008000,0000CD,FF8C00,800080,FFF8D0,FFCAC4,EDFFC4,D1E1FF,FFDD9E,F8D0FF,BFBA9D,BF9893,B2BF93,9DA9BF,BFA677,BA9DBF,E0E0E0,C0C0C0,A0A0A0,505050,000000,ffffff';
+
   config.colorButton_enableMore = false;
 
 	config.toolbar = [
