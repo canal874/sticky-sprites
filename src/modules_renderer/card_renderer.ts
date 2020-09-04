@@ -227,6 +227,10 @@ const renderCardStyle = () => {
   }
   document.getElementById('card')!.style.boxShadow = boxShadow;
 
+  const scrollBarRgba = convertHexColorToRgba(
+    darkenHexColor(avatarProp.style.backgroundColor, 0.85)
+  );
+
   // eslint-disable-next-line no-useless-catch
   try {
     const iframeDoc = (document.getElementById('contentsFrame') as HTMLIFrameElement)
@@ -238,7 +242,7 @@ const renderCardStyle = () => {
         backgroundRgba +
         '}\n' +
         'body::-webkit-scrollbar-thumb { background-color: ' +
-        uiRgba +
+        scrollBarRgba +
         '}';
       iframeDoc.head.appendChild(style);
 

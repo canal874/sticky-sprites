@@ -535,6 +535,7 @@ export class CardEditor implements ICardEditor {
       contents.style.backgroundColor = backgroundRgba;
     }
 
+    const scrollBarRgba = darkenHexColor(this._avatarProp.style.backgroundColor, 0.85);
     const doc = CKEDITOR.instances.editor.document;
     if (doc) {
       const style = doc.$.createElement('style');
@@ -543,7 +544,7 @@ export class CardEditor implements ICardEditor {
         backgroundRgba +
         '}\n' +
         'body::-webkit-scrollbar-thumb { background-color: ' +
-        uiRgba +
+        scrollBarRgba +
         '}';
       doc.getHead().$.appendChild(style);
     }

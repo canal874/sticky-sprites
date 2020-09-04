@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-export const UI_COLOR_DARKENING_RATE = 0.95;
+export const UI_COLOR_DARKENING_RATE = 0.96;
 
 export interface CardColors {
   yellow: string;
