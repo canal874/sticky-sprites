@@ -43,6 +43,7 @@ import {
 import window from './modules_renderer/window';
 import { getLocationFromUrl } from './modules_common/avatar_url_utils';
 import { getCurrentWorkspaceUrl } from './modules_main/store_workspaces';
+import { setAltDown, setCtrlDown, setMetaDown, setShiftDown } from './modules_common/keys';
 
 let avatarProp: AvatarProp = new AvatarProp('');
 
@@ -53,11 +54,6 @@ let cardCssStyle: CardCssStyle = {
 };
 
 let canClose = false;
-
-let isShiftDown = false;
-let isCtrlDown = false;
-let isAltDown = false;
-let isMetaDown = false;
 
 let suppressFocusEvent = false;
 
@@ -90,17 +86,19 @@ const queueSaveCommand = () => {
  */
 const initializeUIEvents = () => {
   document.addEventListener('keydown', e => {
-    isShiftDown = e.shiftKey;
-    isCtrlDown = e.ctrlKey;
-    isAltDown = e.altKey;
-    isMetaDown = e.metaKey; // Windows key, Command key
+    setShiftDown(e.shiftKey);
+    setCtrlDown(e.ctrlKey);
+    setAltDown(e.altKey);
+    setMetaDown(e.metaKey); // Windows key, Command key
+    render(['TitleBar']);
   });
 
   document.addEventListener('keyup', e => {
-    isShiftDown = e.shiftKey;
-    isCtrlDown = e.ctrlKey;
-    isAltDown = e.altKey;
-    isMetaDown = e.metaKey; // Windows key, Command key
+    setShiftDown(e.shiftKey);
+    setCtrlDown(e.ctrlKey);
+    setAltDown(e.altKey);
+    setMetaDown(e.metaKey); // Windows key, Command key
+    render(['TitleBar']);
   });
 
   document.addEventListener('dragover', e => {
