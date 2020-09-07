@@ -6,10 +6,11 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 
-import { AvatarProp } from '../modules_common/cardprop';
+import { AvatarProp, CardProp } from '../modules_common/cardprop';
 import { CardCssStyle, ICardEditor } from '../modules_common/types';
 import { convertHexColorToRgba, darkenHexColor } from '../modules_common/color';
 import window from './window';
+import { getCtrlDown } from '../modules_common/keys';
 
 let cardCssStyle: CardCssStyle;
 let avatarProp: AvatarProp;
@@ -61,6 +62,14 @@ const renderTitleBar = () => {
   document.getElementById('title')!.style.width = titleWidth + 'px';
   const closeBtnLeft = titleWidth - document.getElementById('closeBtn')!.offsetWidth;
   document.getElementById('closeBtn')!.style.left = closeBtnLeft + 'px';
+
+  if (getCtrlDown() || avatarProp.data === '') {
+    document.getElementById('closeIcon')!.className = 'far fa-trash-alt title-btn-icon';
+  }
+  else {
+    document.getElementById('closeIcon')!.className = 'fas fa-minus-circle title-btn-icon';
+  }
+
   const titleBarLeft =
     document.getElementById('codeBtn')!.offsetLeft +
     document.getElementById('codeBtn')!.offsetWidth;
@@ -227,6 +236,10 @@ const renderCardStyle = () => {
   }
   document.getElementById('card')!.style.boxShadow = boxShadow;
 
+  const scrollBarRgba = convertHexColorToRgba(
+    darkenHexColor(avatarProp.style.backgroundColor, 0.85)
+  );
+
   // eslint-disable-next-line no-useless-catch
   try {
     const iframeDoc = (document.getElementById('contentsFrame') as HTMLIFrameElement)
@@ -238,7 +251,7 @@ const renderCardStyle = () => {
         backgroundRgba +
         '}\n' +
         'body::-webkit-scrollbar-thumb { background-color: ' +
-        uiRgba +
+        scrollBarRgba +
         '}';
       iframeDoc.head.appendChild(style);
 

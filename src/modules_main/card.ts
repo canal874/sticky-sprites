@@ -55,7 +55,7 @@ export const cards: Map<string, Card> = new Map<string, Card>();
 /**
  * Const
  */
-const MINIMUM_WINDOW_WIDTH = 180;
+const MINIMUM_WINDOW_WIDTH = 185; // 180 + shadowWidth
 const MINIMUM_WINDOW_HEIGHT = 80;
 
 export const avatars: Map<string, Avatar> = new Map<string, Avatar>();

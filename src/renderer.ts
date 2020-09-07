@@ -43,6 +43,7 @@ import {
 import window from './modules_renderer/window';
 import { getLocationFromUrl } from './modules_common/avatar_url_utils';
 import { getCurrentWorkspaceUrl } from './modules_main/store_workspaces';
+import { setAltDown, setCtrlDown, setMetaDown, setShiftDown } from './modules_common/keys';
 
 let avatarProp: AvatarProp = new AvatarProp('');
 
@@ -53,11 +54,6 @@ let cardCssStyle: CardCssStyle = {
 };
 
 let canClose = false;
-
-let isShiftDown = false;
-let isCtrlDown = false;
-let isAltDown = false;
-let isMetaDown = false;
 
 let suppressFocusEvent = false;
 
@@ -80,7 +76,7 @@ const execSaveCommand = () => {
   saveCard(avatarProp);
 };
 
-const queueSaveCommand = () => {
+export const queueSaveCommand = () => {
   clearTimeout(execSaveCommandTimeout);
   execSaveCommandTimeout = setTimeout(execSaveCommand, 1000);
 };
@@ -90,17 +86,19 @@ const queueSaveCommand = () => {
  */
 const initializeUIEvents = () => {
   document.addEventListener('keydown', e => {
-    isShiftDown = e.shiftKey;
-    isCtrlDown = e.ctrlKey;
-    isAltDown = e.altKey;
-    isMetaDown = e.metaKey; // Windows key, Command key
+    setShiftDown(e.shiftKey);
+    setCtrlDown(e.ctrlKey);
+    setAltDown(e.altKey);
+    setMetaDown(e.metaKey); // Windows key, Command key
+    render(['TitleBar']);
   });
 
   document.addEventListener('keyup', e => {
-    isShiftDown = e.shiftKey;
-    isCtrlDown = e.ctrlKey;
-    isAltDown = e.altKey;
-    isMetaDown = e.metaKey; // Windows key, Command key
+    setShiftDown(e.shiftKey);
+    setCtrlDown(e.ctrlKey);
+    setAltDown(e.altKey);
+    setMetaDown(e.metaKey); // Windows key, Command key
+    render(['TitleBar']);
   });
 
   document.addEventListener('dragover', e => {
@@ -145,12 +143,9 @@ const initializeUIEvents = () => {
   document.getElementById('closeBtn')?.addEventListener('click', event => {
     if (cardEditor.isOpened) {
       cardEditor.hideEditor();
-      const { dataChanged, data } = cardEditor.endEdit();
+      const data = cardEditor.endEdit();
       avatarProp.data = data;
       render(['TitleBar', 'ContentsData', 'ContentsRect']);
-      if (dataChanged && avatarProp.data !== '') {
-        saveCard(avatarProp);
-      }
     }
 
     if (avatarProp.data === '' || event.ctrlKey) {
@@ -526,12 +521,9 @@ const startEditor = async (x: number, y: number) => {
 const endEditor = () => {
   cardEditor.hideEditor();
 
-  const { dataChanged, data } = cardEditor.endEdit();
-  if (dataChanged) {
-    avatarProp.data = data;
-    render();
-    saveCard(avatarProp);
-  }
+  const data = cardEditor.endEdit();
+  avatarProp.data = data;
+  render();
 
   const { left, top } = cardEditor.getScrollPosition();
   const iframe = document.getElementById('contentsFrame') as HTMLIFrameElement;
