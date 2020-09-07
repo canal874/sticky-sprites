@@ -256,27 +256,21 @@ class CardIOClass implements ICardIO {
       name: '',
       avatars: [],
     };
-    await workspaceDB
-      .get(workspaceId)
-      .then(oldWS => {
-        // Update existing card
-        const { name, avatars } = (oldWS as unknown) as Workspace;
-        wsObj._rev = oldWS._rev;
-        wsObj.name = name;
-        wsObj.avatars = avatars.filter(url => url !== avatarUrl);
-      })
-      .catch(e => {
-        throw new Error(`Error in deleteAvatarUrl: ${e}`);
-      });
+    const oldWS = await workspaceDB.get(workspaceId).catch(e => {
+      throw new Error(`Error in deleteAvatarUrl get: ${e}`);
+    });
 
-    return workspaceDB
-      .put(wsObj)
-      .then(res => {
-        console.debug(`Delete avatar: ${avatarUrl}`);
-      })
-      .catch(e => {
-        throw new Error(`Error in deleteAvatarUrl: ${e}`);
-      });
+    // Update existing card
+    const { name, avatars } = (oldWS as unknown) as Workspace;
+    wsObj._rev = oldWS._rev;
+    wsObj.name = name;
+    wsObj.avatars = avatars.filter(url => url !== avatarUrl);
+
+    await workspaceDB.put(wsObj).catch(e => {
+      throw new Error(`Error in deleteAvatarUrl put: ${e}`);
+    });
+
+    console.debug(`Delete avatar: ${avatarUrl}`);
   };
 
   public getCardIdList = (): Promise<string[]> => {

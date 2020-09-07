@@ -40,7 +40,11 @@ import {
 import { DialogButton } from '../modules_common/const';
 import { cardColors, ColorName } from '../modules_common/color';
 import { getSettings, globalDispatch, MESSAGE } from './store';
-import { getIdFromUrl, getLocationFromUrl } from '../modules_common/avatar_url_utils';
+import {
+  getIdFromUrl,
+  getLocationFromUrl,
+  getWorkspaceIdFromUrl,
+} from '../modules_common/avatar_url_utils';
 import { handlers } from './event';
 import { settingsDialog } from './settings';
 
@@ -159,10 +163,10 @@ export const deleteCard = async (id: string) => {
   /**
    * Delete all avatar cards
    */
-  const deleters = [];
   for (const avatarLocation in card.prop.avatars) {
     const avatarUrl = avatarLocation + id;
-    deleters.push(CardIO.deleteAvatarUrl(getCurrentWorkspaceId(), avatarUrl));
+    // eslint-disable-next-line no-await-in-loop
+    await CardIO.deleteAvatarUrl(getWorkspaceIdFromUrl(avatarUrl), avatarUrl); // Use await because there is race case.
 
     const avatar = avatars.get(avatarUrl);
     const ws = getCurrentWorkspace();
@@ -172,7 +176,6 @@ export const deleteCard = async (id: string) => {
       avatar.window.destroy();
     }
   }
-  await Promise.all(deleters);
 
   /**
    * Delete actual card
