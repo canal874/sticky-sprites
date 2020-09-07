@@ -263,7 +263,8 @@ export const setTrayContextMenu = () => {
     },
   ]);
   tray.setContextMenu(contextMenu);
-  let taskTrayToolTip = MESSAGE('trayToolTip');
+  const version = process.env.npm_package_version;
+  let taskTrayToolTip = `${MESSAGE('trayToolTip')}  ${version}`;
   if (!app.isPackaged) {
     taskTrayToolTip += ' (Development)';
   }
