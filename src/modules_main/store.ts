@@ -146,6 +146,12 @@ const temporal = (
       messages: action.payload,
     };
   }
+  else if (action.type === 'app-put') {
+    return {
+      ...state,
+      app: action.payload,
+    };
+  }
   return state;
 };
 
@@ -224,8 +230,22 @@ export const subscribeStoreFromSettings = (subscriber: BrowserWindow) => {
 
 /**
  * Initializing
- * deserializes data from electron-store
  */
+// Temporal settings
+app
+  .getFileIcon(path.join(__dirname, '../assets/media_stickies_grad_icon.ico'))
+  .then(img => {
+    const appName = app.getName();
+    const appVersion = app.getVersion();
+    const dataURL = img.toDataURL();
+    store.dispatch({
+      type: 'app-put',
+      payload: { name: appName, version: appVersion, iconDataURL: dataURL },
+    });
+  })
+  .catch(e => console.error(e));
+
+// Persistent settings are deserialized from electron-store
 export const initializeGlobalStore = (preferredLanguage: string) => {
   const loadOrCreate = (key: string, defaultValue: any) => {
     const value: any = electronStore.get(key, defaultValue);

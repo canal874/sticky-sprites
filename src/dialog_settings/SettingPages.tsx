@@ -12,6 +12,7 @@ import { SettingPageSecurity } from './SettingPageSecurity';
 import { SettingPageLanguage } from './SettingPageLanguage';
 import { SettingsDialogContext, SettingsDialogProvider } from './StoreProvider';
 import { MenuItemProps } from './MenuItem';
+import { SettingPageAbout } from './SettingPageAbout';
 
 export interface SettingsProps {
   items: MenuItemProps[];
@@ -32,6 +33,9 @@ export const SettingPages = (props: SettingsProps) => {
     }
     else if (item.id === 'language') {
       Page = <SettingPageLanguage item={item} index={index} />;
+    }
+    else if (item.id === 'about') {
+      Page = <SettingPageAbout item={item} index={index} />;
     }
 
     if (settingsDialogState.activeSettingId === item.id) {

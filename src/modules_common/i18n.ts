@@ -16,7 +16,6 @@ type MessagesMain = {
   btnCancel: string;
   btnRemove: string;
   settings: string;
-  trayToolTip: string;
   lockCard: string;
   unlockCard: string;
   cut: string;
@@ -31,6 +30,7 @@ type MessagesMain = {
   orange: string;
   purple: string;
   gray: string;
+  lightgray: string;
   transparent: string;
 };
 
@@ -52,6 +52,7 @@ type MessagesSettings = {
   settingPageLanguage: string;
   settingPageSecurity: string;
   settingPageSave: string;
+  settingPageAbout: string;
   exportData: string;
   exportDataButton: string;
   saveDetailedText: string;
@@ -65,6 +66,8 @@ type MessagesSettings = {
   selectableLanguages: string;
   securityDetailedText: string;
   securityNoUrl: string;
+  aboutCopyright: string;
+  aboutAppUrl: string;
 };
 
 type MessagesLanguage = {
@@ -103,6 +106,7 @@ const SettingsEnglish: MessagesSettings = {
   settingPageLanguage: 'Language',
   settingPageSecurity: 'Security',
   settingPageSave: 'Data Save',
+  settingPageAbout: 'About',
   exportData: 'Export data (JSON format) by hand',
   exportDataButton: 'Select folder',
   saveDetailedText: 'Save data automatically to the following location',
@@ -118,6 +122,8 @@ const SettingsEnglish: MessagesSettings = {
   securityDetailedText:
     'Only following websites are allowed to load into a card. Remove by clicking \u00D7 if not needed.',
   securityNoUrl: 'No URL allowed',
+  aboutCopyright: 'Copyright (C) 2020 Hidekazu Kubota',
+  aboutAppUrl: 'https://github.com/canal874/media-stickies',
 };
 export const English: Messages = {
   ...LanguagesCommon,
@@ -145,7 +151,6 @@ export const English: Messages = {
   btnCancel: 'Cancel ', // 'Cancel' is automatically translated to local language, so add use 'Cancel '.
   btnRemove: 'Remove',
   settings: 'Settings...',
-  trayToolTip: 'Media Stickies',
   lockCard: 'Lock card',
   unlockCard: 'Unlock card',
   cut: 'Cut',
@@ -160,6 +165,7 @@ export const English: Messages = {
   orange: 'orange',
   purple: 'purple',
   gray: 'gray',
+  lightgray: 'lightgray',
   transparent: 'transparent',
 };
 
@@ -182,6 +188,7 @@ const SettingsJapanese: MessagesSettings = {
   settingPageLanguage: '言語',
   settingPageSecurity: 'セキュリティ',
   settingPageSave: 'データ保存',
+  settingPageAbout: 'アプリの情報',
   exportData: '手動で書き出し（JSON形式）',
   exportDataButton: '書き出し先を選択',
   saveDetailedText: '自動的に次の場所へ保存',
@@ -197,6 +204,8 @@ const SettingsJapanese: MessagesSettings = {
   securityDetailedText:
     '次のドメインのサイトのみカードに読み込むことができます。不要なサイトは×ボタンを押して削除してください。',
   securityNoUrl: '許可されたサイトはありません',
+  aboutCopyright: 'Copyright (C) 2020 Hidekazu Kubota',
+  aboutAppUrl: 'https://github.com/canal874/media-stickies',
 };
 export const Japanese: Messages = {
   ...LanguagesCommon,
@@ -224,7 +233,6 @@ export const Japanese: Messages = {
   btnCancel: 'キャンセル',
   btnRemove: '削除する',
   settings: '設定...',
-  trayToolTip: 'Media Stickies',
   lockCard: 'ロックする',
   unlockCard: 'ロック解除する',
   cut: '切り取り',
@@ -239,6 +247,7 @@ export const Japanese: Messages = {
   orange: 'オレンジ',
   purple: '紫',
   gray: 'グレー',
+  lightgray: 'ライトグレー',
   transparent: '透明',
 };
 

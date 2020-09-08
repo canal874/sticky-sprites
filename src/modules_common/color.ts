@@ -17,6 +17,7 @@ export interface CardColors {
   purple: string;
   white: string;
   gray: string;
+  lightgray: string;
   transparent: string;
 }
 
@@ -31,6 +32,7 @@ export const cardColors: CardColors = {
   purple: '#f8d0ff',
   white: '#ffffff',
   gray: '#e0e0e0',
+  lightgray: '#f8f8f8',
   transparent: '#ffffff',
 };
 
@@ -43,6 +45,7 @@ export const uiColors: CardColors = {
   purple: '#ffd0ff',
   white: '#ffffff',
   gray: '#d0d0d0',
+  lightgray: '#f0f0f0',
   transparent: '#ffffff',
 };
 
