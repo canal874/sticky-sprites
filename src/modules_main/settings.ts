@@ -6,7 +6,7 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import path from 'path';
-import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import electronConnect from 'electron-connect';
 import { subscribeStoreFromSettings } from './store';
 import { CardIO } from './io';
@@ -52,6 +52,10 @@ export const openSettings = () => {
     settingsDialog.on('close', () => {
       unsubscribe();
     });
+  });
+  settingsDialog.webContents.on('new-window', (e, _url) => {
+    e.preventDefault();
+    shell.openExternal(_url);
   });
 };
 

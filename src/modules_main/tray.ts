@@ -6,7 +6,6 @@
  * found in the LICENSE file in the root directory of this source tree.
  */
 import path from 'path';
-import { settings } from 'cluster';
 import prompt from 'electron-prompt';
 import { app, dialog, Menu, MenuItemConstructorOptions, Tray } from 'electron';
 import { closeSettings, openSettings, settingsDialog } from './settings';
@@ -264,8 +263,7 @@ export const setTrayContextMenu = () => {
   ]);
   tray.setContextMenu(contextMenu);
   // const version = process.env.npm_package_version; // It is only available when the app is started by 'npm start'
-  const version = app.getVersion();
-  let taskTrayToolTip = `${MESSAGE('trayToolTip')}  ${version}`;
+  let taskTrayToolTip = `${app.getName()}  ${app.getVersion()}`;
   if (!app.isPackaged) {
     taskTrayToolTip += ' (Development)';
   }

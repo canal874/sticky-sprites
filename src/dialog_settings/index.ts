@@ -42,6 +42,14 @@ const onready = () => {
           width: 400,
           height: 220,
         },
+        {
+          id: 'about',
+          label: 'settingPageAbout',
+          icon: 'fas fa-info-circle',
+          color: 'lightgray',
+          width: 420,
+          height: 220,
+        },
       ],
     },
   };
