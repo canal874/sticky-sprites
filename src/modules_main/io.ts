@@ -441,7 +441,7 @@ class CardIOClass implements ICardIO {
       .map(row => {
         const doc = (row.doc as unknown) as Record<
           string,
-          string | string[] | Record<string, string>
+          string | string[] | number | Record<string, string>
         >;
         const newID = 'w' + nanoid();
         doc['id'] = newID;
@@ -453,6 +453,7 @@ class CardIOClass implements ICardIO {
           createdDate: current,
           modifiedDate: current,
         };
+        doc['version'] = 0;
 
         if (row.doc) {
           const avatars = doc.avatars as string[];
