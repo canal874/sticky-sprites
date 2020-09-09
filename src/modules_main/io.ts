@@ -436,8 +436,9 @@ class CardIOClass implements ICardIO {
 
     const workspaceObj: Record<string, any> = {};
     workspaceObj['version'] = 0;
-    workspaceObj['spaces'] = (await workspaceDB.allDocs({ include_docs: true })).rows.map(
-      row => {
+    workspaceObj['spaces'] = (await workspaceDB.allDocs({ include_docs: true })).rows
+      .filter(row => row.id !== 'currentId')
+      .map(row => {
         const doc = (row.doc as unknown) as Record<
           string,
           string | string[] | Record<string, string>
@@ -471,8 +472,7 @@ class CardIOClass implements ICardIO {
           }
         }
         return doc;
-      }
-    );
+      });
 
     for (const id in cardObj) {
       cardObj[id].user = 'local';
