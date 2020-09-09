@@ -435,7 +435,7 @@ class CardIOClass implements ICardIO {
     );
 
     const workspaceObj: Record<string, any> = {};
-    workspaceObj['version'] = '1.0';
+    workspaceObj['version'] = 0;
     workspaceObj['spaces'] = (
       await workspaceDB.allDocs({ include_docs: true })
     ).rows.reduce((wsObj, row) => {
@@ -455,17 +455,18 @@ class CardIOClass implements ICardIO {
       if (row.doc) {
         const avatars = doc.avatars;
         if (avatars) {
-          const newAvatarObj = avatars.reduce((avtrObj, url) => {
+          const newAvatarArray = avatars.map(url => {
             const cardId = cardIdMap[getIdFromUrl(url)];
 
             const oldLocation = getLocationFromUrl(url);
             const newURL = `rxdesktop://local/ws/${newID}/${cardId}/${nanoid(5)}`;
 
             // @ts-ignore
-            avtrObj[newURL] = cardObj[cardId].avatars[oldLocation];
-            return avtrObj;
-          }, {} as { [id: string]: any });
-          wsObj[newID].avatars = newAvatarObj;
+            const newAvatar = cardObj[cardId].avatars[oldLocation];
+            newAvatar['id'] = newURL;
+            return newAvatar;
+          });
+          wsObj[newID].avatars = newAvatarArray;
         }
       }
       return wsObj;
@@ -473,6 +474,12 @@ class CardIOClass implements ICardIO {
 
     for (const id in cardObj) {
       cardObj[id].user = 'local';
+      cardObj[id].version = 0;
+      const current = getCurrentDateAndTime();
+      cardObj[id].date = {
+        createdDate: current,
+        modifiedDate: current,
+      };
       for (const url in cardObj[id].avatars) {
         cardObj[id].date = cardObj[id].avatars[url].date;
       }
