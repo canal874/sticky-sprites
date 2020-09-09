@@ -489,9 +489,19 @@ class CardIOClass implements ICardIO {
       delete cardObj[id].avatars;
     }
 
+    const newCardObj: Record<string, any> = {};
+    newCardObj['version'] = 0;
+
+    const cardArray = [];
+    for (const id in cardObj) {
+      cardObj[id].id = id;
+      cardArray.push(cardObj[id]);
+    }
+    newCardObj['cards'] = cardArray;
+
     const dataObj = {
       workspace: workspaceObj,
-      card: cardObj,
+      card: newCardObj,
     };
     fs.writeJSON(filepath, dataObj, { spaces: 2 });
   };
