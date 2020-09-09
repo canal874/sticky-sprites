@@ -436,41 +436,43 @@ class CardIOClass implements ICardIO {
 
     const workspaceObj: Record<string, any> = {};
     workspaceObj['version'] = 0;
-    workspaceObj['spaces'] = (
-      await workspaceDB.allDocs({ include_docs: true })
-    ).rows.reduce((wsObj, row) => {
-      const doc = (row.doc as unknown) as { name: string; avatars: string[] };
-      const newID = 'w' + nanoid();
+    workspaceObj['spaces'] = (await workspaceDB.allDocs({ include_docs: true })).rows.map(
+      row => {
+        const doc = (row.doc as unknown) as Record<
+          string,
+          string | string[] | Record<string, string>
+        >;
+        const newID = 'w' + nanoid();
+        doc['id'] = newID;
+        delete doc['_id'];
+        delete doc['_rev'];
 
-      wsObj[newID] = doc;
-      delete wsObj[newID]['_id'];
-      delete wsObj[newID]['_rev'];
+        const current = getCurrentDateAndTime();
+        doc['date'] = {
+          createdDate: current,
+          modifiedDate: current,
+        };
 
-      const current = getCurrentDateAndTime();
-      wsObj[newID].date = {
-        createdDate: current,
-        modifiedDate: current,
-      };
+        if (row.doc) {
+          const avatars = doc.avatars as string[];
+          if (avatars) {
+            const newAvatarArray = avatars.map(url => {
+              const cardId = cardIdMap[getIdFromUrl(url)];
 
-      if (row.doc) {
-        const avatars = doc.avatars;
-        if (avatars) {
-          const newAvatarArray = avatars.map(url => {
-            const cardId = cardIdMap[getIdFromUrl(url)];
+              const oldLocation = getLocationFromUrl(url);
+              const newURL = `rxdesktop://local/ws/${newID}/${cardId}/${nanoid(5)}`;
 
-            const oldLocation = getLocationFromUrl(url);
-            const newURL = `rxdesktop://local/ws/${newID}/${cardId}/${nanoid(5)}`;
-
-            // @ts-ignore
-            const newAvatar = cardObj[cardId].avatars[oldLocation];
-            newAvatar['id'] = newURL;
-            return newAvatar;
-          });
-          wsObj[newID].avatars = newAvatarArray;
+              // @ts-ignore
+              const newAvatar = cardObj[cardId].avatars[oldLocation];
+              newAvatar['id'] = newURL;
+              return newAvatar;
+            });
+            doc['avatars'] = newAvatarArray;
+          }
         }
+        return doc;
       }
-      return wsObj;
-    }, {} as { [id: string]: any });
+    );
 
     for (const id in cardObj) {
       cardObj[id].user = 'local';
