@@ -11,6 +11,7 @@
  * Common part
  */
 import PouchDB from 'pouchdb';
+import { nanoid } from 'nanoid';
 import fs from 'fs-extra';
 import {
   CardAvatars,
@@ -31,7 +32,12 @@ import {
   Workspace,
   workspaces,
 } from './store_workspaces';
-import { getWorkspaceIdFromUrl } from '../modules_common/avatar_url_utils';
+import {
+  getIdFromUrl,
+  getLocationFromUrl,
+  getWorkspaceIdFromUrl,
+} from '../modules_common/avatar_url_utils';
+import { getCurrentDateAndTime } from '../modules_common/utils';
 
 /**
  * Module specific part
@@ -415,14 +421,68 @@ class CardIOClass implements ICardIO {
     this.openWorkspaceDB();
     this.openCardDB();
 
-    const workspaceObj = (await workspaceDB.allDocs({ include_docs: true })).rows.map(
-      row => row.doc
+    const cardIdMap: Record<string, string> = {};
+    const cardObj = (await cardDB.allDocs({ include_docs: true })).rows.reduce(
+      (obj, row) => {
+        const newID = 'c' + nanoid();
+        cardIdMap[row.id] = newID;
+        obj[newID] = row.doc;
+        delete obj[newID]['_id'];
+        delete obj[newID]['_rev'];
+        return obj;
+      },
+      {} as { [id: string]: any }
     );
-    const cardObj = (await cardDB.allDocs({ include_docs: true })).rows.map(row => row.doc);
+
+    const workspaceObj: Record<string, any> = {};
+    workspaceObj['version'] = '1.0';
+    workspaceObj['spaces'] = (
+      await workspaceDB.allDocs({ include_docs: true })
+    ).rows.reduce((wsObj, row) => {
+      const doc = (row.doc as unknown) as { name: string; avatars: string[] };
+      const newID = 'w' + nanoid();
+
+      wsObj[newID] = doc;
+      delete wsObj[newID]['_id'];
+      delete wsObj[newID]['_rev'];
+
+      const current = getCurrentDateAndTime();
+      wsObj[newID].date = {
+        createdDate: current,
+        modifiedDate: current,
+      };
+
+      if (row.doc) {
+        const avatars = doc.avatars;
+        if (avatars) {
+          const newAvatarObj = avatars.reduce((avtrObj, url) => {
+            const cardId = cardIdMap[getIdFromUrl(url)];
+
+            const oldLocation = getLocationFromUrl(url);
+            const newURL = `rxdesktop://local/ws/${newID}/${cardId}/${nanoid(5)}`;
+
+            // @ts-ignore
+            avtrObj[newURL] = cardObj[cardId].avatars[oldLocation];
+            return avtrObj;
+          }, {} as { [id: string]: any });
+          wsObj[newID].avatars = newAvatarObj;
+        }
+      }
+      return wsObj;
+    }, {} as { [id: string]: any });
+
+    for (const id in cardObj) {
+      cardObj[id].user = 'local';
+      for (const url in cardObj[id].avatars) {
+        cardObj[id].date = cardObj[id].avatars[url].date;
+      }
+      cardObj[id].type = 'text/html';
+      delete cardObj[id].avatars;
+    }
 
     const dataObj = {
-      workspaces: workspaceObj,
-      cards: cardObj,
+      workspace: workspaceObj,
+      card: cardObj,
     };
     fs.writeJSON(filepath, dataObj, { spaces: 2 });
   };
