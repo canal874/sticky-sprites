@@ -2,9 +2,9 @@
 
 # Media Stickies
 
-Sticky notes written by Electron
+A desktop gadget platform written by Electron. You can write or paste any HTML on your desktop as a multimedia card.
 
-[![MediaSticky](https://github.com/canal874/media-stickies/blob/images/mediasticky-1.0-movie-thumb.png)](https://www.youtube.com/watch?v=2au3QY3cFmM)
+[![MediaSticky](https://github.com/sosuisen/media-stickies/blob/images/mediasticky-1.0-movie-thumb.png)](https://www.youtube.com/watch?v=wqt9Pf4V6bg)
 
 It looks like just a sticky note but accepts any HTML and can have a transparent background.
 
