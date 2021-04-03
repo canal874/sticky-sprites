@@ -4,6 +4,10 @@
 
 Sticky notes written by Electron
 
+[![MediaSticky](https://github.com/canal874/media-stickies/blob/images/mediasticky-1.0-movie-thumb.png)](https://www.youtube.com/watch?v=2au3QY3cFmM)
+
+It looks like just a sticky note but accepts any HTML and can have a transparent background.
+
 # Run
 
 npm run start-all-clean
