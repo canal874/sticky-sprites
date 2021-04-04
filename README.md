@@ -2,7 +2,7 @@
 
 # Media Stickies
 
-A desktop gadget platform written by Electron. You can write or paste any HTML on your desktop as a multimedia card.
+A desktop knowledge platform written by Electron. You can write or paste any HTML on your desktop as a multimedia card.
 
 [![MediaSticky](https://github.com/sosuisen/media-stickies/blob/images/mediasticky-1.0-movie-thumb.png)](https://www.youtube.com/watch?v=wqt9Pf4V6bg)
 
